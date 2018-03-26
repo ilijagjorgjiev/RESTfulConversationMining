@@ -27,7 +27,7 @@ var g = new dagreD3.graphlib.Graph()
 // below.
 g.setNode("start", { shape: "circle" });
 g.setNode("end", {shape: "circle", style: "stroke-width: 4; stroke: black"})
-for(let i = 0; i < clients["154.103.165.66"].length; i++){
+for(let i = 0; i < 1; i++){
   g.setNode(i, {label: "Method: "+ clients["154.103.165.66"][i].method + '\n' + 'Status: '+ clients["154.103.165.66"][i].status + '\n' +"Location:"+clients["154.103.165.66"][i].location, class: "type-"  + clients["154.103.165.66"][i].method})
 }
 g.nodes().forEach(function(v) {
@@ -36,12 +36,72 @@ g.nodes().forEach(function(v) {
   node.rx = node.ry = 5;
 });
 
+var simpleComparison = function(clients){
+    var size = clients["154.103.165.66"].length
+    var responses = [];
+    var marked = new Array(size).fill(false);
+    for(let i = 0; i < size; i++){
+      responses[i] = [];
+      if(!marked[i]){
+        responses[i].push({id : i, client : clients["154.103.165.66"][i]})
+        marked[i] = true;
+        for(let j = i+1; j < size; j++){
+          // console.log(true)
+          if((clients["154.103.165.66"][j].status != responses[i][0].client.status) && (clients["154.103.165.66"][j].method == responses[i][0].client.method) &&
+          clients["154.103.165.66"][j].location == responses[i][0].client.location){
+            // console.log("true")
+            marked[j] = true;
+            responses[i].push({id : j, client : clients["154.103.165.66"][j] })
+          }
+        }
+      }
+        // console.log(responses[i])
+    }
+    return responses;
+  }
+  // Set up edges, no special attributes.
+   var responses = simpleComparison(clients);
+   console.log(responses);
+   var prev = responses[0][0].id;
+   g.setEdge("start", 0)
+   g.setEdge(0, "end")
+  // console.log(responses[0][0].id)
+  // for(let i = 0; i < 1; i++){
+  //   console.log(responses[i])
+  //   if(responses[i].length > 1){
+  //     if(i == 0){
+  //       for(let j = 1; j < responses[i].length; j++){
+  //         g.setEdge(responses[i][0].id,responses[i][j].id)
+  //         prev = responses[i][j].id;
+  //       }
+  //     }
+  //     else{
+  //       g.setEdge(prev, responses[i][0].id)
+  //       for(let j = 1; j < responses[i].length; j++){
+  //         g.setEdge(responses[i][0].id,responses[i][j].id)
+  //         prev = responses[i][j].id;
+  //       }
+  //     }
+  //   }
+  //   else if(responses[i].length == 1){
+  //     if( i == 0){
+  //       prev = responses[0][0].id
+  //     }
+  //     else{
+  //       g.setEdge(prev, responses[i][0].id)
+  //       prev = responses[i][0].id
+  //     }
+  //   }
+  // }
+  // g.setEdge(responses[responses.length-1][responses[responses.length-1].length], "end")
+  // g.setEdge(0,"end")
+
 // Set up edges, no special attributes.
-g.setEdge("start",0)
-for(let i = 1; i < clients["154.103.165.66"].length; i++){
-  g.setEdge(i-1,i);
-}
-g.setEdge("end",clients["154.103.165.66"].length-1)
+// g.setEdge("start",0)
+// for(let i = 1; i < clients["154.103.165.66"].length; i++){
+//   g.setEdge(i-1,i);
+// }
+// g.setEdge("end",clients["154.103.165.66"].length-1)
 
 // Create the renderer
 var render = new dagreD3.render();
