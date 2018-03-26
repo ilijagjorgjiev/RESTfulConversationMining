@@ -7,14 +7,22 @@ text {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
   font-size: 14px;
 }
-.node circle,
-.node rect {
+/* .node circle, */
+/* .node rect {
   fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1
-}
+} */
  /* .node up{
   fill:#e6e6e6;stroke:#000000;stroke-width:1.11049819px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1
 } */
-
+.node circle{
+  fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1
+}
+.type-Response{
+  fill:#e6e6e6;stroke:#000000;stroke-width:1.11049819px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1
+}
+.type-Request{
+  fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1
+}
 .edgePath path {
   stroke: #333;
   stroke-width: 1.5px;

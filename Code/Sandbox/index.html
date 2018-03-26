@@ -13,30 +13,32 @@
 
 <body>
 
-<svg width='800' height = '600'></svg>
+  <svg width='800' height = '600'></svg>
 
-<script>
-// Input related code goes here
-// Create the input graph
+  <script>
+  // Input related code goes here
+  // Create the input graph
 
-var g = new dagreD3.graphlib.Graph()
+  console.log(clients);
+
+  var g = new dagreD3.graphlib.Graph()
   .setGraph({})
   .setDefaultEdgeLabel(function() { return {}; });
 
-// Here we"re setting nodeclass, which is used by our custom drawNodes function
-// below.
-g.setNode("start", { shape: "circle" });
-g.setNode("end", {shape: "circle", style: "stroke-width: 4; stroke: black"})
-// for(let i = 0; i < 1; i++){
-//   g.setNode(i, {label: "Method: "+ clients["154.103.165.66"][i].method + '\n' + 'Status: '+ clients["154.103.165.66"][i].status + '\n' +"Location:"+clients["154.103.165.66"][i].location, class: "type-"  + clients["154.103.165.66"][i].method})
-// }
-// g.nodes().forEach(function(v) {
-//   var node = g.node(v);
-//   // Round the corners of the nodes
-//   node.rx = node.ry = 5;
-// });
+  // Here we"re setting nodeclass, which is used by our custom drawNodes function
+  // below.
+  g.setNode("start", { shape: "circle" });
+  g.setNode("end", {shape: "circle", style: "stroke-width: 4; stroke: black"})
+  // for(let i = 0; i < 1; i++){
+  //   g.setNode(i, {label: "Method: "+ clients["154.103.165.66"][i].method + '\n' + 'Status: '+ clients["154.103.165.66"][i].status + '\n' +"Location:"+clients["154.103.165.66"][i].location, class: "type-"  + clients["154.103.165.66"][i].method})
+  // }
+  // g.nodes().forEach(function(v) {
+  //   var node = g.node(v);
+  //   // Round the corners of the nodes
+  //   node.rx = node.ry = 5;
+  // });
 
-var simpleComparison = function(clients){
+  var simpleComparison = function(clients){
     var size = clients["154.103.165.66"].length
     var responses = [];
     var marked = new Array(size).fill(false);
@@ -55,32 +57,35 @@ var simpleComparison = function(clients){
           }
         }
       }
-        // console.log(responses[i])
+      // console.log(responses[i])
     }
     return responses;
   }
   // Set up edges, no special attributes.
-   var responses = simpleComparison(clients);
-   console.log(responses);
-   var prev = "start";
-  for(let i = 0; i < 20; i++){
+  var responses = simpleComparison(clients);
+  console.log(responses);
+  var prev = "start";
+  for(let i = 0; i < responses.length; i++){
     if(responses[i].length == 1){
       if(i == 0) prev = responses[i][0].id
       else{
         var prev1 = responses[i][0].id
-        g.setNode(prev1, {label: "Method: "+ clients["154.103.165.66"][prev1].method + '\n' + 'Status: '+ clients["154.103.165.66"][prev1].status + '\n' +"Location:"+clients["154.103.165.66"][prev1].location, class: "type-"  + clients["154.103.165.66"][prev1].method})
+        g.setNode(prev1, {label: "Method: "+ clients["154.103.165.66"][prev1].method + '\n' + 'Status: '+ clients["154.103.165.66"][prev1].status + '\n' +"Location:"+clients["154.103.165.66"][prev1].location + '\n' + "Time: "+ clients["154.103.165.66"][prev1].datetime, class: "type-Request method-"  + clients["154.103.165.66"][prev1].method})
         g.setEdge(prev,prev1)
         prev = prev1
-        }
       }
+    }
     else if(responses[i].length > 1){
       var prev1 = responses[i][0].id
-      g.setNode(prev1, {label: "Method: "+ clients["154.103.165.66"][prev1].method + '\n' + 'Status: '+ clients["154.103.165.66"][prev1].status + '\n' +"Location:"+clients["154.103.165.66"][prev1].location, class: "type-"  + clients["154.103.165.66"][prev1].method})
+      var prev1Res = prev1+"R"
+      g.setNode(prev1, {label: "Method: "+ clients["154.103.165.66"][prev1].method + '\n' +"Location:"+clients["154.103.165.66"][prev1].location + '\n' + "Time: "+ clients["154.103.165.66"][prev1].datetime, class: "type-Request method-"  + clients["154.103.165.66"][prev1].method})
+      g.setNode(prev1Res, {label: "Status: " + clients["154.103.165.66"][prev1].status + '\n' + "Time: "+ clients["154.103.165.66"][prev1].datetime, class: "type-Response"})
       g.setEdge(prev,prev1)
+      g.setEdge(prev1,prev1Res)
       prev = prev1
       for(let j = 1; j < responses[i].length; j++){
         prev1 = responses[i][j].id
-        g.setNode(prev1, {label: "Method: "+ clients["154.103.165.66"][prev1].method + '\n' + 'Status: '+ clients["154.103.165.66"][prev1].status + '\n' +"Location:"+clients["154.103.165.66"][prev1].location, class: "type-"  + clients["154.103.165.66"][prev1].method})
+        g.setNode(prev1, {label: 'Status: '+ clients["154.103.165.66"][prev1].status + '\n' + "Time: "+ clients["154.103.165.66"][prev1].datetime, class: "type-Response"})
         g.setEdge(prev,prev1)
       }
       prev = prev1
@@ -94,26 +99,32 @@ var simpleComparison = function(clients){
   });
 
 
-// Set up edges, no special attributes.
-// g.setEdge("start",0)
-// for(let i = 1; i < clients["154.103.165.66"].length; i++){
-//   g.setEdge(i-1,i);
-// }
-// g.setEdge("end",clients["154.103.165.66"].length-1)
+  // Set up edges, no special attributes.
+  // g.setEdge("start",0)
+  // for(let i = 1; i < clients["154.103.165.66"].length; i++){
+  //   g.setEdge(i-1,i);
+  // }
+  // g.setEdge("end",clients["154.103.165.66"].length-1)
 
-// Create the renderer
-var render = new dagreD3.render();
-console.log(g)
+  // Create the renderer
+  var render = new dagreD3.render();
+  console.log(g)
 
-// Set up an SVG group so that we can translate the final graph.
-var svg = d3.select("svg"),
-    svgGroup = svg.append("g");
+  // Set up an SVG group so that we can translate the final graph.
+  var svg = d3.select("svg"),
+  svgGroup = svg.append("g");
 
-// Run the renderer. This is what draws the final graph.
-render(d3.select("svg g"), g);
+  //Set up zoom support
+  var zoom = d3.zoom().on("zoom", function() {
+    svgGroup.attr("transform", d3.event.transform);
+  });
+  svg.call(zoom);
 
-// Center the graph
-var xCenterOffset = (svg.attr("width") - g.graph().width) / 2;
-svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
-svg.attr("height", g.graph().height + 40);
+  // Run the renderer. This is what draws the final graph.
+  render(d3.select("svg g"), g);
+
+  // Center the graph
+  var xCenterOffset = (svg.attr("width") - g.graph().width) / 2;
+  svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
+  svg.attr("height", g.graph().height + 40);
 </script>
