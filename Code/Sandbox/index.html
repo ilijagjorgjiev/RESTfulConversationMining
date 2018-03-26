@@ -27,14 +27,14 @@ var g = new dagreD3.graphlib.Graph()
 // below.
 g.setNode("start", { shape: "circle" });
 g.setNode("end", {shape: "circle", style: "stroke-width: 4; stroke: black"})
-for(let i = 0; i < 1; i++){
-  g.setNode(i, {label: "Method: "+ clients["154.103.165.66"][i].method + '\n' + 'Status: '+ clients["154.103.165.66"][i].status + '\n' +"Location:"+clients["154.103.165.66"][i].location, class: "type-"  + clients["154.103.165.66"][i].method})
-}
-g.nodes().forEach(function(v) {
-  var node = g.node(v);
-  // Round the corners of the nodes
-  node.rx = node.ry = 5;
-});
+// for(let i = 0; i < 1; i++){
+//   g.setNode(i, {label: "Method: "+ clients["154.103.165.66"][i].method + '\n' + 'Status: '+ clients["154.103.165.66"][i].status + '\n' +"Location:"+clients["154.103.165.66"][i].location, class: "type-"  + clients["154.103.165.66"][i].method})
+// }
+// g.nodes().forEach(function(v) {
+//   var node = g.node(v);
+//   // Round the corners of the nodes
+//   node.rx = node.ry = 5;
+// });
 
 var simpleComparison = function(clients){
     var size = clients["154.103.165.66"].length
@@ -62,39 +62,37 @@ var simpleComparison = function(clients){
   // Set up edges, no special attributes.
    var responses = simpleComparison(clients);
    console.log(responses);
-   var prev = responses[0][0].id;
-   g.setEdge("start", 0)
-   g.setEdge(0, "end")
-  // console.log(responses[0][0].id)
-  // for(let i = 0; i < 1; i++){
-  //   console.log(responses[i])
-  //   if(responses[i].length > 1){
-  //     if(i == 0){
-  //       for(let j = 1; j < responses[i].length; j++){
-  //         g.setEdge(responses[i][0].id,responses[i][j].id)
-  //         prev = responses[i][j].id;
-  //       }
-  //     }
-  //     else{
-  //       g.setEdge(prev, responses[i][0].id)
-  //       for(let j = 1; j < responses[i].length; j++){
-  //         g.setEdge(responses[i][0].id,responses[i][j].id)
-  //         prev = responses[i][j].id;
-  //       }
-  //     }
-  //   }
-  //   else if(responses[i].length == 1){
-  //     if( i == 0){
-  //       prev = responses[0][0].id
-  //     }
-  //     else{
-  //       g.setEdge(prev, responses[i][0].id)
-  //       prev = responses[i][0].id
-  //     }
-  //   }
-  // }
-  // g.setEdge(responses[responses.length-1][responses[responses.length-1].length], "end")
-  // g.setEdge(0,"end")
+   var prev = "start";
+  for(let i = 0; i < 20; i++){
+    if(responses[i].length == 1){
+      if(i == 0) prev = responses[i][0].id
+      else{
+        var prev1 = responses[i][0].id
+        g.setNode(prev1, {label: "Method: "+ clients["154.103.165.66"][prev1].method + '\n' + 'Status: '+ clients["154.103.165.66"][prev1].status + '\n' +"Location:"+clients["154.103.165.66"][prev1].location, class: "type-"  + clients["154.103.165.66"][prev1].method})
+        g.setEdge(prev,prev1)
+        prev = prev1
+        }
+      }
+    else if(responses[i].length > 1){
+      var prev1 = responses[i][0].id
+      g.setNode(prev1, {label: "Method: "+ clients["154.103.165.66"][prev1].method + '\n' + 'Status: '+ clients["154.103.165.66"][prev1].status + '\n' +"Location:"+clients["154.103.165.66"][prev1].location, class: "type-"  + clients["154.103.165.66"][prev1].method})
+      g.setEdge(prev,prev1)
+      prev = prev1
+      for(let j = 1; j < responses[i].length; j++){
+        prev1 = responses[i][j].id
+        g.setNode(prev1, {label: "Method: "+ clients["154.103.165.66"][prev1].method + '\n' + 'Status: '+ clients["154.103.165.66"][prev1].status + '\n' +"Location:"+clients["154.103.165.66"][prev1].location, class: "type-"  + clients["154.103.165.66"][prev1].method})
+        g.setEdge(prev,prev1)
+      }
+      prev = prev1
+    }
+  }
+  g.setEdge(prev,"end")
+  g.nodes().forEach(function(v) {
+    var node = g.node(v);
+    // Round the corners of the nodes
+    node.rx = node.ry = 5;
+  });
+
 
 // Set up edges, no special attributes.
 // g.setEdge("start",0)
