@@ -52,7 +52,6 @@ var drawGraph = function(clientIP){
   var seqArray = seqPreservingComparison(clients, clientIP);
   var client = clients[clientIP]
   console.log(seqArray)
-  var j = 5;
   for(var key in seqArray){
     if(seqArray[key].length == 1){
       g.setNode(seqArray[key][0].end,
@@ -68,7 +67,6 @@ var drawGraph = function(clientIP){
           g.setEdge(seqArray[key][i].start, key)
         }
       }
-      j--;
       // if(j == 0){
       //   break;
       // }
@@ -160,7 +158,7 @@ var drawGraph = function(clientIP){
     var marked = new Array(length).fill(false);
     var prev = "start";
     var seqArray = []
-    for(let i = 0; i < 60; i++){
+    for(let i = 0; i < length; i++){
       var str = client[i].method + client[i].location
       if(seqArray[str] === undefined){
         seqArray[str] = []
