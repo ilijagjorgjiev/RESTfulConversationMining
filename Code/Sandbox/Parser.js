@@ -6,26 +6,26 @@ var dagreD3 = require("dagre-d3");
 // var graphlib = requireFromUrl("https://dagrejs.github.io/project/graphlib-dot/v0.6.3/graphlib-dot.js")
 // var d3v4 = requireFromUrl("https://d3js.org/d3.v4.js")
 
-// var exports = module.exports{}
+
 var links = fs.readFileSync("../../../Code/log.txt", 'utf8').split('\n')
 var logs = [];
 var clients = {};
-// console.log(clients)
+
+
+//Read the file and parse it to objects
 for(let i = 0; i < links.length; i++){
   let str = links[i];
   let spaces = str.split(' ');
   if(str != ''){
-  let obj = {date : spaces[0], time : spaces[1], ip : spaces[2], method : spaces[3], location: spaces[4], status : spaces[5]}
-  logs[i] = obj;
+    let obj = {date : spaces[0], time : spaces[1], ip : spaces[2], method : spaces[3], location: spaces[4], status : spaces[5]}
+    logs[i] = obj;
+  }
 }
-  // console.log(links[i])
-   // console.log(logs[i])
-}
-console.log(logs)
 
-//Bug: the logs may contain some undefined entries. Fixed the bug with undefined it was due to an empty line.
 
-//Client segmentation
+//Bug: the logs may contain some undefined entries. Fixed the bug with undefined it was due to an empty line. --Fixed
+
+//Client segmentation.
 for(let i = 0; i < logs.length; i++){
   var ip = logs[i].ip;
   if(clients[ip] === undefined) {
@@ -33,8 +33,8 @@ for(let i = 0; i < logs.length; i++){
   }
   clients[ip].push(logs[i]);
 }
-// console.log(clients)
-//sort by date/time
+
+//Sort Each Client by time/date.
 var compare = function(a,b) {
   if(a > b) return 1
   else if (a === b) return 0
@@ -54,24 +54,19 @@ for(var ip in clients){
       date.setMinutes(build2[1])
       date.setSeconds(build2[2])
       clients[ip][i].datetime = date;
-      //delete clients["154.103.165.66"][i].time;
-      // console.log(clients["154.103.165.66"][i].date);
     }
   }
 }
 for(var ip in clients){
-  // console.log(ip)
   clients[ip].sort((a,b) => compare(a.datetime,b.datetime));
 }
-
-console.log(clients['154.103.165.66'])
 
 var filepath = "data.js"
 var content = "var clients = " + JSON.stringify(clients);
 fs.writeFile(filepath, content, (err) => {
-    if (err) throw err;
+  if (err) throw err;
 
-    console.log("The file was succesfully saved!");
+  console.log("The file was succesfully saved!");
 });
 
 

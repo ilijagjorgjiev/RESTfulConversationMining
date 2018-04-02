@@ -13,14 +13,33 @@
 
 <body>
 
-  <svg width='800' height = '600'></svg>
+  <div class="dropdown">
+    <button class="dropbtn" onmouseover="displayClients()">Dropdown</button>
+    <!-- <div class="dropdown-content" >
+    <a href="#">Link 1</a>
+    <a href="#">Link 2</a>
+    <a href="#">Link 3</a>
+  </div> -->
+  <!-- <svg width='800' height = '600'></svg> -->
+</div>
+<svg width='800' height = '600'></svg>
 
-  <script>
-  // Input related code goes here
-  // Create the input graph
+<script>
+// Input related code goes here
 
-  console.log(clients);
+// Create the dropdown-list of Clients.
+var displayClients = function(){
+  var div = document.getElementsByClassName("dropdown");
+  var str = '<div class="dropdown-content"> '
+  for(var client in clients){
+    str+=('<a onclick="drawGraph(\''+client +'\')"> '+ client + '</a> ')
+  }
+  str+=('</div>')
+  div[0].innerHTML += str;
+}
 
+//Draw the Graph for the selected IP.
+var drawGraph = function(clientIP){
   var g = new dagreD3.graphlib.Graph()
   .setGraph({})
   .setDefaultEdgeLabel(function() { return {}; });
@@ -29,31 +48,104 @@
   // below.
   g.setNode("start", { shape: "circle" });
   g.setNode("end", {shape: "circle", style: "stroke-width: 4; stroke: black"})
-  // for(let i = 0; i < 1; i++){
-  //   g.setNode(i, {label: "Method: "+ clients["154.103.165.66"][i].method + '\n' + 'Status: '+ clients["154.103.165.66"][i].status + '\n' +"Location:"+clients["154.103.165.66"][i].location, class: "type-"  + clients["154.103.165.66"][i].method})
-  // }
-  // g.nodes().forEach(function(v) {
-  //   var node = g.node(v);
-  //   // Round the corners of the nodes
-  //   node.rx = node.ry = 5;
-  // });
+  // Set up edges, no special attributes.
+  var seqArray = seqPreservingComparison(clients, clientIP);
+  var client = clients[clientIP]
+  console.log(seqArray)
+  var j = 5;
+  for(var key in seqArray){
+    if(seqArray[key].length == 1){
+      g.setNode(seqArray[key][0].end,
+        {label: "Method: "+ seqArray[key][0].data.method + '\n' + 'Status: '+ seqArray[key][0].data.status + '\n' +"Location:"+seqArray[key][0].data.location + '\n' + "Time: "+ seqArray[key][0].data.datetime,
+        class: "type-Request method-"  + seqArray[key][0].data.method})
+        g.setEdge(seqArray[key][0].start, seqArray[key][0].end)
+      }
+      else{
+        g.setNode(key, {label: "Method: "+ seqArray[key][0].data.method + '\n' +"Location: "+ seqArray[key][0].data.location + '\n' + "Time: "+ seqArray[key][0].data.datetime, class: "type-Request method-"  + seqArray[key][0].data.method})
+        for(let i = 0; i < seqArray[key].length; i++){
+          g.setNode(seqArray[key][i].end, {label : 'Status: ' + seqArray[key][i].data.status + '\n' + "Time: "+ seqArray[key][i].data.datetime, class: "type-Response"})
+          g.setEdge(key, seqArray[key][i].end)
+          g.setEdge(seqArray[key][i].start, key)
+        }
+      }
+      j--;
+      // if(j == 0){
+      //   break;
+      // }
+    }
+    // var prev = "start";
+    // for(let i = 0; i < responses.length; i++){
+    //   if(responses[i].length == 1){
+    //     if(i == 0) prev = responses[i][0].id
+    //     else{
+    //       var prev1 = responses[i][0].id
+    //       g.setNode(prev1, {label: "Method: "+ clients[clientIP][prev1].method + '\n' + 'Status: '+ clients[clientIP][prev1].status + '\n' +"Location:"+clients[clientIP][prev1].location + '\n' + "Time: "+ clients[clientIP][prev1].datetime, class: "type-Request method-"  + clients[clientIP][prev1].method})
+    //       g.setEdge(prev,prev1)
+    //       prev = prev1
+    //     }
+    //   }
+    //   else if(responses[i].length > 1){
+    //     var prev1 = responses[i][0].id
+    //     var prev1Res = prev1+"R"
+    //     g.setNode(prev1, {label: "Method: "+ clients[clientIP][prev1].method + '\n' +"Location:"+clients[clientIP][prev1].location + '\n' + "Time: "+ clients[clientIP][prev1].datetime, class: "type-Request method-"  + clients[clientIP][prev1].method})
+    //     g.setNode(prev1Res, {label: "Status: " + clients[clientIP][prev1].status + '\n' + "Time: "+ clients[clientIP][prev1].datetime, class: "type-Response"})
+    //     g.setEdge(prev,prev1)
+    //     g.setEdge(prev1,prev1Res)
+    //     prev = prev1
+    //     for(let j = 1; j < responses[i].length; j++){
+    //       prev1 = responses[i][j].id
+    //       g.setNode(prev1, {label: 'Status: '+ clients[clientIP][prev1].status + '\n' + "Time: "+ clients[clientIP][prev1].datetime, class: "type-Response"})
+    //       g.setEdge(prev,prev1)
+    //     }
+    //     prev = prev1
+    //   }
+    // }
+    // g.setEdge(prev,"end")
+    // g.nodes().forEach(function(v) {
+    //   var node = g.node(v);
+    //   // Round the corners of the nodes
+    //   node.rx = node.ry = 5;
+    // });
+    console.log(g.nodes())
 
-  var simpleComparison = function(clients){
-    var size = clients["154.103.165.66"].length
+    // Create the renderer
+    var render = new dagreD3.render();
+    // console.log(g)
+
+    // Set up an SVG group so that we can translate the final graph.
+    var svg = d3.select("svg"),
+    svgGroup = svg.append("g");
+
+    //Set up zoom support
+    var zoom = d3.zoom().on("zoom", function() {
+      svgGroup.attr("transform", d3.event.transform);
+    });
+    svg.call(zoom);
+
+    // Run the renderer. This is what draws the final graph.
+    render(d3.select("svg g"), g);
+
+    // Center the graph
+    var xCenterOffset = (svg.attr("width") - g.graph().width) / 2;
+    svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
+    svg.attr("height", g.graph().height + 40);
+  }
+  var simpleComparison = function(clients, clientIP){
+    var size = clients[clientIP].length
     var responses = [];
     var marked = new Array(size).fill(false);
     for(let i = 0; i < size; i++){
       responses[i] = [];
       if(!marked[i]){
-        responses[i].push({id : i, client : clients["154.103.165.66"][i]})
+        responses[i].push({id : i, client : clients[clientIP][i]})
         marked[i] = true;
         for(let j = i+1; j < size; j++){
           // console.log(true)
-          if((clients["154.103.165.66"][j].status != responses[i][0].client.status) && (clients["154.103.165.66"][j].method == responses[i][0].client.method) &&
-          clients["154.103.165.66"][j].location == responses[i][0].client.location){
+          if((clients[clientIP][j].status != responses[i][0].client.status) && (clients[clientIP][j].method == responses[i][0].client.method) &&
+          clients[clientIP][j].location == responses[i][0].client.location){
             // console.log("true")
             marked[j] = true;
-            responses[i].push({id : j, client : clients["154.103.165.66"][j] })
+            responses[i].push({id : j, client : clients[clientIP][j] })
           }
         }
       }
@@ -61,70 +153,45 @@
     }
     return responses;
   }
-  // Set up edges, no special attributes.
-  var responses = simpleComparison(clients);
-  console.log(responses);
-  var prev = "start";
-  for(let i = 0; i < responses.length; i++){
-    if(responses[i].length == 1){
-      if(i == 0) prev = responses[i][0].id
-      else{
-        var prev1 = responses[i][0].id
-        g.setNode(prev1, {label: "Method: "+ clients["154.103.165.66"][prev1].method + '\n' + 'Status: '+ clients["154.103.165.66"][prev1].status + '\n' +"Location:"+clients["154.103.165.66"][prev1].location + '\n' + "Time: "+ clients["154.103.165.66"][prev1].datetime, class: "type-Request method-"  + clients["154.103.165.66"][prev1].method})
-        g.setEdge(prev,prev1)
-        prev = prev1
+  var seqPreservingComparison = function(clients, clientIP){
+    var length = clients[clientIP].length
+    var client = clients[clientIP];
+    var seq = []
+    var marked = new Array(length).fill(false);
+    var prev = "start";
+    var seqArray = []
+    for(let i = 0; i < 60; i++){
+      var str = client[i].method + client[i].location
+      if(seqArray[str] === undefined){
+        seqArray[str] = []
       }
-    }
-    else if(responses[i].length > 1){
-      var prev1 = responses[i][0].id
-      var prev1Res = prev1+"R"
-      g.setNode(prev1, {label: "Method: "+ clients["154.103.165.66"][prev1].method + '\n' +"Location:"+clients["154.103.165.66"][prev1].location + '\n' + "Time: "+ clients["154.103.165.66"][prev1].datetime, class: "type-Request method-"  + clients["154.103.165.66"][prev1].method})
-      g.setNode(prev1Res, {label: "Status: " + clients["154.103.165.66"][prev1].status + '\n' + "Time: "+ clients["154.103.165.66"][prev1].datetime, class: "type-Response"})
-      g.setEdge(prev,prev1)
-      g.setEdge(prev1,prev1Res)
-      prev = prev1
-      for(let j = 1; j < responses[i].length; j++){
-        prev1 = responses[i][j].id
-        g.setNode(prev1, {label: 'Status: '+ clients["154.103.165.66"][prev1].status + '\n' + "Time: "+ clients["154.103.165.66"][prev1].datetime, class: "type-Response"})
-        g.setEdge(prev,prev1)
+      var obj = {
+        "start" : prev,
+        "end" : i,
+        "data" : client[i]
       }
-      prev = prev1
+      if(i == length-1) obj.end = "end";
+      seqArray[str].push(obj)
+      prev = i;
     }
+    return seqArray;
   }
-  g.setEdge(prev,"end")
-  g.nodes().forEach(function(v) {
-    var node = g.node(v);
-    // Round the corners of the nodes
-    node.rx = node.ry = 5;
-  });
-
-
-  // Set up edges, no special attributes.
-  // g.setEdge("start",0)
-  // for(let i = 1; i < clients["154.103.165.66"].length; i++){
-  //   g.setEdge(i-1,i);
+  //   var constructGraph = function(client, seqArray,  g){
+  //     for(var key in seqArray){
+  //       if(seqArray[key].length == 1){
+  //         g.setNode(client[key].end, {label: "Method: "+ client[key][0].method + '\n' + 'Status: '+ client[key][0].status + '\n' +"Location:"+client[key][0].location + '\n' + "Time: "+ client[key][0].datetime, class: "type-Request method-"  + client[key][0].method})
+  //         g.setEdge(client[key][0].start, client[key][0].end)
+  //       }
+  //       else{
+  //         g.setNode(key, {label: "Method: "+ client[key][i].method + '\n' +"Location: "+ client[key][i].location + '\n' + "Time: "+ client[key][i].datetime, class: "type-Request method-"  + client[key][i].method})
+  //         for(let i = 0; i < seqArray[key].length; i++){
+  //           g.setNode(client[key][i].end, {label : 'Status: ' + client[key][i].status + '\n' + "Time: "+ client[key][i].datetime, class: "type-Response"})
+  //           g.setEdge(key, client[key][i].end)
+  //           g.setEdge(client[key][i].start, key)
+  //         }
+  //       }
+  //     }
+  //   }
+  //   return g;
   // }
-  // g.setEdge("end",clients["154.103.165.66"].length-1)
-
-  // Create the renderer
-  var render = new dagreD3.render();
-  console.log(g)
-
-  // Set up an SVG group so that we can translate the final graph.
-  var svg = d3.select("svg"),
-  svgGroup = svg.append("g");
-
-  //Set up zoom support
-  var zoom = d3.zoom().on("zoom", function() {
-    svgGroup.attr("transform", d3.event.transform);
-  });
-  svg.call(zoom);
-
-  // Run the renderer. This is what draws the final graph.
-  render(d3.select("svg g"), g);
-
-  // Center the graph
-  var xCenterOffset = (svg.attr("width") - g.graph().width) / 2;
-  svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
-  svg.attr("height", g.graph().height + 40);
 </script>
