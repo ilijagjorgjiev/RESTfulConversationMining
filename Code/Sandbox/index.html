@@ -1,29 +1,25 @@
 <!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Dagre Interactive Demo</title>
 
-<meta charset="utf-8">
-<title>Dagre Interactive Demo</title>
-
-<script src="https://d3js.org/d3.v4.js"></script>
-<script src="https://dagrejs.github.io/project/graphlib-dot/v0.6.3/graphlib-dot.js"></script>
-<script src="/Users/ilijagjorgjiev/node_modules/dagre-d3/dist/dagre-d3.js"></script>
-<script src="data.js"></script>
-<!-- <script type="text/javascript" src="setup.js"></script> -->
-<link rel="stylesheet" href="styles.css">
-
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://dagrejs.github.io/project/graphlib-dot/v0.6.3/graphlib-dot.js"></script>
+  <script src="/Users/ilijagjorgjiev/node_modules/dagre-d3/dist/dagre-d3.js"></script>
+  <script src="data.js"></script>
+  <!-- <script type="text/javascript" src="setup.js"></script> -->
+  <link rel="stylesheet" href="styles.css">
+</head>
 
 <body>
-
-  <div class="dropdown">
+  <div>
+  <div class="dropdown" style="float: left">
     <button class="dropbtn" onmouseover="displayClients()">Dropdown</button>
-    <!-- <div class="dropdown-content" >
-    <a href="#">Link 1</a>
-    <a href="#">Link 2</a>
-    <a href="#">Link 3</a>
-  </div> -->
-  <!-- <svg width='800' height = '600'></svg> -->
 </div>
-<svg width='800' height = '600'></svg>
-
+<svg> </g></svg>
+</div>
+</body>
 <script>
 // Input related code goes here
 
@@ -48,6 +44,7 @@ var drawGraph = function(clientIP){
   // below.
   g.setNode("start", { shape: "circle" });
   g.setNode("end", {shape: "circle", style: "stroke-width: 4; stroke: black"})
+
   // Set up edges, no special attributes.
   var seqArray = seqPreservingComparison(clients, clientIP);
   var client = clients[clientIP]
@@ -67,67 +64,39 @@ var drawGraph = function(clientIP){
           g.setEdge(seqArray[key][i].start, key)
         }
       }
-      // if(j == 0){
-      //   break;
-      // }
     }
-    // var prev = "start";
-    // for(let i = 0; i < responses.length; i++){
-    //   if(responses[i].length == 1){
-    //     if(i == 0) prev = responses[i][0].id
-    //     else{
-    //       var prev1 = responses[i][0].id
-    //       g.setNode(prev1, {label: "Method: "+ clients[clientIP][prev1].method + '\n' + 'Status: '+ clients[clientIP][prev1].status + '\n' +"Location:"+clients[clientIP][prev1].location + '\n' + "Time: "+ clients[clientIP][prev1].datetime, class: "type-Request method-"  + clients[clientIP][prev1].method})
-    //       g.setEdge(prev,prev1)
-    //       prev = prev1
-    //     }
-    //   }
-    //   else if(responses[i].length > 1){
-    //     var prev1 = responses[i][0].id
-    //     var prev1Res = prev1+"R"
-    //     g.setNode(prev1, {label: "Method: "+ clients[clientIP][prev1].method + '\n' +"Location:"+clients[clientIP][prev1].location + '\n' + "Time: "+ clients[clientIP][prev1].datetime, class: "type-Request method-"  + clients[clientIP][prev1].method})
-    //     g.setNode(prev1Res, {label: "Status: " + clients[clientIP][prev1].status + '\n' + "Time: "+ clients[clientIP][prev1].datetime, class: "type-Response"})
-    //     g.setEdge(prev,prev1)
-    //     g.setEdge(prev1,prev1Res)
-    //     prev = prev1
-    //     for(let j = 1; j < responses[i].length; j++){
-    //       prev1 = responses[i][j].id
-    //       g.setNode(prev1, {label: 'Status: '+ clients[clientIP][prev1].status + '\n' + "Time: "+ clients[clientIP][prev1].datetime, class: "type-Response"})
-    //       g.setEdge(prev,prev1)
-    //     }
-    //     prev = prev1
-    //   }
-    // }
-    // g.setEdge(prev,"end")
-    // g.nodes().forEach(function(v) {
-    //   var node = g.node(v);
-    //   // Round the corners of the nodes
-    //   node.rx = node.ry = 5;
-    // });
-    console.log(g.nodes())
-
-    // Create the renderer
-    var render = new dagreD3.render();
-    // console.log(g)
+    g.nodes().forEach(function(v) {
+      var node = g.node(v);
+      // Round the corners of the nodes
+      node.rx = node.ry = 5;
+    });
 
     // Set up an SVG group so that we can translate the final graph.
-    var svg = d3.select("svg"),
-    svgGroup = svg.append("g");
 
-    //Set up zoom support
+    var svg = d3.select("svg");
+    svg.selectAll("*").remove();
+    var inner = svg.append("g");
+
+    // Set up zoom support
     var zoom = d3.zoom().on("zoom", function() {
-      svgGroup.attr("transform", d3.event.transform);
+      inner.attr("transform", d3.event.transform);
     });
     svg.call(zoom);
 
+    // Create the renderer
+    var render = new dagreD3.render();
+
     // Run the renderer. This is what draws the final graph.
-    render(d3.select("svg g"), g);
+    render(inner, g);
 
     // Center the graph
-    var xCenterOffset = (svg.attr("width") - g.graph().width) / 2;
-    svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
-    svg.attr("height", g.graph().height + 40);
+    var initialScale = 0.2;
+    svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
+
+    svg.attr('height', g.graph().height * initialScale + 40);
   }
+
+  //Simple Comparison Algorithm
   var simpleComparison = function(clients, clientIP){
     var size = clients[clientIP].length
     var responses = [];
@@ -138,19 +107,17 @@ var drawGraph = function(clientIP){
         responses[i].push({id : i, client : clients[clientIP][i]})
         marked[i] = true;
         for(let j = i+1; j < size; j++){
-          // console.log(true)
           if((clients[clientIP][j].status != responses[i][0].client.status) && (clients[clientIP][j].method == responses[i][0].client.method) &&
           clients[clientIP][j].location == responses[i][0].client.location){
-            // console.log("true")
             marked[j] = true;
             responses[i].push({id : j, client : clients[clientIP][j] })
           }
         }
       }
-      // console.log(responses[i])
     }
     return responses;
   }
+  //Sequence Preserving Comparison
   var seqPreservingComparison = function(clients, clientIP){
     var length = clients[clientIP].length
     var client = clients[clientIP];
@@ -193,3 +160,4 @@ var drawGraph = function(clientIP){
   //   return g;
   // }
 </script>
+</html>
