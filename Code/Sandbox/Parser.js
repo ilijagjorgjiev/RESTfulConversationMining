@@ -61,6 +61,7 @@ for(var ip in clients){
   clients[ip].sort((a,b) => compare(a.datetime,b.datetime));
 }
 
+//Save Data into the data.js file.
 var filepath = "data.js"
 var content = "var clients = " + JSON.stringify(clients);
 fs.writeFile(filepath, content, (err) => {
@@ -68,61 +69,3 @@ fs.writeFile(filepath, content, (err) => {
 
   console.log("The file was succesfully saved!");
 });
-
-
-// var g = new dagreD3.graphlib.Graph()
-// .setGraph({})
-// .setDefaultEdgeLabel(function() { return {}; });
-//
-// for(let i = 0; i < clients["154.103.165.66"].length; i++){
-//   g.setNode(i, {label: clients["154.103.165.66"][i].method, class: "type-" + clients["154.103.165.66"][i].method})
-// }
-// g.nodes().forEach(function(v) {
-//   var node = g.node(v);
-//   // Round the corners of the nodes
-//   node.rx = node.ry = 5;
-// });
-//
-// // Set up edges, no special attributes.
-// for(let i = 1; i < clients["154.103.165.66"].length; i++){
-//   g.setEdge(i-1,i);
-// }
-
-
-
-// console.log(clients["154.103.165.66"]);
-// var render = new dagreD3.render();
-// console.log(render)
-
-// var g = new dagre.graphlib.Graph();
-// g.setGraph({});
-// g.setDefaultEdgeLabel(function() { return {}; });
-//
-// // Here we"re setting nodeclass, which is used by our custom drawNodes function
-// // below.
-// let width1 = 100;
-//           for(let i = 0; i < clients["154.103.165.66"].length; i++){
-//             g.setNode(i, {label: clients["154.103.165.66"][i].method, width : 105, height : 100})
-//           }
-//
-// g.nodes().forEach(function(v) {
-//   var node = g.node(v);
-//   // Round the corners of the nodes
-//   node.rx = node.ry = 5;
-// });
-//
-// // Set up edges, no special attributes.
-// for(let i = 1; i < clients["154.103.165.66"].length; i++){
-//   g.setEdge(i-1,i);
-// }
-//
-// // Create the renderer
-// dagre.layout(g);
-// exports.clients = clients;
-// exports.graph = g;
-// g.nodes().forEach(function(v) {
-//      console.log("Node " + v + ": " + JSON.stringify(g.node(v)));
-// });
-// g.edges().forEach(function(e) {
-//     console.log("Edge " + e.v + " -> " + e.w + ": " + JSON.stringify(g.edge(e)));
-// });
