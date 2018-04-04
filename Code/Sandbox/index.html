@@ -48,7 +48,7 @@ var drawGraph = function(clientIP){
   // Set up edges, no special attributes.
   var seqArray = seqPreservingComparison(clients, clientIP);
   var client = clients[clientIP]
-  console.log(seqArray)
+  // console.log(seqArray)
   for(var key in seqArray){
     if(seqArray[key].length == 1){
       g.setNode(seqArray[key][0].end,
