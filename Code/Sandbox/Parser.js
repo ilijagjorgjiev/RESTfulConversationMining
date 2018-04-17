@@ -67,7 +67,8 @@ var sortClientByDateTime = function(clients){
   return clients;
 }
 
-var links = fs.readFileSync("../../../Code/log.txt", 'utf8').split('\n')
+var links = fs.readFileSync("../../Data/log.txt", 'utf8').split('\n')
+// var links = fs.readFileSync("./demoLog.txt", 'utf8').split('\n')
 var logs = readParseFile(links);
 var clients = clientSegmentation(logs);
 clients = sortClientByDateTime(clients);
