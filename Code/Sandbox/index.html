@@ -49,12 +49,14 @@ var drawGraph = function(clientIP){
   g.setNode("end", {shape: "circle", style: "stroke-width: 4; stroke: black"})
 
   var length = clients[clientIP].length;
-  var obj = seqPreservingComparison(clients, clientIP, length);
+  var client = clients[clientIP];
+  var timeSegments = differenceThreshold(client);
+  console.log(timeSegments);
+  var obj = seqPreservingComparison(client, length);
   var incomingXorNodes = obj.incomingXorNodes;
   var nodes = obj.nodes;
   var endConection = obj.endConection;
-  var client = clients[clientIP];
-  differenceThreshold(client);
+
 
 
   //Set Up Nodes
@@ -223,8 +225,7 @@ var differenceThreshold = function(client){
 }
 
 //Sequence Preserving Comparison
-var seqPreservingComparison = function(clients, clientIP, length){
-  var client = clients[clientIP];
+var seqPreservingComparison = function(client, length){
   var prev = "start";
   var prevId = "start";
   var endConection = {};
@@ -279,7 +280,7 @@ var outgoingXOR = function(nodes){
       for(let i = 0; i < nodes[key][status].statusArray.length; i++){
         for(let j = 0; j < counterArray.length; j++){
           if(counterArray[j] == nodes[key][status].statusArray[i].start){
-            console.log(counterArray[j]);
+            // console.log(counterArray[j]);
             nodes[key][status].statusArray[i].start = "XOR-" + counterArray[j];
           }
         }
