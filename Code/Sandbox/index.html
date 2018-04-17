@@ -54,7 +54,7 @@ var drawGraph = function(clientIP){
   var nodes = obj.nodes;
   var endConection = obj.endConection;
   var client = clients[clientIP];
-  // averageTimeDifference(client);
+  differenceThreshold(client);
 
 
   //Set Up Nodes
@@ -191,80 +191,11 @@ var simpleComparison = function(clients, clientIP){
   }
   return responses;
 }
-//Sequence Preserving Comparison
-// var seqPreservingComparison = function(clients, clientIP){
-//   var length = clients[clientIP].length;
-//   var client = clients[clientIP];
-//   // console.log(client)
-//   var counterArray = [];
-//   var prev = "start";
-//   var seqArray = []
-//   var endConection = {};
-//   for(let i = 0; i < length; i++){
-//     var str = client[i].method + client[i].location
-//     var status = client[i].status;
-//     if(seqArray[str] === undefined){
-//       seqArray[str] = {}
-//     }
-//     var obj = {
-//       "start" : prev,
-//       "end" : i,
-//       "data" : client[i]
-//     }
-//     if(seqArray[str][status] === undefined){
-//       seqArray[str][status] = []
-//       prev = i
-//     }
-//     else{
-//       obj.end = seqArray[str][status][0].end
-//       prev = seqArray[str][status][0].end
-//     }
-//     seqArray[str][status].push(obj)
-//     if(i == (length-1)){
-//       endConection.e1 = prev;
-//       console.log('enter');
-//     }
-//   }
-//
-//   var counter = 0;
-//   for(var key in seqArray){
-//     for(var status in seqArray[key]){
-//       if(seqArray[key][status].length > 1){
-//         counterArray.push(seqArray[key][status][0].end)
-//         var bool = false;
-//         for(let i = 0; i < seqArray[key][status].length; i++){
-//           seqArray[key][status][i].xor = "XOR-" + seqArray[key][status][i].end
-//           if(seqArray[key][status][0].end == endConection.e1 && !bool) {
-//             endConection.e1 = "XOR-" + seqArray[key][status][0].end;
-//             bool = true;
-//           }
-//         }
-//       }
-//     }
-//   }
-//   for(var key in seqArray){
-//     for(var status in seqArray[key]){
-//       for(let i = 0; i < seqArray[key][status].length; i++){
-//         for(let j = 0; j < counterArray.length; j++){
-//           if(seqArray[key][status][i].start == counterArray[j]){
-//             seqArray[key][status][i].start = "XOR-" + counterArray[j];
-//           }
-//         }
-//       }
-//     }
-//   }
-//   // seqArray = mergeXOR(seqArray);
-//   var retObj = {
-//     "seqArray" : seqArray,
-//     "endConection" : endConection,
-//   }
-//   console.log(retObj.seqArray);
-//   return retObj;
-// }
-var averageTimeDifference = function(client){
+var differenceThreshold = function(client){
   let avg = 0;
   let min = Number.MAX_VALUE;
-  let max = Number.MIN_VALUE
+  let max = Number.MIN_VALUE;
+  var timePeriods = [];
   for(let i = 1; i < client.length; i++){
     let date = new Date(client[i-1].datetime)
     let date1 = new Date(client[i].datetime)
@@ -275,7 +206,20 @@ var averageTimeDifference = function(client){
   }
   avg /= (client.length-1);
   let days =  (avg / (1000*60*60*24));
-  console.log(max,min,avg);
+  let diffThreshold = (min+max)/2;
+  var timeP = []
+  timeP.push(client[0])
+  for(let i = 1; i < client.length; i++){
+    let date = new Date(client[i-1].datetime)
+    let date1 = new Date(client[i].datetime)
+    let diff = Math.abs(date1-date);
+    if(diff > diffThreshold){
+      timePeriods.push(timeP);
+      timeP = []
+    }
+    timeP.push(client[i]);
+  }
+  return timePeriods;
 }
 
 //Sequence Preserving Comparison
