@@ -69,15 +69,19 @@
     if(dataObject.identify === "tp"){
       var timePeriods = dataObject.data;
       var nodes = []
+      var incomingXorNodes = {}
       for(let i = 0; i < timePeriods.length; i++){
         var start = "start-"+i;
         g.setNode("start-"+i, {shape: "circle"});
         g.setNode("end-"+i, {shape: "circle", style: "stroke-width: 4; stroke: black"});
-        obj = seqPreservingComparison(timePeriods[i], timePeriods[i].length, nodes, start)
+        obj = seqPreservingComparison(timePeriods[i], timePeriods[i].length, nodes, start, incomingXorNodes)
+        incomingXorNodes = obj.incomingXorNodes;
         endConnections.push(obj.endConection);
+        console.log(incomingXorNodes);
         nodes = obj.nodes;
       }
       // g.setNode("end", {shape: "circle", style: "stroke-width: 4; stroke: black"})
+      console.log(nodes);
     }
     else{
       var nodes = []
@@ -264,7 +268,7 @@
   }
 
   //Sequence Preserving Comparison
-  var seqPreservingComparison = function(client, length, nodes, start){
+  var seqPreservingComparison = function(client, length, nodes, start, incomingXorNodes){
     var prev = start;
     var prevId = start;
     var endConection = {};
@@ -299,9 +303,9 @@
         endConection.e1 = prev;
       }
     }
-    console.log(nodes);
+    // console.log(nodes);
     nodes = outgoingXOR(nodes);
-    nodes = incomingXOR(nodes, start);
+    nodes = incomingXOR(nodes, start, incomingXorNodes);
     nodes.endConection = endConection;
     return nodes;
   }
@@ -331,7 +335,7 @@
     }
     return nodes;
   }
-  var incomingXOR = function(nodes, start){
+  var incomingXOR = function(nodes, start, incomingXorNodes){
     var incomingXorKeys = []
     var keyCounter = 0;
     var keyArray = []
@@ -354,19 +358,20 @@
       }
       keyCounter = 0;
     }
-    let incomingXorNodes = {}
     for(let i = 0; i < incomingXorKeys.length; i++){
       for(var key in nodes){
         if(key == incomingXorKeys[i].key){
           for(var status in nodes[key]){
             for(let j = 0; j < nodes[key][status].statusArray.length; j++){
-              let spaces = nodes[key][status].statusArray[j].start.split(' ');
-              let start = nodes[key][status].statusArray[j].start;
-              nodes[key][status].statusArray[j].start = "inXOR-" + key
-              if(incomingXorNodes[key] === undefined){
-                incomingXorNodes[key] = [];
+              if(nodes[key][status].statusArray[j].start !== "inXOR-" + key){
+                var spaces = nodes[key][status].statusArray[j].start.split(' ');
+                var start = nodes[key][status].statusArray[j].start;
+                nodes[key][status].statusArray[j].start = "inXOR-" + key
+                if(incomingXorNodes[key] === undefined){
+                  incomingXorNodes[key] = [];
+                }
+                incomingXorNodes[key].push(spaces);
               }
-              incomingXorNodes[key].push(spaces);
             }
           }
         }
@@ -394,7 +399,7 @@
       "identify" : "tp",
       "data" : result
     }
-    console.log(result);
+    // console.log(result);
     drawGraph(obj);
   }
 </script>
