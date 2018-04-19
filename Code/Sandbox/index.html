@@ -65,11 +65,10 @@
     // below.
     var obj;
     var endConnections = []
-
+    var nodes = []
+    var incomingXorNodes = {}
     if(dataObject.identify === "tp"){
       var timePeriods = dataObject.data;
-      var nodes = []
-      var incomingXorNodes = {}
       for(let i = 0; i < timePeriods.length; i++){
         var start = "start-"+i;
         g.setNode("start-"+i, {shape: "circle"});
@@ -77,21 +76,23 @@
         obj = seqPreservingComparison(timePeriods[i], timePeriods[i].length, nodes, start, incomingXorNodes)
         incomingXorNodes = obj.incomingXorNodes;
         endConnections.push(obj.endConection);
-        console.log(incomingXorNodes);
         nodes = obj.nodes;
       }
       // g.setNode("end", {shape: "circle", style: "stroke-width: 4; stroke: black"})
       console.log(nodes);
     }
     else{
-      var nodes = []
-      g.setNode("start", { shape: "circle" });
-      g.setNode("end", {shape: "circle", style: "stroke-width: 4; stroke: black"})
+      g.setNode("start-0", { shape: "circle" });
+      g.setNode("end-0", {shape: "circle", style: "stroke-width: 4; stroke: black"})
       var length = clients[dataObject].length;
       var client = clients[dataObject];
-      var start = "start"
-      console.log(client);
-      obj = seqPreservingComparison(client, 60, nodes, start);
+      var start = "start-0"
+      obj = seqPreservingComparison(client, length, nodes, start, incomingXorNodes);
+      incomingXorNodes = obj.incomingXorNodes;
+      console.log(obj.endConection);
+      endConnections.push(obj.endConection);
+      nodes = obj.nodes;
+      // endConnections.push(obj.endConection);
     }
     var incomingXorNodes = obj.incomingXorNodes;
     var nodes = obj.nodes;
