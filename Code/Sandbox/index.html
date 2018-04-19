@@ -13,328 +13,389 @@
   <script src="data.js"></script>
   <!-- <script type="text/javascript" src="setup.js"></script> -->
   <link rel="stylesheet" href="styles.css">
-</head>
 
-<body>
-  <div>
-    <div class="dropdown" style="float: left">
-      <button class="dropbtn" onmouseover="displayClients()">Dropdown</button>
+  <body>
+    <div style="display: flex">
+      <div class="dropdown" style="float: left">
+        <button class="dropbtn" onmouseover="displayClients()">Dropdown</button>
+      </div>
+      <select id="multiSelect" multiple="multiple">
+      </select>
+      <button id="multiSelectForm" type="submit"/> Draw </button>
     </div>
     <svg> </g></svg>
-  </div>
-</body>
-<script>
-// Input related code goes here
+  </body>
+  <script>
+  // Input related code goes here
 
-// Create the dropdown-list of Clients.
-var displayClients = function(){
-  var div = document.getElementsByClassName("dropdown");
-  var str = '<div class="dropdown-content"> '
-  for(var client in clients){
-    str+=('<a onclick="drawGraph(\''+client +'\')"> '+ client + '</a> ')
+  // Create the dropdown-list of Clients.
+  var displayClients = function(){
+    var div = document.getElementsByClassName("dropdown");
+    var str = '<div class="dropdown-content"> '
+    for(var client in clients){
+      str+=('<a onmouseover="displayTimePeriods(\''+ client +'\')" onclick="drawGraph(\''+client +'\')"> '+ client + '</a> ')
+    }
+    str+=('</div>')
+    div[0].innerHTML += str;
   }
-  str+=('</div>')
-  div[0].innerHTML += str;
-}
 
-//Draw the Graph for the selected IP.
-var drawGraph = function(clientIP){
-  var g = new dagreD3.graphlib.Graph()
-  .setGraph({})
-  .setDefaultEdgeLabel(function() { return {}; });
+  var displayTimePeriods = function(clientIP){
+    var client = this.clients[clientIP];
+    var el = document.getElementById("multiSelect");
+    var form = document.getElementById("multiSelectForm");
+    var timePeriods = differenceThreshold(client);
+    var str = "";
+    for(let i = 0; i < timePeriods.length; i++){
+      str += '<option value=\''+i+'\'> Time Period '+ i + '</option>'
+    }
+    form.onclick = function(){
+      getSelectedPeriods(timePeriods);
+    }
+    el.innerHTML = str;
+    // console.log(timePeriods);
+  }
 
-  // Here we"re setting nodeclass, which is used by our custom drawNodes function
-  // below.
-  g.setNode("start", { shape: "circle" });
-  g.setNode("end", {shape: "circle", style: "stroke-width: 4; stroke: black"})
+  //Draw the Graph for the selected IP.
+  var drawGraph = function(dataObject){
+    var g = new dagreD3.graphlib.Graph()
+    .setGraph({})
+    .setDefaultEdgeLabel(function() { return {}; });
 
-  var length = clients[clientIP].length;
-  var client = clients[clientIP];
-  var timeSegments = differenceThreshold(client);
-  console.log(timeSegments);
-  var obj = seqPreservingComparison(client, length);
-  var incomingXorNodes = obj.incomingXorNodes;
-  var nodes = obj.nodes;
-  var endConection = obj.endConection;
+    // Here we"re setting nodeclass, which is used by our custom drawNodes function
+    // below.
+    var obj;
+    var endConnections = []
 
-
-
-  //Set Up Nodes
-  for(var key in nodes){
-    var size = Object.keys(nodes[key]).length;
-    if(size == 1){
-      var status = Object.keys(nodes[key])[0]
-      g.setNode(key+' '+status, {label : key + '\n' + status, class:"type-Request method-"+key+' '+status});
-      if(nodes[key][status].outgoingXOR){
-        g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR"});
-        var str = "inXOR-"+key
-        g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR"});
+    if(dataObject.identify === "tp"){
+      var timePeriods = dataObject.data;
+      var nodes = []
+      for(let i = 0; i < timePeriods.length; i++){
+        var start = "start-"+i;
+        g.setNode("start-"+i, {shape: "circle"});
+        g.setNode("end-"+i, {shape: "circle", style: "stroke-width: 4; stroke: black"});
+        obj = seqPreservingComparison(timePeriods[i], timePeriods[i].length, nodes, start)
+        endConnections.push(obj.endConection);
+        nodes = obj.nodes;
       }
+      // g.setNode("end", {shape: "circle", style: "stroke-width: 4; stroke: black"})
     }
     else{
-      g.setNode(key, {label: key, class: "type-Request method-"+key});
-      g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR"});
-      var str = "inXOR-"+key
-      g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR"});
-      for(var status in nodes[key]){
-        g.setNode(key+' '+status, {label : status, class:"type-Response method-"+key+' '+status});
+      var nodes = []
+      g.setNode("start", { shape: "circle" });
+      g.setNode("end", {shape: "circle", style: "stroke-width: 4; stroke: black"})
+      var length = clients[dataObject].length;
+      var client = clients[dataObject];
+      var start = "start"
+      console.log(client);
+      obj = seqPreservingComparison(client, 60, nodes, start);
+    }
+    var incomingXorNodes = obj.incomingXorNodes;
+    var nodes = obj.nodes;
+    var endConection = obj.endConection;
+
+
+
+    //Set Up Nodes
+    for(var key in nodes){
+      var size = Object.keys(nodes[key]).length;
+      if(size == 1){
+        var status = Object.keys(nodes[key])[0]
+        g.setNode(key+' '+status, {label : nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length, class:"type-Request method-"+key+' '+status + ' ' + "freq-"+nodes[key][status].statusArray.length});
         if(nodes[key][status].outgoingXOR){
           g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR"});
-        }
-      }
-    }
-  }
-
-  //Set Up Edges
-  for(var key in nodes){
-    var str = "inXOR-"+key
-    var size = Object.keys(nodes[key]).length
-    if(size == 1){
-      var status = Object.keys(nodes[key])[0]
-      if(nodes[key][status].outgoingXOR){
-        g.setEdge(key+' '+status,"XOR-"+key+' '+status)
-        g.setEdge("inXOR-"+key, key+' '+status);
-        for(let i = 0; i < incomingXorNodes[key].length; i++){
-          var len = incomingXorNodes[key][i].length;
-          // console.log(incomindXorNodes[])
-          if(len == 1){
-            g.setEdge(incomingXorNodes[key][i][0], str)
-          }
-          else{
-            g.setEdge(incomingXorNodes[key][i][0]+' '+incomingXorNodes[key][i][1], str)
-          }
+          var str = "inXOR-"+key
+          g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR"});
         }
       }
       else{
-        g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status);
+        var st = Object.keys(nodes[key])[0]
+        g.setNode(key, {label: nodes[key][st].statusArray[0].key, class: "type-Request method-"+key});
+        g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR"});
+        var str = "inXOR-"+key
+        g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR"});
+        for(var status in nodes[key]){
+          g.setNode(key+' '+status, {label : status + '\n' + nodes[key][status].statusArray.length, class:"type-Response method-"+key+' '+status});
+          if(nodes[key][status].outgoingXOR){
+            g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR"});
+          }
+        }
       }
     }
-    else{
-      var str1 = "middleXOR-"+key;
-      g.setEdge(str,key);
-      g.setEdge(key,str1);
-      for(var status in nodes[key]){
-        g.setEdge(str1,key+' '+status);
+
+    //Set Up Edges
+    for(var key in nodes){
+      var str = "inXOR-"+key
+      var size = Object.keys(nodes[key]).length
+      if(size == 1){
+        var status = Object.keys(nodes[key])[0]
         if(nodes[key][status].outgoingXOR){
-          g.setEdge(key+' '+status, "XOR-"+key+' '+status);
-        }
-        for(let i = 0; i < incomingXorNodes[key].length; i++){
-          var len = incomingXorNodes[key][i].length;
-          if(len == 1){
-            g.setEdge(incomingXorNodes[key][i][0], str)
+          g.setEdge(key+' '+status,"XOR-"+key+' '+status)
+          g.setEdge("inXOR-"+key, key+' '+status);
+          for(let i = 0; i < incomingXorNodes[key].length; i++){
+            var len = incomingXorNodes[key][i].length;
+            if(len == 1){
+              g.setEdge(incomingXorNodes[key][i][0], str)
+            }
+            else{
+              g.setEdge(incomingXorNodes[key][i][0]+' '+incomingXorNodes[key][i][1], str)
+            }
           }
-          else{
-            g.setEdge(incomingXorNodes[key][i][0]+' '+incomingXorNodes[key][i][1], str)
+        }
+        else{
+          g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status);
+        }
+      }
+      else{
+        var str1 = "middleXOR-"+key;
+        g.setEdge(str,key);
+        g.setEdge(key,str1);
+        for(var status in nodes[key]){
+          g.setEdge(str1,key+' '+status);
+          if(nodes[key][status].outgoingXOR){
+            g.setEdge(key+' '+status, "XOR-"+key+' '+status);
           }
-        }
-      }
-    }
-  }
-
-  //Set Up End Node
-  var spaces =  endConection.e1.split(' ');
-  var k = spaces[0]
-  var s = spaces[1]
-  if(nodes[k][s].outgoingXOR){
-    g.setEdge("XOR-"+k+' '+s, "end")
-  }
-  else{
-    g.setEdge(k+' '+s, "end")
-  }
-
-  g.nodes().forEach(function(v) {
-    var node = g.node(v);
-    // Round the corners of the nodes
-    node.rx = node.ry = 5;
-  });
-
-  // Set up an SVG group so that we can translate the final graph.
-  var svg = d3.select("svg");
-  svg.selectAll("*").remove();
-  var inner = svg.append("g");
-
-  // Set up zoom support
-  var zoom = d3.zoom().on("zoom", function() {
-    inner.attr("transform", d3.event.transform);
-  });
-  svg.call(zoom);
-
-  // Create the renderer
-  var render = new dagreD3.render();
-
-  // Run the renderer. This is what draws the final graph.
-  render(inner, g);
-
-  // Center the graph
-  var initialScale = 0.2;
-  svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
-
-  svg.attr('height', g.graph().height * initialScale + 40);
-}
-
-//Simple Comparison Algorithm
-var simpleComparison = function(clients, clientIP){
-  var size = clients[clientIP].length
-  var responses = [];
-  var marked = new Array(size).fill(false);
-  for(let i = 0; i < size; i++){
-    responses[i] = [];
-    if(!marked[i]){
-      responses[i].push({id : i, client : clients[clientIP][i]})
-      marked[i] = true;
-      for(let j = i+1; j < size; j++){
-        if((clients[clientIP][j].status != responses[i][0].client.status) && (clients[clientIP][j].method == responses[i][0].client.method) &&
-        clients[clientIP][j].location == responses[i][0].client.location){
-          marked[j] = true;
-          responses[i].push({id : j, client : clients[clientIP][j] })
-        }
-      }
-    }
-  }
-  return responses;
-}
-var differenceThreshold = function(client){
-  let avg = 0;
-  let min = Number.MAX_VALUE;
-  let max = Number.MIN_VALUE;
-  var timePeriods = [];
-  for(let i = 1; i < client.length; i++){
-    let date = new Date(client[i-1].datetime)
-    let date1 = new Date(client[i].datetime)
-    let diff = Math.abs(date1-date);
-    avg+=diff;
-    if(max < diff) max = diff
-    if(min > diff) min = diff;
-  }
-  avg /= (client.length-1);
-  let days =  (avg / (1000*60*60*24));
-  let diffThreshold = (min+max)/2;
-  var timeP = []
-  timeP.push(client[0])
-  for(let i = 1; i < client.length; i++){
-    let date = new Date(client[i-1].datetime)
-    let date1 = new Date(client[i].datetime)
-    let diff = Math.abs(date1-date);
-    if(diff > diffThreshold){
-      timePeriods.push(timeP);
-      timeP = []
-    }
-    timeP.push(client[i]);
-  }
-  return timePeriods;
-}
-
-//Sequence Preserving Comparison
-var seqPreservingComparison = function(client, length){
-  var prev = "start";
-  var prevId = "start";
-  var endConection = {};
-  var edges = []
-  var nodes = []
-  for(let i = 0; i < length; i++){
-    var str = client[i].method + client[i].location
-    var status = client[i].status;
-    if(nodes[str] === undefined){
-      nodes[str] = {}
-    }
-    var node = {
-      "id" : i,
-      "startId" : prevId,
-      "endId" : i,
-      "dataNode" : client[i],
-      "start" : prev,
-      "end" : str+' '+status,
-    }
-    if(nodes[str][status] === undefined){
-      nodes[str][status] = {
-        statusArray : [],
-        outgoingXOR : false
-      }
-    }
-    prev = str + ' ' + status;
-    prevId = i;
-    nodes[str][status].statusArray.push(node)
-    if(i == (length-1)){
-      endConection.e1 = prev;
-    }
-  }
-  nodes = outgoingXOR(nodes);
-  nodes = incomingXOR(nodes);
-  nodes.endConection = endConection;
-  return nodes;
-}
-var outgoingXOR = function(nodes){
-  var counterArray = []
-  var xorTitle;
-  for(var key in nodes){
-    for(var status in nodes[key]){
-      if(nodes[key][status].statusArray.length > 1){
-        xorTitle = key + ' ' + status;
-        nodes[key][status].outgoingXOR = true;
-        counterArray.push(xorTitle);
-      }
-    }
-  }
-  for(var key in nodes){
-    for(var status in nodes[key]){
-      for(let i = 0; i < nodes[key][status].statusArray.length; i++){
-        for(let j = 0; j < counterArray.length; j++){
-          if(counterArray[j] == nodes[key][status].statusArray[i].start){
-            // console.log(counterArray[j]);
-            nodes[key][status].statusArray[i].start = "XOR-" + counterArray[j];
+          for(let i = 0; i < incomingXorNodes[key].length; i++){
+            var len = incomingXorNodes[key][i].length;
+            if(len == 1){
+              g.setEdge(incomingXorNodes[key][i][0], str)
+            }
+            else{
+              g.setEdge(incomingXorNodes[key][i][0]+' '+incomingXorNodes[key][i][1], str)
+            }
           }
         }
       }
     }
+
+    //Set Up End Node
+    for(let i = 0; i < endConnections.length; i++){
+      var endConection = endConnections[i];
+      var spaces =  endConection.e1.split(' ');
+      var k = spaces[0]
+      var s = spaces[1]
+      if(nodes[k][s].outgoingXOR){
+        g.setEdge("XOR-"+k+' '+s, "end-"+i)
+      }
+      else{
+        g.setEdge(k+' '+s, "end-"+i);
+      }
+    }
+    // console.log(g);
+    g.nodes().forEach(function(v) {
+      var node = g.node(v);
+      // Round the corners of the nodes
+      node.rx = node.ry = 5;
+    });
+
+    // Set up an SVG group so that we can translate the final graph.
+    var svg = d3.select("svg");
+    svg.selectAll("*").remove();
+    var inner = svg.append("g");
+
+    // Set up zoom support
+    var zoom = d3.zoom().on("zoom", function() {
+      inner.attr("transform", d3.event.transform);
+    });
+    svg.call(zoom);
+
+    // Create the renderer
+    var render = new dagreD3.render();
+
+    // Run the renderer. This is what draws the final graph.
+    render(inner, g);
+
+    // Center the graph
+    var initialScale = 0.2;
+    svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
+
+    svg.attr('height', g.graph().height * initialScale + 40);
   }
-  return nodes;
-}
-var incomingXOR = function(nodes){
-  var incomingXorKeys = []
-  var keyCounter = 0;
-  var keyArray = []
-  for(var key in nodes){
-    keyArray.push(key);
+
+  //Simple Comparison Algorithm
+  var simpleComparison = function(clients, clientIP){
+    var size = clients[clientIP].length
+    var responses = [];
+    var marked = new Array(size).fill(false);
+    for(let i = 0; i < size; i++){
+      responses[i] = [];
+      if(!marked[i]){
+        responses[i].push({id : i, client : clients[clientIP][i]})
+        marked[i] = true;
+        for(let j = i+1; j < size; j++){
+          if((clients[clientIP][j].status != responses[i][0].client.status) && (clients[clientIP][j].method == responses[i][0].client.method) &&
+          clients[clientIP][j].location == responses[i][0].client.location){
+            marked[j] = true;
+            responses[i].push({id : j, client : clients[clientIP][j] })
+          }
+        }
+      }
+    }
+    return responses;
   }
-  for(let i = 0; i < keyArray.length; i++){
+  var differenceThreshold = function(client){
+    let avg = 0;
+    let min = Number.MAX_VALUE;
+    let max = Number.MIN_VALUE;
+    var timePeriods = [];
+    for(let i = 1; i < client.length; i++){
+      let date = new Date(client[i-1].datetime)
+      let date1 = new Date(client[i].datetime)
+      let diff = Math.abs(date1-date);
+      avg+=diff;
+      if(max < diff) max = diff
+      if(min > diff) min = diff;
+    }
+    avg /= (client.length-1);
+    let days =  (avg / (1000*60*60*24));
+    let diffThreshold = (min+max)/2;
+    var timeP = []
+    timeP.push(client[0])
+    for(let i = 1; i < client.length; i++){
+      let date = new Date(client[i-1].datetime)
+      let date1 = new Date(client[i].datetime)
+      let diff = Math.abs(date1-date);
+      if(diff > diffThreshold){
+        timePeriods.push(timeP);
+        timeP = []
+      }
+      timeP.push(client[i]);
+    }
+    return timePeriods;
+  }
+
+  //Sequence Preserving Comparison
+  var seqPreservingComparison = function(client, length, nodes, start){
+    var prev = start;
+    var prevId = start;
+    var endConection = {};
+    var edges = []
+    // var nodes = []
+    for(let i = 0; i < length; i++){
+      var str = client[i].method + client[i].location
+      var key = client[i].method + ' ' + client[i].location;
+      var status = client[i].status;
+      if(nodes[str] === undefined){
+        nodes[str] = {}
+      }
+      var node = {
+        "id" : i,
+        "startId" : prevId,
+        "endId" : i,
+        "dataNode" : client[i],
+        "start" : prev,
+        "end" : str+' '+status,
+        "key" : key,
+      }
+      if(nodes[str][status] === undefined){
+        nodes[str][status] = {
+          statusArray : [],
+          outgoingXOR : false
+        }
+      }
+      prev = str + ' ' + status;
+      prevId = i;
+      nodes[str][status].statusArray.push(node)
+      if(i == (length-1)){
+        endConection.e1 = prev;
+      }
+    }
+    console.log(nodes);
+    nodes = outgoingXOR(nodes);
+    nodes = incomingXOR(nodes, start);
+    nodes.endConection = endConection;
+    return nodes;
+  }
+  var outgoingXOR = function(nodes){
+    var counterArray = []
+    var xorTitle;
     for(var key in nodes){
       for(var status in nodes[key]){
-        for(let j = 0; j < nodes[key][status].statusArray.length; j++){
-          let spaces = nodes[key][status].statusArray[j].end.split(' ');
-          if((spaces[0] == "start" && i == 0) || spaces[0] == "XOR-"+keyArray[i] || spaces[0] == keyArray[i]){
-            keyCounter++;
+        if(nodes[key][status].statusArray.length > 1){
+          xorTitle = key + ' ' + status;
+          nodes[key][status].outgoingXOR = true;
+          counterArray.push(xorTitle);
+        }
+      }
+    }
+    for(var key in nodes){
+      for(var status in nodes[key]){
+        for(let i = 0; i < nodes[key][status].statusArray.length; i++){
+          for(let j = 0; j < counterArray.length; j++){
+            if(counterArray[j] == nodes[key][status].statusArray[i].start){
+              // console.log(counterArray[j]);
+              nodes[key][status].statusArray[i].start = "XOR-" + counterArray[j];
+            }
           }
         }
       }
     }
-    if(keyCounter > 1){
-      incomingXorKeys.push({ "key" : keyArray[i], "id" : i})
-    }
-    keyCounter = 0;
+    return nodes;
   }
-  let incomingXorNodes = {}
-  for(let i = 0; i < incomingXorKeys.length; i++){
+  var incomingXOR = function(nodes, start){
+    var incomingXorKeys = []
+    var keyCounter = 0;
+    var keyArray = []
     for(var key in nodes){
-      if(key == incomingXorKeys[i].key){
+      keyArray.push(key);
+    }
+    for(let i = 0; i < keyArray.length; i++){
+      for(var key in nodes){
         for(var status in nodes[key]){
           for(let j = 0; j < nodes[key][status].statusArray.length; j++){
-            let spaces = nodes[key][status].statusArray[j].start.split(' ');
-            let start = nodes[key][status].statusArray[j].start;
-            nodes[key][status].statusArray[j].start = "inXOR-" + key
-            if(incomingXorNodes[key] === undefined){
-              incomingXorNodes[key] = [];
+            let spaces = nodes[key][status].statusArray[j].end.split(' ');
+            if((spaces[0] == start && i == 0) || spaces[0] == "XOR-"+keyArray[i] || spaces[0] == keyArray[i]){
+              keyCounter++;
             }
-            incomingXorNodes[key].push(spaces);
+          }
+        }
+      }
+      if(keyCounter > 1){
+        incomingXorKeys.push({ "key" : keyArray[i], "id" : i})
+      }
+      keyCounter = 0;
+    }
+    let incomingXorNodes = {}
+    for(let i = 0; i < incomingXorKeys.length; i++){
+      for(var key in nodes){
+        if(key == incomingXorKeys[i].key){
+          for(var status in nodes[key]){
+            for(let j = 0; j < nodes[key][status].statusArray.length; j++){
+              let spaces = nodes[key][status].statusArray[j].start.split(' ');
+              let start = nodes[key][status].statusArray[j].start;
+              nodes[key][status].statusArray[j].start = "inXOR-" + key
+              if(incomingXorNodes[key] === undefined){
+                incomingXorNodes[key] = [];
+              }
+              incomingXorNodes[key].push(spaces);
+            }
           }
         }
       }
     }
+    var obj = {
+      "nodes" : nodes,
+      incomingXorNodes : incomingXorNodes,
+    }
+    return obj;
   }
-  var obj = {
-    "nodes" : nodes,
-    incomingXorNodes : incomingXorNodes,
+  var getSelectedPeriods = function(timePeriods){
+    var elem = document.getElementById("multiSelect");
+    var result = [];
+    var options = elem && elem.options;
+    var opt;
+    for (var i=0, iLen=options.length; i<iLen; i++) {
+      opt = options[i];
+
+      if (opt.selected) {
+        result.push(timePeriods[parseInt(opt.value)] || timePeriods[parseInt(opt.text)]);
+      }
+    }
+    var obj = {
+      "identify" : "tp",
+      "data" : result
+    }
+    console.log(result);
+    drawGraph(obj);
   }
-  return obj;
-}
 </script>
 </html>
