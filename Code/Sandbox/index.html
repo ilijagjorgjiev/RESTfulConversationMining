@@ -53,7 +53,6 @@
       getSelectedPeriods(timePeriods);
     }
     el.innerHTML = str;
-    // console.log(timePeriods);
   }
 
   //Draw the Graph for the selected IP.
@@ -79,8 +78,6 @@
         endConnections.push(obj.endConection);
         nodes = obj.nodes;
       }
-      // g.setNode("end", {shape: "circle", style: "stroke-width: 4; stroke: black"})
-      console.log(nodes);
     }
     else{
       g.setNode("start-0", { shape: "circle" });
@@ -92,7 +89,6 @@
       incomingXorNodes = obj.incomingXorNodes;
       endConnections.push(obj.endConection);
       nodes = obj.nodes;
-      // endConnections.push(obj.endConection);
     }
     var incomingXorNodes = obj.incomingXorNodes;
     var nodes = obj.nodes;
@@ -107,8 +103,6 @@
       var size = Object.keys(nodes[key]).length;
       if(size == 1){
         var status = Object.keys(nodes[key])[0]
-        // var percent = calculatePercentage(0, maxRequests, nodes[key][status].statusArray.length);
-        // var color = getGradientColor(red, yellow, (percent-normalizePercent));
         g.setNode(key+' '+status, { shape: "rect", label : nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length, class:"type-Request method-"+key+' '+status});
         if(nodes[key][status].outgoingXOR){
           g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR"});
@@ -118,16 +112,11 @@
       }
       else{
         var st = Object.keys(nodes[key])[0]
-        // var percent = calculatePercentage(0, maxRequests, totalRequests[key]);
-        // var color = getGradientColor(red, yellow, (percent-normalizePercent));
         g.setNode(key, {shape: "rect", label: nodes[key][st].statusArray[0].key + '\n' + totalRequests[key], class: "type-Request method-"+key});
         g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR"});
         var str = "inXOR-"+key
         g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR"});
         for(var status in nodes[key]){
-          // percent = calculatePercentage(0, maxRequests, nodes[key][status].statusArray.length);
-          // color = getGradientColor(red, yellow, (percent-normalizePercent));
-          // style: "fill: rgb("+color[0]+","+color[1]+","+color[2]+")"
           g.setNode(key+' '+status, {shape: "rect", label : status + '\n' + nodes[key][status].statusArray.length, class:"type-Response method-"+key+' '+status});
           if(nodes[key][status].outgoingXOR){
             g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR"});
@@ -200,10 +189,9 @@
       // Round the corners of the nodes
       node.rx = node.ry = 5;
     });
-    // enableColoring(g, nodes, totalRequestsData);
+    enableColoring(g, nodes, totalRequestsData);
     // disableColoring(g);
     // enableColoring(g, nodes, totalRequestsData);
-
     // Set up an SVG group so that we can translate the final graph.
     var svg = d3.select("svg");
     svg.selectAll("*").remove();
@@ -220,12 +208,10 @@
 
     // Run the renderer. This is what draws the final graph.
     render(inner, g);
-
     // Center the graph
     var initialScale = 0.2;
     svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
 
-    svg.attr('height', g.graph().height * initialScale + 40);
   }
 
   //Simple Comparison Algorithm
@@ -412,7 +398,6 @@
       "identify" : "tp",
       "data" : result
     }
-    // console.log(result);
     drawGraph(obj);
   }
   var totalNumberOfRequests = function(nodes){
@@ -441,31 +426,32 @@
     return rgb;
   }
   var calculatePercentage = function(min, max, val){
-    var num = max-min;
-    return (val/num);
+    if((max-min) == 0) return 1;
+    return (((val - min)) / (max - min))
   }
+  //Enable Node Coloring
   var enableColoring = function(g, nodes, totalRequestsData){
     var totalRequests = totalRequestsData.total;
     var maxRequests = totalRequestsData.maxRequests;
     var red = [255,0,0];
     var yellow = [255,255,0];
-    var normalizePercent = calculatePercentage(1, maxRequests, 1);
     for(var key in g._nodes){
       if(g._nodes[key].shape == "rect"){
         var spaces = key.split(' ');
         if(spaces[1] === undefined){
           var percent = calculatePercentage(1, maxRequests, totalRequests[key]);
-          var color = getGradientColor(red, yellow, (percent-normalizePercent));
+          var color = getGradientColor(red, yellow, (percent));
           g._nodes[key].style = "fill: rgb("+color[0]+","+color[1]+","+color[2]+")"
         }
         else{
           var percent = calculatePercentage(1, maxRequests, nodes[spaces[0]][spaces[1]].statusArray.length);
-          var color = getGradientColor(red, yellow, (percent-normalizePercent));
+          var color = getGradientColor(red, yellow, (percent));
           g._nodes[key].style = "fill: rgb("+color[0]+","+color[1]+","+color[2]+")"
         }
       }
     }
   }
+  //Disable Node Coloring
   var disableColoring = function(g){
     for(var key in g._nodes){
       g._nodes[key].style = "";
