@@ -10,6 +10,7 @@
   <script src="bower_components/graphlib/dist/graphlib.core.js"></script>
   <script src="bower_components/dagre/dist/dagre.core.js"></script>
   <script src="bower_components/dagre-d3/dist/dagre-d3.core.js"></script>
+  <link rel="stylesheet/less" type="text/css" href="bower_components/tyles.less" />
   <script src="data.js"></script>
   <!-- <script type="text/javascript" src="setup.js"></script> -->
   <link rel="stylesheet" href="styles.css">
@@ -89,7 +90,6 @@
       var start = "start-0"
       obj = seqPreservingComparison(client, length, nodes, start, incomingXorNodes);
       incomingXorNodes = obj.incomingXorNodes;
-      console.log(obj.endConection);
       endConnections.push(obj.endConection);
       nodes = obj.nodes;
       // endConnections.push(obj.endConection);
@@ -97,15 +97,19 @@
     var incomingXorNodes = obj.incomingXorNodes;
     var nodes = obj.nodes;
     var endConection = obj.endConection;
-
-
-
-    //Set Up Nodes
+    var totalRequestsData = totalNumberOfRequests(nodes);
+    var totalRequests = totalRequestsData.total;
+    var maxRequests = totalRequestsData.maxRequests;
+    var red = [255,0,0];
+    var yellow = [255,255,0];
+    var normalizePercent = calculatePercentage(0, maxRequests, 1);
     for(var key in nodes){
       var size = Object.keys(nodes[key]).length;
       if(size == 1){
         var status = Object.keys(nodes[key])[0]
-        g.setNode(key+' '+status, {label : nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length, class:"type-Request method-"+key+' '+status + ' ' + "freq-"+nodes[key][status].statusArray.length});
+        // var percent = calculatePercentage(0, maxRequests, nodes[key][status].statusArray.length);
+        // var color = getGradientColor(red, yellow, (percent-normalizePercent));
+        g.setNode(key+' '+status, { shape: "rect", label : nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length, class:"type-Request method-"+key+' '+status});
         if(nodes[key][status].outgoingXOR){
           g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR"});
           var str = "inXOR-"+key
@@ -114,12 +118,17 @@
       }
       else{
         var st = Object.keys(nodes[key])[0]
-        g.setNode(key, {label: nodes[key][st].statusArray[0].key, class: "type-Request method-"+key});
+        // var percent = calculatePercentage(0, maxRequests, totalRequests[key]);
+        // var color = getGradientColor(red, yellow, (percent-normalizePercent));
+        g.setNode(key, {shape: "rect", label: nodes[key][st].statusArray[0].key + '\n' + totalRequests[key], class: "type-Request method-"+key});
         g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR"});
         var str = "inXOR-"+key
         g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR"});
         for(var status in nodes[key]){
-          g.setNode(key+' '+status, {label : status + '\n' + nodes[key][status].statusArray.length, class:"type-Response method-"+key+' '+status});
+          // percent = calculatePercentage(0, maxRequests, nodes[key][status].statusArray.length);
+          // color = getGradientColor(red, yellow, (percent-normalizePercent));
+          // style: "fill: rgb("+color[0]+","+color[1]+","+color[2]+")"
+          g.setNode(key+' '+status, {shape: "rect", label : status + '\n' + nodes[key][status].statusArray.length, class:"type-Response method-"+key+' '+status});
           if(nodes[key][status].outgoingXOR){
             g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR"});
           }
@@ -191,6 +200,9 @@
       // Round the corners of the nodes
       node.rx = node.ry = 5;
     });
+    // enableColoring(g, nodes, totalRequestsData);
+    // disableColoring(g);
+    // enableColoring(g, nodes, totalRequestsData);
 
     // Set up an SVG group so that we can translate the final graph.
     var svg = d3.select("svg");
@@ -273,7 +285,7 @@
     var prev = start;
     var prevId = start;
     var endConection = {};
-    var edges = []
+    var edges = [];
     // var nodes = []
     for(let i = 0; i < length; i++){
       var str = client[i].method + client[i].location
@@ -402,6 +414,62 @@
     }
     // console.log(result);
     drawGraph(obj);
+  }
+  var totalNumberOfRequests = function(nodes){
+    var counter = 0;
+    var totalNumberOfRequests = {}
+    var max = Number.MIN_VALUE;
+    for(var key in nodes){
+      for(var status in nodes[key]){
+        counter += (nodes[key][status].statusArray.length);
+      }
+      totalNumberOfRequests[key] = counter;
+      if(max < counter){
+        max = counter;
+      }
+      counter = 0;
+    }
+    return {"total" : totalNumberOfRequests,
+          "maxRequests" : max};
+  }
+  var getGradientColor = function(color1, color2, weight){
+    var w1 = weight;
+    var w2 = 1 - w1;
+    var rgb = [Math.round(color1[0] * w1 + color2[0] * w2),
+        Math.round(color1[1] * w1 + color2[1] * w2),
+        Math.round(color1[2] * w1 + color2[2] * w2)];
+    return rgb;
+  }
+  var calculatePercentage = function(min, max, val){
+    var num = max-min;
+    return (val/num);
+  }
+  var enableColoring = function(g, nodes, totalRequestsData){
+    var totalRequests = totalRequestsData.total;
+    var maxRequests = totalRequestsData.maxRequests;
+    var red = [255,0,0];
+    var yellow = [255,255,0];
+    var normalizePercent = calculatePercentage(1, maxRequests, 1);
+    for(var key in g._nodes){
+      if(g._nodes[key].shape == "rect"){
+        var spaces = key.split(' ');
+        if(spaces[1] === undefined){
+          var percent = calculatePercentage(1, maxRequests, totalRequests[key]);
+          var color = getGradientColor(red, yellow, (percent-normalizePercent));
+          g._nodes[key].style = "fill: rgb("+color[0]+","+color[1]+","+color[2]+")"
+        }
+        else{
+          var percent = calculatePercentage(1, maxRequests, nodes[spaces[0]][spaces[1]].statusArray.length);
+          var color = getGradientColor(red, yellow, (percent-normalizePercent));
+          g._nodes[key].style = "fill: rgb("+color[0]+","+color[1]+","+color[2]+")"
+        }
+      }
+    }
+  }
+  var disableColoring = function(g){
+    for(var key in g._nodes){
+      g._nodes[key].style = "";
+    }
   }
 </script>
 </html>
