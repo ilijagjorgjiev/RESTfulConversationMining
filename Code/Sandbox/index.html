@@ -132,7 +132,7 @@
       if(size == 1){
         var status = Object.keys(nodes[key])[0]
         if(nodes[key][status].outgoingXOR){
-          g.setEdge(key+' '+status,"XOR-"+key+' '+status)
+          g.setEdge(key+' '+status,"XOR-"+key+' '+status);
           g.setEdge("inXOR-"+key, key+' '+status);
           for(let i = 0; i < incomingXorNodes[key].length; i++){
             var len = incomingXorNodes[key][i].length;
@@ -153,7 +153,7 @@
         g.setEdge(str,key);
         g.setEdge(key,str1);
         for(var status in nodes[key]){
-          g.setEdge(str1,key+' '+status);
+          g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%", labelType: "html"});
           if(nodes[key][status].outgoingXOR){
             g.setEdge(key+' '+status, "XOR-"+key+' '+status);
           }
@@ -212,12 +212,6 @@
     container.appendChild(btn1);
     container.appendChild(btn2);
 
-
-
-    // gradient_style.setAttribute("media","screen");
-    // disableColoring(g);
-    // enableColoring(g, nodes, totalRequestsData);
-    // Set up an SVG group so that we can translate the final graph.
     var svg = d3.select("svg");
     svg.selectAll("*").remove();
     var inner = svg.append("g");
@@ -524,6 +518,9 @@ var disableColoring = function(){
     }
     return style; //the caller can use setAttribute("media") to enable/disable
   }
-
+  var roundUp = function(num, precision){
+  precision = Math.pow(10, precision)
+  return Math.ceil(num * precision) / precision
+}
 </script>
 </html>
