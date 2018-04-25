@@ -129,11 +129,12 @@
     for(var key in nodes){
       var str = "inXOR-"+key
       var size = Object.keys(nodes[key]).length
+      var delayAvg = computeDelayAvg(nodes, key, "total");
       if(size == 1){
         var status = Object.keys(nodes[key])[0]
         if(nodes[key][status].outgoingXOR){
           g.setEdge(key+' '+status,"XOR-"+key+' '+status);
-          g.setEdge("inXOR-"+key, key+' '+status);
+          g.setEdge("inXOR-"+key, key+' '+status, {label: "delayAvg: "+ delayAvg});
           for(let i = 0; i < incomingXorNodes[key].length; i++){
             var len = incomingXorNodes[key][i].length;
             if(len == 1){
@@ -145,15 +146,15 @@
           }
         }
         else{
-          g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status);
+          g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status, {label: "delayAvg: "+ delayAvg});
         }
       }
       else{
         var str1 = "middleXOR-"+key;
-        g.setEdge(str,key);
+        g.setEdge(str,key,{label: "Delay Average:"+delayAvg});
         g.setEdge(key,str1);
         for(var status in nodes[key]){
-          g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%", labelType: "html"});
+          g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%"+'\n'+"Delay Avg:" + (computeDelayAvg(nodes, key, status)), labelType: "html"});
           if(nodes[key][status].outgoingXOR){
             g.setEdge(key+' '+status, "XOR-"+key+' '+status);
           }
@@ -320,12 +321,17 @@ var disableColoring = function(){
         "end" : str+' '+status,
         "key" : key,
       }
+      let delay = computeDelay(nodes, node.start, node.dataNode);
+      node.delay = delay;
       if(nodes[str][status] === undefined){
         nodes[str][status] = {
           statusArray : [],
-          outgoingXOR : false
+          outgoingXOR : false,
+          delayArray : [],
         }
       }
+      //console.log(delay/1000/60/60/24)
+      nodes[str][status].delayArray.push(delay);
       prev = str + ' ' + status;
       prevId = i;
       nodes[str][status].statusArray.push(node)
@@ -333,7 +339,6 @@ var disableColoring = function(){
         endConection.e1 = prev;
       }
     }
-    // console.log(nodes);
     nodes = outgoingXOR(nodes);
     nodes = incomingXOR(nodes, start, incomingXorNodes);
     nodes.endConection = endConection;
@@ -522,5 +527,31 @@ var disableColoring = function(){
   precision = Math.pow(10, precision)
   return Math.ceil(num * precision) / precision
 }
+  var computeDelay = function(nodes, startNode, endNode){
+      if(startNode.includes("start")) return 0;
+      startNode = startNode.split(' ');
+      let length = nodes[startNode[0]][startNode[1]].statusArray.length;
+      let startDate = new Date(nodes[startNode[0]][startNode[1]].statusArray[length-1].dataNode.datetime)
+      let endDate = new Date(endNode.datetime);
+      return (endDate-startDate);
+  }
+  var computeDelayAvg = function(nodes, key, st){
+    var avg = 0;
+    var counter = 0;
+    if(st == "total"){
+      let counter = 0;
+      for(var status in nodes[key]){
+        for(let i = 0; i < nodes[key][status].delayArray.length; i++){
+          avg += nodes[key][status].delayArray[i];
+          counter++;
+        }
+      }
+      return (avg/counter);
+    }
+    for(let i = 0; i < nodes[key][st].delayArray.length; i++){
+      avg += nodes[key][st].delayArray[i];
+    }
+    return (avg/nodes[key][st].delayArray.length);
+  }
 </script>
 </html>
