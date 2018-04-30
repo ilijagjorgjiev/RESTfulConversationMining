@@ -1,6 +1,6 @@
-g.type-TK > rect {
+/* g.type-TK > rect {
   fill: #00ffd0;
-}
+} */
 
 text {
   font-weight: 300;
@@ -32,6 +32,12 @@ text {
 } */
 .edgePath path {
   stroke: #333;
+  fill: none;
+  stroke-width: 1.5px;
+}
+.arrowhead{
+  stroke: black;
+  fill: black;
   stroke-width: 1.5px;
 }
 
