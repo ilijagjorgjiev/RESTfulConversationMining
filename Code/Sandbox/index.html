@@ -76,7 +76,7 @@
         var start = "start-"+i;
         g.setNode("start-"+i, {shape: "circle", class : "start"});
         g.setNode("end-"+i, {shape: "circle", style: "stroke-width: 4; stroke: black"});
-        obj = seqPreservingComparison(timePeriods[i], timePeriods[i].length, nodes, start, incomingXorNodes)
+        obj = seqPreservingComparison(timePeriods[i], timePeriods[i].length, nodes, start, incomingXorNodes, "end-"+i)
         incomingXorNodes = obj.incomingXorNodes;
         endConnections.push(obj.endConection);
         nodes = obj.nodes;
@@ -88,14 +88,13 @@
       var length = clients[dataObject].length;
       var client = clients[dataObject];
       var start = "start-0"
-      obj = seqPreservingComparison(client, length, nodes, start, incomingXorNodes);
+      obj = seqPreservingComparison(client, length, nodes, start, incomingXorNodes, "end-0");
       incomingXorNodes = obj.incomingXorNodes;
+      console.log(incomingXorNodes);
       endConnections.push(obj.endConection);
       nodes = obj.nodes;
     }
-    var incomingXorNodes = obj.incomingXorNodes;
-    console.log(incomingXorNodes);
-    var nodes = obj.nodes;
+    console.log(nodes);
     var endConection = obj.endConection;
     var totalRequestsData = totalNumberOfRequests(nodes);
     var totalRequests = totalRequestsData.total;
@@ -107,6 +106,10 @@
         g.setNode(key+' '+status, { shape: "rect", label : nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length, class:"type-Request method-"+key+' '+status});
         if(nodes[key][status].outgoingXOR){
           g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR"});
+          var str = "inXOR-"+key
+          g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR"});
+        }
+        else if((nodes[key][status].statusArray.length) > 1){
           var str = "inXOR-"+key
           g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR"});
         }
@@ -134,8 +137,14 @@
       if(size == 1){
         var status = Object.keys(nodes[key])[0]
         if(nodes[key][status].outgoingXOR){
+          // console.log(key,status);
           g.setEdge(key+' '+status,"XOR-"+key+' '+status, {class: "edge-thickness-" + nodes[key][status].statusArray.length});
           // g.setEdge("inXOR-"+key, key+' '+status, {label: "delayAvg: "+ delayAvg});
+        }
+        else{
+          g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,{class: "edge-thickness-" + nodes[key][status].statusArray.length})
+        }
+        if(nodes[key][status].statusArray.length > 1){
           g.setEdge("inXOR-"+key, key+' '+status, {class: "edge-thickness-" + nodes[key][status].statusArray.length})
           for(var space in incomingXorNodes[key]){
             var len = incomingXorNodes[key][space][0].length;
@@ -146,10 +155,6 @@
               g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], str, {class: "edge-thickness-" + incomingXorNodes[key][space].length})
             }
           }
-        }
-        else{
-          // g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status, {label: "delayAvg: "+ delayAvg});
-          g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,{class: "edge-thickness-" + nodes[key][status].statusArray.length})
         }
       }
       else{
@@ -200,7 +205,7 @@
     var red = [255,0,0];
     var yellow = [255,255,0];
     var gradient_style = setupGradientStyleSheet("totalRequest",maxRequests,red,yellow);
-    // setEdgeThicknessStyleSheet("edge-thickness",maxRequests);
+    setEdgeThicknessStyleSheet("edge-thickness", maxRequests);
     var container = document.getElementById("Btns");
     while (container.firstChild){
       container.removeChild(container.firstChild);
@@ -240,33 +245,32 @@
     svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id); console.log("Clicked " + id,_node); });
   }
 
-//Edge Thickness
-// var setEdgeThicknessStyleSheet = function(class_prefix, steps){
-//   // Create the <style> tag
-//   var style = document.createElement('style')
-//
-//   // Add a media (and/or media query) here if you'd like!
-//   // style.setAttribute("media", "print")
-//   // style.setAttribute("media", "only screen and (max-width : 1024px)")
-//
-//   // WebKit hack :(
-//   style.appendChild(document.createTextNode(""));
-//
-//   // Add the <style> element to the page
-//   document.head.appendChild(style);
-//   var w = 1.5;
-//   var sheet = style.sheet;
-//   var MAX = steps;
-//   for (let N = 1; N<=MAX; N++){
-//     w+=0.5;
-//     var st = "stroke: #333; fill: black; stroke-width: "+w +"px;";
-//     var clazz = "."+class_prefix+"-"+N;
-//
-//     sheet.insertRule(clazz+" { "+st+" }");
-//
-//   }
-//   return style; //the caller can use setAttribute("media") to enable/disable
-// }
+// Edge Thickness
+var setEdgeThicknessStyleSheet = function(class_prefix, steps){
+  // Create the <style> tag
+  var style = document.createElement('style')
+
+  // Add a media (and/or media query) here if you'd like!
+  // style.setAttribute("media", "print")
+  // style.setAttribute("media", "only screen and (max-width : 1024px)")
+
+  // WebKit hack :(
+  style.appendChild(document.createTextNode(""));
+
+  // Add the <style> element to the page
+  document.head.appendChild(style);
+  var w = 1.125;
+  var sheet = style.sheet;
+  var MAX = steps;
+  for (let N = 1; N<=MAX; N++){
+    w*=1.5;
+    var st = "stroke: #333; fill: black; stroke-width: "+ w +"px;";
+    var clazz = "."+class_prefix+"-"+N;
+    sheet.insertRule(clazz+" { "+st+" }");
+
+  }
+  return style; //the caller can use setAttribute("media") to enable/disable
+}
 //Enable Coloring, Set Media to Screen
 var enableColoring = function(){
   var x = document.getElementsByTagName("STYLE")[0];
@@ -333,11 +337,15 @@ var disableColoring = function(){
   }
 
   //Sequence Preserving Comparison
-  var seqPreservingComparison = function(client, length, nodes, start, incomingXorNodes){
+  var seqPreservingComparison = function(client, length, nodes, start, incomingXorNodes, endName){
     var prev = start;
     var prevId = start;
     var endConection = {};
     var edges = [];
+    var finalEnd;
+    var k = null;
+    var s = null;
+    var l;
     for(let i = 0; i < length; i++){
       var str = client[i].method + client[i].location
       var key = client[i].method + ' ' + client[i].location;
@@ -353,9 +361,19 @@ var disableColoring = function(){
         "start" : prev,
         "end" : str+' '+status,
         "key" : key,
+        "finalEnd" : start,
       }
       let delay = computeDelay(nodes, node.start, node.dataNode);
-      node.delay = delay;
+      if(k == null || s == null){
+        k = str;
+        s = status;
+      }
+      else{
+        l = nodes[k][s].statusArray.length;
+        nodes[k][s].statusArray[l-1].finalEnd = key;
+        k = str;
+        s = status;
+      }
       if(nodes[str][status] === undefined){
         nodes[str][status] = {
           statusArray : [],
@@ -369,6 +387,8 @@ var disableColoring = function(){
       nodes[str][status].statusArray.push(node)
       if(i == (length-1)){
         endConection.e1 = prev;
+        l = nodes[str][status].statusArray.length;
+        nodes[k][s].statusArray[l-1].finalEnd = endName;
       }
     }
     nodes = outgoingXOR(nodes);
@@ -382,9 +402,19 @@ var disableColoring = function(){
     for(var key in nodes){
       for(var status in nodes[key]){
         if(nodes[key][status].statusArray.length > 1){
-          xorTitle = key + ' ' + status;
-          nodes[key][status].outgoingXOR = true;
-          counterArray.push(xorTitle);
+          let check = false;
+          for(let i = 0; i < nodes[key][status].statusArray.length; i++){
+            for(let j = i + 1; j < nodes[key][status].statusArray.length; j++){
+              if(nodes[key][status].statusArray[i].finalEnd != nodes[key][status].statusArray[j].finalEnd){
+                check = true;
+              }
+            }
+          }
+          if(check){
+            xorTitle = key + ' ' + status;
+            nodes[key][status].outgoingXOR = true;
+            counterArray.push(xorTitle);
+          }
         }
       }
     }
