@@ -12,6 +12,7 @@
   <script src="bower_components/dagre-d3/dist/dagre-d3.core.js"></script>
   <link rel="stylesheet/less" type="text/css" href="bower_components/tyles.less" />
   <script src="data.js"></script>
+  <script src="sqrfun.js"></script>
   <!-- <script type="text/javascript" src="setup.js"></script> -->
   <link rel="stylesheet" href="styles.css">
 
@@ -24,7 +25,11 @@
       </select>
       <button id="multiSelectForm" type="submit"/> Draw </button>
       <div id="Btns">
-
+      </div>
+      <div id="VisualizationConfig" style="display: none">
+        Node Frequency Coloring: <input type="checkbox" id="nfc" onclick="myFunction()"> <br />
+        Edge Frequency Thickness: <input type="checkbox" id="eft" onclick="myFunction1()"> <br />
+        Edge Delay Coloring: <input type="checkbox" id="edc" onclick="myFunction2()">
       </div>
     </div>
     <svg> </g></svg>
@@ -57,13 +62,22 @@
     }
     el.innerHTML = str;
   }
-
+  var fixVisualizationConfig = function(nfc, eft, edc){
+    nfc.checked = false;
+    eft.checked = false;
+    edc.checked = false;
+    deleteStyles();
+  }
   //Draw the Graph for the selected IP.
   var drawGraph = function(dataObject){
     var g = new dagreD3.graphlib.Graph()
     .setGraph({})
     .setDefaultEdgeLabel(function() { return {}; });
 
+    var nfc = document.getElementById("nfc");
+    var eft = document.getElementById("eft");
+    var edc = document.getElementById("edc");
+    fixVisualizationConfig(nfc, eft, edc);
     // Here we"re setting nodeclass, which is used by our custom drawNodes function
     // below.
     var obj;
@@ -130,6 +144,7 @@
     }
     //Compute Delay Avgs
     obj = computeMinMaxAvgDelayVal(nodes);
+    console.log(obj);
     nodes = obj.nodes;
     var totalAvgKey = obj.totalAvgKey;
     var maxDelay = obj.MAX;
@@ -215,30 +230,8 @@
         });
 
 
-        setNodeClasses(g, nodes, totalRequestsData)
-        var red = [255,0,0];
-        var yellow = [255,255,0];
-        var gradient_style = setupGradientStyleSheet("totalRequest",maxRequests,red,yellow);
-        // setEdgeThicknessStyleSheet("edge-thickness", maxRequests);
-        // setDelayClasses(red, yellow, "try", 0, 128)
-        var container = document.getElementById("Btns");
-        while (container.firstChild){
-          container.removeChild(container.firstChild);
-        }
-        var btn1 = document.createElement("BUTTON")
-        var t1 = document.createTextNode("Enable Node Coloring");
-        btn1.appendChild(t1);
-        btn1.onclick = enableColoring
-        var btn2 = document.createElement("BUTTON")
-        var t2 = document.createTextNode("Disable Node Coloring");
-        btn2.appendChild(t2);
-        btn2.onclick = disableColoring
-        // btn2.onclick = function(gradient_style){
-        //   gradient_style.setAttribute("media","print");
-        // }
-        container.appendChild(btn1);
-        container.appendChild(btn2);
-
+        setNodeClasses(g, nodes, totalRequestsData);
+        setVisualizationConfig(nfc, eft, edc, maxRequests);
 
         var svg = d3.select("svg");
         svg.selectAll("*").remove();
@@ -257,9 +250,45 @@
         // Center the graph
         var initialScale = 0.2;
         svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
-        svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id); console.log("Clicked " + id,_node); });
+        svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id); console.log("Clicked " + id); });
       }
+      var setStyles = function(){
+        for(let i = 0; i < 3; i++){
+          let style = document.createElement('style')
 
+          style.disabled = true;
+          // WebKit hack :(
+          style.appendChild(document.createTextNode(""));
+
+          // Add the <style> element to the page
+          document.head.appendChild(style);
+          var x = document.getElementsByTagName("STYLE")[i];
+          x.disabled = true;
+        }
+      }
+      var setVisualizationConfig = function(nfc, eft, edc, maxRequests){
+        var VisualizationConfig = document.getElementById("VisualizationConfig");
+        var red = [255,0,0];
+        var yellow = [255,255,0];
+        setStyles();
+        setNodeFrequencyColoring(red, yellow, "totalRequest", 1, maxRequests, document.getElementsByTagName("STYLE")[0].sheet);
+        setEdgeFrequencyThickness("edge-thickness", 1, maxRequests, document.getElementsByTagName("STYLE")[1].sheet);
+        setElementOnClick(nfc, 0);
+        setElementOnClick(eft, 1);
+        VisualizationConfig.style = "diplay: visible;"
+      }
+      var setElementOnClick = function(elem, index){
+        elem.onclick = function(){
+          if(elem.checked != true){
+            var x = document.getElementsByTagName("STYLE")[index];
+            x.disabled = true;
+          }
+          else{
+              var x = document.getElementsByTagName("STYLE")[index];
+              x.disabled = false;;
+          }
+        };
+      }
       //Get Min & Max Delay Value of the whole Graph
       var computeMinMaxAvgDelayVal = function(nodes){
         var MAXtotal = Number.MIN_VALUE;
@@ -308,7 +337,7 @@
         return bin;
       }
       //Set Delay Classes
-      var setDelayClasses = function(first_color, second_color, class_prefix, minShading, maxShading){
+      var setDelayClasses_old = function(first_color, second_color, class_prefix, minShading, maxShading){
         var style = document.createElement('style')
         style.appendChild(document.createTextNode(""));
         document.head.appendChild(style);
@@ -327,279 +356,62 @@
         return style;
       }
 
-      // Edge Thickness
-      var setEdgeThicknessStyleSheet = function(class_prefix, steps){
-        // Create the <style> tag
-        var style = document.createElement('style')
+      var setFxClasses = function(class_prefix, minShading, maxShading, fx, sheet){
+        var MAX = maxShading;
+        for(let i = minShading; i <= maxShading; i++){
+          var percent = calculatePercentage(minShading, MAX, i);
 
-        // Add a media (and/or media query) here if you'd like!
-        // style.setAttribute("media", "print")
-        // style.setAttribute("media", "only screen and (max-width : 1024px)")
+          var st = fx(percent, i);
 
-        // WebKit hack :(
-        style.appendChild(document.createTextNode(""));
+          var clazz = "."+class_prefix+"-"+i;
 
-        // Add the <style> element to the page
-        document.head.appendChild(style);
-        var w = 1.125;
-        var sheet = style.sheet;
-        var MAX = steps;
-        for (let N = 1; N<=MAX; N++){
-          w*=1.5;
-          var st = "stroke: #333; fill: black; stroke-width: "+ w +"px;";
-          var clazz = "."+class_prefix+"-"+N;
           sheet.insertRule(clazz+" { "+st+" }");
-
         }
-        return style; //the caller can use setAttribute("media") to enable/disable
       }
-      //Enable Coloring, Set Media to Screen
-      var enableColoring = function(){
-        var x = document.getElementsByTagName("STYLE")[0];
-        console.log(x);
-        x.setAttribute("media", "screen");
+
+      var setDelayClasses = function(first_color, second_color, class_prefix, minShading, maxShading){
+
+          var fx = function(percent, lvl){
+
+            var color = getGradientColor(first_color, second_color, percent);
+            var fill = "fill: rgb("+color[0]+","+color[1]+","+color[2]+");";
+            var stroke = "stroke: rgb("+color[0]+","+color[1]+","+color[2]+");";
+            var strokeWidth = "stroke-width: 1.5px;";
+            return stroke + '\n' + fill + '\n' + strokeWidth;
+
+          };
+
+          setFxClasses(class_prefix, minShading, maxShading, fx)
+
       }
-      var disableColoring = function(){
-        var x = document.getElementsByTagName("STYLE")[0];
-        if(undefined === x) return;
-        else x.setAttribute("media", "print");
+      var setNodeFrequencyColoring = function(first_color, second_color, class_prefix, minShading, maxShading, sheet){
+          var fx = function(percent, lvl){
+            var color = getGradientColor(first_color, second_color, percent);
+            var st = "fill: rgb("+color[0]+","+color[1]+","+color[2]+")";
+            return st;
+          }
+          setFxClasses(class_prefix, minShading, maxShading, fx, sheet);
+      }
+      // Edge Frequency Thickness
+      var setEdgeFrequencyThickness = function(class_prefix, minShading, maxShading, sheet){
+        var fx = function(percent, lvl){
+          var w = 3;
+          var particle = w/maxShading;
+          lvl--;
+          w = 1.5 + lvl*particle;
+          var st = "stroke: #333; fill: black; stroke-width: "+ w +"px;";
+          return st;
+        }
+        setFxClasses(class_prefix, minShading, maxShading, fx, sheet);
+      }
+      var deleteStyles = function(){
+          var x = document.getElementsByTagName("STYLE");
+          for(let i = 0; i < x.length; i++){
+            x[i].remove();
+          }
       }
 
       //Disable Coloring, Set Media to Print
-      //Simple Comparison Algorithm
-      var simpleComparison = function(clients, clientIP){
-        var size = clients[clientIP].length
-        var responses = [];
-        var marked = new Array(size).fill(false);
-        for(let i = 0; i < size; i++){
-          responses[i] = [];
-          if(!marked[i]){
-            responses[i].push({id : i, client : clients[clientIP][i]})
-            marked[i] = true;
-            for(let j = i+1; j < size; j++){
-              if((clients[clientIP][j].status != responses[i][0].client.status) && (clients[clientIP][j].method == responses[i][0].client.method) &&
-              clients[clientIP][j].location == responses[i][0].client.location){
-                marked[j] = true;
-                responses[i].push({id : j, client : clients[clientIP][j] })
-              }
-            }
-          }
-        }
-        return responses;
-      }
-      var differenceThreshold = function(client){
-        let avg = 0;
-        let min = Number.MAX_VALUE;
-        let max = Number.MIN_VALUE;
-        var timePeriods = [];
-        for(let i = 1; i < client.length; i++){
-          let date = new Date(client[i-1].datetime)
-          let date1 = new Date(client[i].datetime)
-          let diff = Math.abs(date1-date);
-          avg+=diff;
-          if(max < diff) max = diff
-          if(min > diff) min = diff;
-        }
-        avg /= (client.length-1);
-        let days =  (avg / (1000*60*60*24));
-        let diffThreshold = (min+max)/2;
-        var timeP = []
-        timeP.push(client[0])
-        for(let i = 1; i < client.length; i++){
-          let date = new Date(client[i-1].datetime)
-          let date1 = new Date(client[i].datetime)
-          let diff = Math.abs(date1-date);
-          if(diff > diffThreshold){
-            timePeriods.push(timeP);
-            timeP = []
-          }
-          timeP.push(client[i]);
-        }
-        return timePeriods;
-      }
-
-      //Sequence Preserving Comparison
-      var seqPreservingComparison = function(client, length, nodes, start, incomingXorNodes, endName){
-        var prev = start;
-        var prevId = start;
-        var endConection = {};
-        var edges = [];
-        var finalEnd;
-        var k = null;
-        var s = null;
-        var l;
-        for(let i = 0; i < length; i++){
-          var str = client[i].method + client[i].location
-          var key = client[i].method + ' ' + client[i].location;
-          var status = client[i].status;
-          if(nodes[str] === undefined){
-            nodes[str] = {}
-          }
-          var node = {
-            "id" : i,
-            "startId" : prevId,
-            "endId" : i,
-            "dataNode" : client[i],
-            "start" : prev,
-            "end" : str+' '+status,
-            "key" : key,
-            "finalEnd" : start,
-          }
-          let delay = computeDelay(nodes, node.start, node.dataNode);
-          if(k == null || s == null){
-            k = str;
-            s = status;
-          }
-          else{
-            l = nodes[k][s].statusArray.length;
-            nodes[k][s].statusArray[l-1].finalEnd = key;
-            k = str;
-            s = status;
-          }
-          if(nodes[str][status] === undefined){
-            nodes[str][status] = {
-              statusArray : [],
-              outgoingXOR : false,
-              delayArray : [],
-            }
-          }
-          nodes[str][status].delayArray.push(delay);
-          prev = str + ' ' + status;
-          prevId = i;
-          nodes[str][status].statusArray.push(node)
-          if(i == (length-1)){
-            endConection.e1 = prev;
-            l = nodes[str][status].statusArray.length;
-            nodes[k][s].statusArray[l-1].finalEnd = endName;
-          }
-        }
-        nodes = outgoingXOR(nodes);
-        nodes = incomingXOR(nodes, start, incomingXorNodes);
-        nodes.endConection = endConection;
-        return nodes;
-      }
-      var outgoingXOR = function(nodes){
-        var counterArray = []
-        var xorTitle;
-        for(var key in nodes){
-          for(var status in nodes[key]){
-            if(nodes[key][status].statusArray.length > 1){
-              let check = false;
-              for(let i = 0; i < nodes[key][status].statusArray.length; i++){
-                for(let j = i + 1; j < nodes[key][status].statusArray.length; j++){
-                  if(nodes[key][status].statusArray[i].finalEnd != nodes[key][status].statusArray[j].finalEnd){
-                    check = true;
-                  }
-                }
-              }
-              if(check){
-                xorTitle = key + ' ' + status;
-                nodes[key][status].outgoingXOR = true;
-                counterArray.push(xorTitle);
-              }
-            }
-          }
-        }
-        for(var key in nodes){
-          for(var status in nodes[key]){
-            for(let i = 0; i < nodes[key][status].statusArray.length; i++){
-              for(let j = 0; j < counterArray.length; j++){
-                if(counterArray[j] == nodes[key][status].statusArray[i].start){
-                  // console.log(counterArray[j]);
-                  nodes[key][status].statusArray[i].start = "XOR-" + counterArray[j];
-                }
-              }
-            }
-          }
-        }
-        return nodes;
-      }
-      var incomingXOR = function(nodes, start, incomingXorNodes){
-        var incomingXorKeys = []
-        var keyCounter = 0;
-        var keyArray = []
-        for(var key in nodes){
-          keyArray.push(key);
-        }
-        for(let i = 0; i < keyArray.length; i++){
-          for(var key in nodes){
-            for(var status in nodes[key]){
-              for(let j = 0; j < nodes[key][status].statusArray.length; j++){
-                let spaces = nodes[key][status].statusArray[j].end.split(' ');
-                if((spaces[0] == start && i == 0) || spaces[0] == "XOR-"+keyArray[i] || spaces[0] == keyArray[i]){
-                  keyCounter++;
-                }
-              }
-            }
-          }
-          if(keyCounter > 1){
-            incomingXorKeys.push({ "key" : keyArray[i], "id" : i})
-          }
-          keyCounter = 0;
-        }
-        for(let i = 0; i < incomingXorKeys.length; i++){
-          for(var key in nodes){
-            if(key == incomingXorKeys[i].key){
-              for(var status in nodes[key]){
-                for(let j = 0; j < nodes[key][status].statusArray.length; j++){
-                  if(nodes[key][status].statusArray[j].start !== "inXOR-" + key){
-                    var spaces = nodes[key][status].statusArray[j].start
-                    var start = nodes[key][status].statusArray[j].start;
-                    nodes[key][status].statusArray[j].start = "inXOR-" + key
-                    if(incomingXorNodes[key] === undefined){
-                      incomingXorNodes[key] = {};
-                    }
-                    if(incomingXorNodes[key][spaces] === undefined){
-                      incomingXorNodes[key][spaces] = [];
-                    }
-                    incomingXorNodes[key][spaces].push(spaces.split(' '));
-                  }
-                }
-              }
-            }
-          }
-        }
-        var obj = {
-          "nodes" : nodes,
-          incomingXorNodes : incomingXorNodes,
-        }
-        return obj;
-      }
-      var getSelectedPeriods = function(timePeriods){
-        var elem = document.getElementById("multiSelect");
-        var result = [];
-        var options = elem && elem.options;
-        var opt;
-        for (let i=0, iLen=options.length; i<iLen; i++) {
-          opt = options[i];
-
-          if (opt.selected) {
-            result.push(timePeriods[parseInt(opt.value)] || timePeriods[parseInt(opt.text)]);
-          }
-        }
-        var obj = {
-          "identify" : "tp",
-          "data" : result
-        }
-        drawGraph(obj);
-      }
-      var totalNumberOfRequests = function(nodes){
-        var counter = 0;
-        var totalNumberOfRequests = {}
-        var max = Number.MIN_VALUE;
-        for(var key in nodes){
-          for(var status in nodes[key]){
-            counter += (nodes[key][status].statusArray.length);
-          }
-          totalNumberOfRequests[key] = counter;
-          if(max < counter){
-            max = counter;
-          }
-          counter = 0;
-        }
-        return {"total" : totalNumberOfRequests,
-        "maxRequests" : max};
-      }
       var getGradientColor = function(color1, color2, weight){
         var w1 = weight;
         var w2 = 1 - w1;
@@ -636,52 +448,9 @@
           }
         }
       }
-
-      var setupGradientStyleSheet = function(class_prefix, steps, first_color, second_color){
-
-        // Create the <style> tag
-        var style = document.getElementsByTagName("STYLE")[0];
-        // console.log(document.getElementsByTagName("STYLE"));
-        if(style != undefined){
-          var st = document.getElementsByTagName("STYLE")
-          st[0].remove();
-        }
-        style = document.createElement('style')
-
-        // Add a media (and/or media query) here if you'd like!
-        style.setAttribute("media", "print")
-        // style.setAttribute("media", "only screen and (max-width : 1024px)")
-
-        // WebKit hack :(
-        style.appendChild(document.createTextNode(""));
-
-        // Add the <style> element to the page
-        document.head.appendChild(style);
-
-        var sheet = style.sheet;
-        var MAX = steps;
-        for (let N = 1; N<=MAX; N++){
-          var percent = calculatePercentage(1, MAX, N);
-          var color = getGradientColor(first_color, second_color, (percent));
-          var st = "fill: rgb("+color[0]+","+color[1]+","+color[2]+")";
-          var clazz = "."+class_prefix+"-"+N;
-
-          sheet.insertRule(clazz+" { "+st+" }");
-
-        }
-        return style; //the caller can use setAttribute("media") to enable/disable
-      }
       var roundUp = function(num, precision){
         precision = Math.pow(10, precision)
         return Math.ceil(num * precision) / precision
-      }
-      var computeDelay = function(nodes, startNode, endNode){
-        if(startNode.includes("start")) return 0;
-        startNode = startNode.split(' ');
-        let length = nodes[startNode[0]][startNode[1]].statusArray.length;
-        let startDate = new Date(nodes[startNode[0]][startNode[1]].statusArray[length-1].dataNode.datetime)
-        let endDate = new Date(endNode.datetime);
-        return (endDate-startDate);
       }
       var computeDelayAvg = function(nodes, key, st){
         var avg = 0;
