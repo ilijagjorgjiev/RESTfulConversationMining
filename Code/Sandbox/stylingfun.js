@@ -79,11 +79,12 @@ var setNodeClasses = function(g, nodes, totalRequestsData){
 //Get Delay Avg for Incoming Edge
 var getIncomingEdgeIndexDelay = function(nodes, k, node, counter){
   let avg = 0;
+  // console.log("dsasda",node);
   let checker = 0;
   for(var s in nodes[k]){
     for(let i = 0; i < nodes[k][s].statusArray.length; i++){
-      // console.log(nodes[k][s].statusArray[i]);
-      if(nodes[k][s].statusArray[i].finalStart == node || 'XOR-'+nodes[k][s].statusArray[i].finalStart == node){
+      // if(node == 'XOR-'+nodes[k][s].statusArray[i].finalStart) console.log(nodes[k][s]);
+      if(nodes[k][s].statusArray[i].finalStart.split(' ')[0] == node.split(' ')[0] || 'XOR-'+nodes[k][s].statusArray[i].finalStart == node){
         // console.log(node);
         avg+=nodes[k][s].delayArray[i];
         checker++;

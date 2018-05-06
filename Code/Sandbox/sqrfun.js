@@ -68,7 +68,7 @@ var outgoingXOR = function(nodes){
         let check = false;
         for(let i = 0; i < nodes[key][status].statusArray.length; i++){
           for(let j = i + 1; j < nodes[key][status].statusArray.length; j++){
-            if(nodes[key][status].statusArray[i].finalEnd != nodes[key][status].statusArray[j].finalEnd){
+            if(nodes[key][status].statusArray[i].finalEnd.split(' ')[0] != nodes[key][status].statusArray[j].finalEnd.split(' ')[0]){
               check = true;
             }
           }
@@ -264,3 +264,54 @@ var differenceThreshold = function(client){
   }
   return timePeriods;
 }
+var checkIfIncomingXorExists = function(nodes, key, incomingXorNodes, size, inXorId){
+  if(size == 1){
+    var id = Object.keys(incomingXorNodes[key])[0].split(' ');
+    var k = id[0];
+    var s = id[1];
+    for(var status in nodes[key]){
+      for(let i = 0; i < nodes[key][status].statusArray.length; i++){
+        if(nodes[key][status].statusArray[i].start == inXorId){
+          nodes[key][status].statusArray[i].start = id[0] + ' ' + id[1];
+        }
+      }
+    }
+  }
+}
+
+var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, minDelay, incomingXorNodes){
+  var str = "inXOR-"+key
+  if(inXorIdSize > 1){
+    for(var space in incomingXorNodes[key]){
+      var len = incomingXorNodes[key][space][0].length;
+      if(len == 1){
+        g.setEdge(incomingXorNodes[key][space][0][0], str,
+          {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-0"})
+        }
+        else{
+          // console.log(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1]);
+          let avg = getIncomingEdgeIndexDelay(nodes, key, incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
+          // console.log(avg);
+          bin = computeAssignBin(avg, maxDelay, minDelay);
+          // console.log(bin);
+          g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], str,
+          {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
+        }
+      }
+    }
+    else{
+      for(var space in incomingXorNodes[key]){
+        var len = incomingXorNodes[key][space][0].length;
+        if(len == 1){
+          g.setEdge(incomingXorNodes[key][space][0][0], key,
+            {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-0"})
+          }
+          else{
+            let avg = getIncomingEdgeIndexDelay(nodes, key, incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
+            bin = computeAssignBin(avg, maxDelay, minDelay);
+            g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], key,
+            {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
+          }
+        }
+    }
+  }
