@@ -24,6 +24,7 @@ var seqPreservingComparison = function(client, length, nodes, start, incomingXor
       "end" : str+' '+status,
       "key" : key,
       "finalEnd" : start,
+      "finalStart" : prev
     }
     let delay = computeDelay(nodes, node.start, node.dataNode);
     if(k == null || s == null){
@@ -32,7 +33,7 @@ var seqPreservingComparison = function(client, length, nodes, start, incomingXor
     }
     else{
       l = nodes[k][s].statusArray.length;
-      nodes[k][s].statusArray[l-1].finalEnd = key;
+      nodes[k][s].statusArray[l-1].finalEnd = str+' '+status;
       k = str;
       s = status;
     }
@@ -124,7 +125,6 @@ var incomingXOR = function(nodes, start, incomingXorNodes){
           for(let j = 0; j < nodes[key][status].statusArray.length; j++){
             if(nodes[key][status].statusArray[j].start !== "inXOR-" + key){
               var spaces = nodes[key][status].statusArray[j].start
-              var start = nodes[key][status].statusArray[j].start;
               nodes[key][status].statusArray[j].start = "inXOR-" + key
               if(incomingXorNodes[key] === undefined){
                 incomingXorNodes[key] = {};
