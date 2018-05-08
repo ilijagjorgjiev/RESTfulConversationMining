@@ -85,16 +85,18 @@
     var endConnections = []
     var nodes = []
     var incomingXorNodes = {}
+    var totalTpIpArray = []
     if(dataObject.identify === "tp"){
       var timePeriods = dataObject.data;
       for(let i = 0; i < timePeriods.length; i++){
         var start = "start-"+i;
-        g.setNode("start-"+i, {shape: "circle", class : "start"});
-        g.setNode("end-"+i, {shape: "circle", style: "stroke-width: 4; stroke: black"});
-        obj = seqPreservingComparison(timePeriods[i], timePeriods[i].length, nodes, start, incomingXorNodes, "end-"+i)
+        g.setNode("start-"+i, {shape: "circle", class : "start" + " tpIpColoring-"+i});
+        g.setNode("end-"+i, {shape: "circle", style: "stroke-width: 4; stroke: black", class : "start" + " tpIpColoring-"+i});
+        obj = seqPreservingComparison(timePeriods[i], timePeriods[i].length, nodes, start, incomingXorNodes, "end-"+i, i)
         incomingXorNodes = obj.incomingXorNodes;
         endConnections.push(obj.endConection);
         nodes = obj.nodes;
+        totalTpIpArray.push(i);
       }
     }
     else{
@@ -103,7 +105,8 @@
       var length = clients[dataObject].length;
       var client = clients[dataObject];
       var start = "start-0"
-      obj = seqPreservingComparison(client, length, nodes, start, incomingXorNodes, "end-0");
+      obj = seqPreservingComparison(client, length, nodes, start, incomingXorNodes, "end-0", 0);
+      totalTpIpArray.push(0);
       incomingXorNodes = obj.incomingXorNodes;
       endConnections.push(obj.endConection);
       nodes = obj.nodes;
@@ -117,8 +120,10 @@
       if(size == 1){
         var status = Object.keys(nodes[key])[0]
         var str = "inXOR-"+key
+        var word = setUpClassForDifferentIpTp(nodes, key, status);
         if(incomingXorNodes[key] !== undefined) checkIfIncomingXorExists(nodes, key, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXOR-"+key)
-        g.setNode(key+' '+status, { shape: "rect", label : nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length, class:"type-Request method-"+key+' '+status});
+        g.setNode(key+' '+status, { shape: "rect", label : nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length,
+        class:"type-Request method-"+key+' '+status + ' ' + word});
         if(nodes[key][status].outgoingXOR){
           g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR"});
         }
@@ -130,12 +135,14 @@
       }
       else{
         var st = Object.keys(nodes[key])[0]
-        g.setNode(key, {shape: "rect", label: nodes[key][st].statusArray[0].key + '\n' + totalRequests[key], class: "type-Request method-"+key});
+        var word = setUpTotalClassForDifferentIpTp(nodes, key);
+        g.setNode(key, {shape: "rect", label: nodes[key][st].statusArray[0].key + '\n' + totalRequests[key], class: "type-Request method-"+key + ' ' + word});
         g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR"});
         var str = "inXOR-"+key
         if(Object.keys(incomingXorNodes[key]).length > 1) g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR"});
         for(var status in nodes[key]){
-          g.setNode(key+' '+status, {shape: "rect", label : status + '\n' + nodes[key][status].statusArray.length, class:"type-Response method-"+key+' '+status});
+          word = setUpClassForDifferentIpTp(nodes, key, status);
+          g.setNode(key+' '+status, {shape: "rect", label : status + '\n' + nodes[key][status].statusArray.length, class:"type-Response method-"+key+' '+status + ' ' + word});
           if(nodes[key][status].outgoingXOR){
             g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR"});
           }
@@ -149,11 +156,12 @@
     var maxDelay = obj.MAX;
     var minDelay = obj.MIN;
     // console.log(nodes);
+    console.log(nodes["GET/post"]);
     //Set Up Edges
     for(var key in nodes){
       var str = "inXOR-"+key
       var size = Object.keys(nodes[key]).length
-      var bin = computeAssignBin(totalAvgKey[key].totalDelayAvgKey, maxDelay, minDelay);
+      var bin = computeAssignBin(totalAvgKey[key].totalDelayAvgKey, maxDelay, 1);
       if(size == 1){
         var status = Object.keys(nodes[key])[0]
         if(nodes[key][status].outgoingXOR){
@@ -161,8 +169,12 @@
           {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin});
           // g.setEdge("inXOR-"+key, key+' '+status, {label: "delayAvg: "+ delayAvg});
         }
-        else{
+        if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length == 1){
           // if(incomingXorNodes[key] !== undefined) checkIfIncomingXorExists(nodes, key, status, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXOR-"+key)
+          g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,
+          {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
+        }
+        if(nodes[key][status].statusArray.length == 1){
           g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,
           {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
         }
@@ -177,7 +189,8 @@
               }
               else{
                 let avg = getIncomingEdgeIndexDelay(nodes, key, incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
-                bin = computeAssignBin(avg, maxDelay, minDelay);
+                bin = computeAssignBin(avg, maxDelay, 1);
+                if(bin == 384) console.log("OVER");
                 g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], str,
                 {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
               }
@@ -192,7 +205,8 @@
             g.setEdge(key,str1, {class: "edge-thickness-"+totalRequests[key] + " " + "delay-coloring-0"});
             for(var status in nodes[key]){
               // console.log(nodes[key][status].avgDelay);
-              bin = computeAssignBin(nodes[key][status].avgDelay, maxDelay, minDelay);
+              bin = computeAssignBin(nodes[key][status].avgDelay, maxDelay, 1);
+              if(bin == 0)console.log("BIN 0");
               g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%",
               class: "edge-thickness-" +nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin})
               // g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%"+'\n'+"Delay Avg:" + (computeDelayAvg(nodes, key, status)/1000/60/60/24), labelType: "html"});
@@ -201,23 +215,7 @@
                 {class: "edge-thickness-" + nodes[key][status].statusArray.length + " delay-coloring-0"});
               }
             }
-             multipleIncomingXorSetUp(g, nodes, key, Object.keys(incomingXorNodes[key]).length, maxDelay, minDelay, incomingXorNodes)
-            // for(var space in incomingXorNodes[key]){
-            //   var len = incomingXorNodes[key][space][0].length;
-            //   if(len == 1){
-            //     g.setEdge(incomingXorNodes[key][space][0][0], str,
-            //       {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-0"})
-            //     }
-            //     else{
-            //       // console.log(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1]);
-            //       let avg = getIncomingEdgeIndexDelay(nodes, key, incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
-            //       // console.log(avg);
-            //       bin = computeAssignBin(avg, maxDelay, minDelay);
-            //       // console.log(bin);
-            //       g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], str,
-            //       {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
-            //     }
-            //   }
+             multipleIncomingXorSetUp(g, nodes, key, Object.keys(incomingXorNodes[key]).length, maxDelay, 1, incomingXorNodes)
             }
           }
 
@@ -241,7 +239,8 @@
           });
           setNodeClasses(g, nodes, totalRequestsData);
           setVisualizationConfig(nfc, eft, edc, maxRequests);
-
+          conversionPath("tpIpColoring",[0, 0, 255])
+          console.log(nodes["GET/other"]);
           var svg = d3.select("svg");
           svg.selectAll("*").remove();
           var inner = svg.append("g");
@@ -259,7 +258,22 @@
           // Center the graph
           var initialScale = 0.2;
           svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
-          svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id); console.log("Clicked " + id); });
+          svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id);
+            var n = id.split("start-")[1];
+            console.log(n);
+            document.body.classList.toggle("enable-path-"+n);
+
+            // var x = document.getElementsByTagName("STYLE")[3];
+            // console.log(x);
+            // if(x.disabled){
+            //   x.disabled = false;
+            // }
+            // else{
+            //   x.disabled = true;
+            // }
+            console.log("Clicked " + id); });
+
         }
+
         </script>
         </html>

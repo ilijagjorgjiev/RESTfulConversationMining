@@ -30,11 +30,12 @@ text {
  .freq-2{
   fill: red;
 } */
-/* .edgePath path {
+/* .edgePath path { */
+.edgePath {
   stroke: #333;
   fill: black;
   stroke-width: 1.5px;
-} */
+}
 .arrowhead{
   stroke: black;
   fill: black;

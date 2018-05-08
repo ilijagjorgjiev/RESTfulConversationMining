@@ -1,3 +1,23 @@
+
+var conversionPath = function(class_prefix, color){
+  let style = document.createElement('style')
+
+  // style.disabled = true;
+  // WebKit hack :(
+  style.appendChild(document.createTextNode(""));
+
+  // Add the <style> element to the page
+  document.head.appendChild(style);
+  var sheet = style.sheet;
+  var st = "fill: rgb("+color[0]+","+color[1]+","+color[2]+")";
+  var clazz = "."+class_prefix+"-"+0;
+  sheet.insertRule(".enable-path-0 " +clazz+" { "+st+" }");
+  var clazz = "."+class_prefix+"-"+1;
+  sheet.insertRule(".enable-path-1 " +clazz+" { fill:red }");
+  sheet.insertRule(".enable-path-0.enable-path-1 " +"."+class_prefix+"-"+0+"."+class_prefix+"-"+1+" { fill:purple }");
+  var x = document.getElementsByTagName("STYLE")[3];
+  // x.disabled = false;
+}
 var setFxClasses = function(class_prefix, minShading, maxShading, fx, sheet){
   var MAX = maxShading;
   for(let i = minShading; i <= maxShading; i++){
@@ -16,6 +36,9 @@ var setDelayFrequencyColoring = function(first_color, second_color, class_prefix
   var fx = function(percent, lvl){
 
     var color = getGradientColor(first_color, second_color, percent);
+
+    if (lvl == 0) { color = "black;"}
+
     var fill = "fill: rgb("+color[0]+","+color[1]+","+color[2]+");";
     var stroke = "stroke: rgb("+color[0]+","+color[1]+","+color[2]+");";
     return (stroke + '\n' + fill);
@@ -79,13 +102,11 @@ var setNodeClasses = function(g, nodes, totalRequestsData){
 //Get Delay Avg for Incoming Edge
 var getIncomingEdgeIndexDelay = function(nodes, k, node, counter){
   let avg = 0;
-  // console.log("dsasda",node);
   let checker = 0;
   for(var s in nodes[k]){
     for(let i = 0; i < nodes[k][s].statusArray.length; i++){
-      // if(node == 'XOR-'+nodes[k][s].statusArray[i].finalStart) console.log(nodes[k][s]);
-      if(nodes[k][s].statusArray[i].finalStart.split(' ')[0] == node.split(' ')[0] || 'XOR-'+nodes[k][s].statusArray[i].finalStart == node){
-        // console.log(node);
+      // if(k == 'POST/last') console.log(nodes[k][s].statusArray[i])
+      if(nodes[k][s].statusArray[i].finalStart == node || 'XOR-'+nodes[k][s].statusArray[i].finalStart == node){
         avg+=nodes[k][s].delayArray[i];
         checker++;
       }
@@ -94,8 +115,9 @@ var getIncomingEdgeIndexDelay = function(nodes, k, node, counter){
   if(checker == counter) return (avg/counter);
   else {
     // console.log(nodes[k][s].statusArray);
-    // console.log(node, checker, counter, k);
-    console.log(counter);
+    // console.log(nodes[k]);
+    // console.log(counter);
+    // console.log(k,node);
     console.log("ERROR IN getIncomingEdgeIndexDelay")
   };
 }
@@ -152,6 +174,7 @@ var computeMinMaxAvgDelayVal = function(nodes){
     for(var status in nodes[key]){
       for(let i = 0; i < nodes[key][status].delayArray.length; i++){
         avgStatus+= nodes[key][status].delayArray[i];
+        if(MAXtotal < nodes[key][status].delayArray[i]) MAXtotal = nodes[key][status].delayArray[i];
         avgTotal += nodes[key][status].delayArray[i];
         counterStatus++;
         counterTotal++;
@@ -183,7 +206,7 @@ var computeMinMaxAvgDelayVal = function(nodes){
 //Compute Bin and Assign it
 var computeAssignBin = function(val, max, min){
   var particle = (max - min)/128
-  var bin = Math.round((val - min)/particle);
+  var bin = Math.ceil((val - min)/particle);
   return bin;
 }
 
@@ -204,3 +227,169 @@ var roundUp = function(num, precision){
   precision = Math.pow(10, precision)
   return Math.ceil(num * precision) / precision
 }
+var setUpClassForDifferentIpTp = function(nodes, key, status){
+  var word = "";
+  for(let i = 0; i < nodes[key][status].tpIpArray.length; i++){
+    word += ('tpIpColoring-' + nodes[key][status].tpIpArray[i] + ' ');
+  }
+  return word;
+}
+var setUpTotalClassForDifferentIpTp = function(nodes, key){
+  var array = [];
+  var word = "";
+  for(var status in nodes[key]){
+    for(let i = 0; i < nodes[key][status].tpIpArray.length; i++){
+      if(array.includes(nodes[key][status].tpIpArray[i]) != true){
+        array.push(nodes[key][status].tpIpArray[i]);
+        word += ('tpIpColoring-' + nodes[key][status].tpIpArray[i] + ' ');
+      }
+    }
+  }
+  return word;
+}
+// var getAllTpIp = function(nodes){
+//   var array = []
+//   for(var key in nodes){
+//     for(var status in nodes[key]){
+//       for(let i = 0; i < nodes[key][status].tpIpArray.length; i++){
+//         if(array.includes(nodes[key][status].tpIpArray[i]) != true) array.push(nodes[key][status].tpIpArray[i]);
+//       }
+//     }
+//   }
+//   return array;
+// }
+// var pattern = {
+//   "1" : {
+//     method : "GET",
+//     status : "200"
+//   },
+//   "2" : {
+//     method : "POST",
+//     status : "401"
+//   }
+// }
+// var hasPattern = function(pattern, nodes){
+//   console.log(Object.keys(pattern).length)
+//   for(var key in nodes){
+//     if (matchNode(pattern["1"],nodes[key]))
+//       if (followPattern(pattern,nodes,key))
+//         return true; //find first occurence
+//
+//     var k = key.split('/'); // GET/post -> {200, 201}
+//     var node_method = k[0];
+//     if (node_method = pattern["1"].method) {
+//       //for each status in nodes[key]
+//       //follow graph and match the rest of the pattern
+//     }
+//   }
+// }
+//
+// //return true if the pattern is contained into nodes starting from key
+// var matchNode(pattern_node, haystack_node) {
+//   //METHOD + status
+//   //METHOD + URL + status
+//   //METHOD + URL/$ + status
+// }
+//
+// //return true if the pattern is contained into nodes starting from key
+// var followPattern(pattern,nodes,key) {
+//   //pattern is a sequence
+//   //variants find immediate
+//   //find transitive
+//
+//   var position //pattern["1"],nodes[key]
+//
+//   while (?) {
+//     var next = { pattern: pattern(position).next() , haystack: nodes[key].next() };
+//     if (!matchNode(next.pattern, next.haystack_))
+//       return false;
+//   }
+//
+// }
+//
+// var pattern_exact_URL = {
+//   "1" : {
+//     ip : "C1", //exact IP match (some *wildcard*)
+//     method : "GET",
+//     status : "200",
+//     url : "/" //exact string matching
+//   },
+//   "2" : {
+//     method : "GET",
+//     status : "200",
+//     url : "/edit"
+//   },
+//   "3" : {
+//     method : "PUT",
+//     status : "200",
+//     url : "/"
+//   }
+// }
+//
+// var pattern_variableURL = {
+//   "1" : {
+//     xip : "C1",
+//     method : "GET",
+//     status : "200",
+//     xurl : "/"
+//   },
+//   "2" : {
+//     xip : "C2",
+//     method : "GET",
+//     status : "200",
+//     xurl : "/edit"
+//   },
+//   "3" : {
+//     xip : "C1",
+//     method : "PUT",
+//     status : "200",
+//     xurl : "/"
+//   }
+// }
+//
+//
+// var pattern_variableURL = {
+//   "1" : {
+//
+//     method : "GET",
+//     status : "200",
+//     xurl : "/"
+//   },
+//   "2" : {
+//     method : "GET",
+//     status : "200",
+//     xurl : "/edit"
+//   },
+//   "3" : {
+//     method : "PUT",
+//     status : "200",
+//     xurl : "/"
+//   }
+// }
+//
+//
+// GET 200 /
+// GET 200 /edit
+// PUT 200 /
+//
+// GET 200 /blog/
+// GET 200 /blog/edit
+// PUT 200 /
+//
+// GET 200 /blog/
+// GET 200 /blog/edit
+// PUT 200 /blog/
+//
+// //remember actual placeholder value
+// URL["/"] not defined
+// URL["/"] = "/blog/" //store
+// URL["/edit"] = "/blog/edit"
+// URL["/"] is defined
+// URL["/"] =?= "/blog/" //compare
+//
+// GET 200 /blog/post/
+// GET 200 /blog/edit
+// PUT 200 /blog/post/
+//
+// //remember actual placeholder value
+// URL["/"] = "/blog/post"
