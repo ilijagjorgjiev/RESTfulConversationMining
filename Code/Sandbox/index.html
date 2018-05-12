@@ -170,13 +170,17 @@
           // g.setEdge("inXOR-"+key, key+' '+status, {label: "delayAvg: "+ delayAvg});
         }
         if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length == 1){
-          // if(incomingXorNodes[key] !== undefined) checkIfIncomingXorExists(nodes, key, status, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXOR-"+key)
+          let space = Object.keys(incomingXorNodes[key])[0]
+          let p = getProbabilityLabel(nodes, nodes[key][status].statusArray[0].start.split(' ')[0], nodes[key][status].statusArray[0].start.split(' ')[1], incomingXorNodes[key][space].length);
           g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,
-          {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
+          {label: p,
+           class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
         }
         if(nodes[key][status].statusArray.length == 1){
+          let p = getProbabilityLabel(nodes, nodes[key][status].statusArray[0].start.split(' ')[0], nodes[key][status].statusArray[0].start.split(' ')[1], 1);
           g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,
-          {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
+          { label : p,
+            class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
         }
         if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length > 1){
           g.setEdge("inXOR-"+key, key+' '+status,
@@ -190,9 +194,10 @@
               else{
                 let avg = getIncomingEdgeIndexDelay(nodes, key, incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
                 bin = computeAssignBin(avg, maxDelay, 1);
-                if(bin == 384) console.log("OVER");
+                let p = getProbabilityLabel(nodes, incomingXorNodes[key][space][0][0], incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
                 g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], str,
-                {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
+                { label : p,
+                  class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
               }
             }
           }
@@ -226,7 +231,9 @@
             var k = spaces[0]
             var s = spaces[1]
             if(nodes[k][s].outgoingXOR){
-              g.setEdge("XOR-"+k+' '+s, "end-"+i, {class: "edge-thickness-1 delay-coloring-0"})
+              g.setEdge("XOR-"+k+' '+s, "end-"+i, {
+                label : roundUp(1/totalRequests[k]*100,1)+"%",
+                class: "edge-thickness-1 delay-coloring-0"})
             }
             else{
               g.setEdge(k+' '+s, "end-"+i, {class: "edge-thickness-1 delay-coloring-0"});

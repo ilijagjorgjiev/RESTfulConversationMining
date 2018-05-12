@@ -297,18 +297,18 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
           {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-0"})
         }
         else{
-          // console.log(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1]);
           let avg = getIncomingEdgeIndexDelay(nodes, key, incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
           // console.log(avg);
           bin = computeAssignBin(avg, maxDelay, 1);
-          // console.log(bin);
+          let p = getProbabilityLabel(nodes, incomingXorNodes[key][space][0][0], incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
           g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], str,
-          {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
+          { label: p,
+            class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
         }
       }
     }
     else{
-      if(nodes["GET/post"]) console.log("Trigger");
+      // if(nodes["GET/post"]) console.log("Trigger");
       for(var space in incomingXorNodes[key]){
         var len = incomingXorNodes[key][space][0].length;
         if(len == 1){
@@ -318,9 +318,24 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
           else{
             let avg = getIncomingEdgeIndexDelay(nodes, key, incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
             bin = computeAssignBin(avg, maxDelay, 1);
+            let p = getProbabilityLabel(nodes, incomingXorNodes[key][space][0][0], incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
             g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], key,
-            {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
+            { label: p,
+              class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
           }
       }
     }
+  }
+  var getProbability = function(nodes, key, status, length){
+    console.log(nodes[key][status].statusArray.length,length);
+    return (roundUp(length/nodes[key][status].statusArray.length*100,1));
+  }
+  var getProbabilityLabel = function(nodes, s1, s2, length){
+    s1 =  s1.split('-')
+    if(s1.length > 1) s1 = s1[1];
+    else s1 = s1[0];
+    let p = getProbability(nodes, s1, s2, length);
+    if(p == 100) p = '';
+    else p = p+'%';
+    return p;
   }
