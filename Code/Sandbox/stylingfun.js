@@ -1,5 +1,12 @@
 
-var conversionPath = function(class_prefix, color){
+var disableConversionPaths = function(){
+  var obj = document.body.classList;
+  var length = obj.length
+  for(let i = 0; i < length; i++){
+    obj.toggle(obj[0]);
+  }
+}
+var conversionPath = function(class_prefix, size){
   let style = document.createElement('style')
 
   // style.disabled = true;
@@ -8,15 +15,50 @@ var conversionPath = function(class_prefix, color){
 
   // Add the <style> element to the page
   document.head.appendChild(style);
+  var rainbow = createRainbow(size);
   var sheet = style.sheet;
-  var st = "fill: rgb("+color[0]+","+color[1]+","+color[2]+")";
-  var clazz = "."+class_prefix+"-"+0;
-  sheet.insertRule(".enable-path-0 " +clazz+" { "+st+" }");
-  var clazz = "."+class_prefix+"-"+1;
-  sheet.insertRule(".enable-path-1 " +clazz+" { fill:red }");
-  sheet.insertRule(".enable-path-0.enable-path-1 " +"."+class_prefix+"-"+0+"."+class_prefix+"-"+1+" { fill:purple }");
-  var x = document.getElementsByTagName("STYLE")[3];
-  // x.disabled = false;
+  for(let i = 0; i < size; i++){
+    let st = "fill: "+rainbow[i];
+    let clazz = "."+class_prefix+"-"+i;
+    sheet.insertRule(".enable-path-" + i + " " +clazz+" { "+st+" }");
+  }
+  for(let i = 0; i < size; i++){
+    for(let j = i + 1; j < size; j++){
+      let color = getGradientColor(hexToRgb(rainbow[i]), hexToRgb(rainbow[j]), 0.5);
+      let st = "fill: rgb("+color[0]+","+color[1]+","+color[2]+")";
+      sheet.insertRule(".enable-path-"+i+".enable-path-"+j+" " +"."+class_prefix+"-"+i+"."+class_prefix+"-"+j+" { "+st+" }");
+    }
+  }
+}
+var hexToRgb = function(hex) {
+    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+    var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+        return r + r + g + g + b + b;
+    });
+
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)];
+}
+
+var createRainbow = function(size){
+  var rainbow = new Array(size);
+
+  for (var i=0; i<size; i++) {
+    var red   = sin_to_hex(i, 0 * Math.PI * 2/3, size); // 0   deg
+    var blue  = sin_to_hex(i, 1 * Math.PI * 2/3, size); // 120 deg
+    var green = sin_to_hex(i, 2 * Math.PI * 2/3, size); // 240 deg
+
+    rainbow[i] = "#"+ red + green + blue;
+  }
+  return rainbow;
+}
+function sin_to_hex(i, phase, size) {
+  var sin = Math.sin(Math.PI / size * 2 * i + phase);
+  var int = Math.floor(sin * 127) + 128;
+  var hex = int.toString(16);
+
+  return hex.length === 1 ? "0"+hex : hex;
 }
 var setFxClasses = function(class_prefix, minShading, maxShading, fx, sheet){
   var MAX = maxShading;
@@ -114,10 +156,6 @@ var getIncomingEdgeIndexDelay = function(nodes, k, node, counter){
   }
   if(checker == counter) return (avg/counter);
   else {
-    // console.log(nodes[k][s].statusArray);
-    // console.log(nodes[k]);
-    // console.log(counter);
-    // console.log(k,node);
     console.log("ERROR IN getIncomingEdgeIndexDelay")
   };
 }

@@ -271,19 +271,18 @@ var differenceThreshold = function(client){
 var checkIfIncomingXorExists = function(nodes, key, incomingXorNodes, size, inXorId){
 
   if(size == 1){
-    console.log(key, incomingXorNodes);
+    // console.log(key, incomingXorNodes);
     var id = Object.keys(incomingXorNodes[key])[0].split(' ');
     var k = id[0];
     var s = id[1];
     for(var status in nodes[key]){
       for(let i = 0; i < nodes[key][status].statusArray.length; i++){
         if(nodes[key][status].statusArray[i].start == inXorId){
-          console.log("HERE");
           nodes[key][status].statusArray[i].start = id[0] + ' ' + id[1];
         }
       }
     }
-    console.log(nodes[key]);
+    // console.log(nodes[key]);
   }
 }
 
@@ -327,10 +326,10 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
     }
   }
   var getProbability = function(nodes, key, status, length){
-    console.log(nodes[key][status].statusArray.length,length);
     return (roundUp(length/nodes[key][status].statusArray.length*100,1));
   }
   var getProbabilityLabel = function(nodes, s1, s2, length){
+    if(s1.includes("start")) return '';
     s1 =  s1.split('-')
     if(s1.length > 1) s1 = s1[1];
     else s1 = s1[0];

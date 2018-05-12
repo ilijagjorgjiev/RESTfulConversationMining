@@ -68,6 +68,7 @@
     eft.checked = false;
     edc.checked = false;
     deleteStyles();
+    disableConversionPaths();
   }
   //Draw the Graph for the selected IP.
   var drawGraph = function(dataObject){
@@ -155,8 +156,6 @@
     var totalAvgKey = obj.totalAvgKey;
     var maxDelay = obj.MAX;
     var minDelay = obj.MIN;
-    // console.log(nodes);
-    console.log(nodes["GET/post"]);
     //Set Up Edges
     for(var key in nodes){
       var str = "inXOR-"+key
@@ -211,7 +210,6 @@
             for(var status in nodes[key]){
               // console.log(nodes[key][status].avgDelay);
               bin = computeAssignBin(nodes[key][status].avgDelay, maxDelay, 1);
-              if(bin == 0)console.log("BIN 0");
               g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%",
               class: "edge-thickness-" +nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin})
               // g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%"+'\n'+"Delay Avg:" + (computeDelayAvg(nodes, key, status)/1000/60/60/24), labelType: "html"});
@@ -246,8 +244,7 @@
           });
           setNodeClasses(g, nodes, totalRequestsData);
           setVisualizationConfig(nfc, eft, edc, maxRequests);
-          conversionPath("tpIpColoring",[0, 0, 255])
-          console.log(nodes["GET/other"]);
+          conversionPath("tpIpColoring", totalTpIpArray.length);
           var svg = d3.select("svg");
           svg.selectAll("*").remove();
           var inner = svg.append("g");
@@ -267,9 +264,7 @@
           svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
           svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id);
             var n = id.split("start-")[1];
-            console.log(n);
             document.body.classList.toggle("enable-path-"+n);
-
             // var x = document.getElementsByTagName("STYLE")[3];
             // console.log(x);
             // if(x.disabled){
@@ -279,7 +274,6 @@
             //   x.disabled = true;
             // }
             console.log("Clicked " + id); });
-
         }
 
         </script>
