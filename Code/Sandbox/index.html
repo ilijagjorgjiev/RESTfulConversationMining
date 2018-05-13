@@ -15,6 +15,7 @@
   <script src="sqrfun.js"></script>
   <script src="stylingfun.js"></script>
   <script src="patternMatching.js"></script>
+  <script src="patternData.js"></script>
   <!-- <script type="text/javascript" src="setup.js"></script> -->
   <link rel="stylesheet" href="styles.css">
 
@@ -246,9 +247,13 @@
           setNodeClasses(g, nodes, totalRequestsData);
           setVisualizationConfig(nfc, eft, edc, maxRequests);
           conversionPath("tpIpColoring", totalTpIpArray.length);
-          var patternFound = patternMethondStatus(nodes);
+          var patternFound = patternMethondStatus(nodes, pattern);
+          var patternFound1 = patternMethondStatusURL(nodes, patternURL);
+          var patternFound2 = patternMSUW(nodes, patternWild);
           // patternMethondStatusURL(nodes);
           console.log("PATTERN="+patternFound);
+          console.log("PatternURL="+patternFound1);
+          console.log("patternWild="+patternFound2);
           var svg = d3.select("svg");
           svg.selectAll("*").remove();
           var inner = svg.append("g");

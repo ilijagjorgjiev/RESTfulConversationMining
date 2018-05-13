@@ -1,35 +1,122 @@
-var pattern = {
-  "0" : {
-    method : "GET",
-    status : "200"
-  },
-  "1" : {
-    method : "POST",
-    status : "401"
-  },
-  "2" : {
-    method : "GET",
-    status : "404"
-  },
-  "3" : {
-    method : "GET",
-    status : "200"
-  },
-  "4" : {
-    method : "GET",
-    status : "300"
+var patternMSUW = function(nodes, pattern){
+  var ret = false;
+  var placeholder = {};
+  for(var key in nodes){
+    let space = key.split('/');
+    let mt = space[0];
+    let url = "/";
+    url+= space.slice(1).join("/");
+    if(placeholder[url] === undefined && matchMethod(pattern["0"], mt)){
+      for(var status in nodes[key]){
+        if(matchStatus(pattern["0"], status)){
+          placeholder[url] = pattern["0"].url;
+          ret = followUpPatternMSUW(nodes, key, status, pattern, placeholder)
+        }
+        if(ret){return ret};
+        placeholder = {};
+      }
+    }
   }
+  return ret;
+}
+var followUpPatternMSUW = function(nodes, key, status, pattern, placeholder){
+  var patternSize = Object.keys(pattern).length;
+  var  j = 1;
+  if(j == patternSize) return true;
+  for(let i = 0; i < nodes[key][status].statusArray.length; i++){
+    let finalEnd = nodes[key][status].statusArray[i].finalEnd.split(' ');
+    if(finalEnd.length > 1){
+      let slash = finalEnd[0].split('/');
+      let method = slash[0];
+      let newUrl = "/";
+      newUrl+= slash.slice(1).join("/");
+      let st = finalEnd[1];
+      console.log(newUrl, method);
+      if(matchMethod(pattern[j], method) && matchStatus(pattern[j], st)){
+        if(placeholder[newUrl] === undefined){
+          placeholder[newUrl] = pattern[j].url;
+          key = finalEnd[0];
+          status = finalEnd[1];
+          j++;
+          i = -1;
+        }
+        else{
+          if(matchURL(pattern[j], placeholder[newUrl])){
+            key = finalEnd[0];
+            status = finalEnd[1];
+            j++;
+            i = -1;
+          }
+        }
+      }
+    }
+    if(j == patternSize) return true;
+  }
+  return (j==patternSize);
+}
+// var pattern_variableURL = {
+//   "1" : {
+//
+//     method : "GET",
+//     status : "200",
+//     xurl : "/"
+//   },
+//   "2" : {
+//     method : "GET",
+//     status : "200",
+//     xurl : "/edit"
+//   },
+//   "3" : {
+//     method : "PUT",
+//     status : "200",
+//     xurl : "/"
+//   }
+// }
+//
+//
+// GET 200 /
+// GET 200 /edit
+// PUT 200 /
+//
+// GET 200 /blog/
+// GET 200 /blog/edit
+// PUT 200 /
+//
+// GET 200 /blog/
+// GET 200 /blog/edit
+// PUT 200 /blog/
+//
+// //remember actual placeholder value
+// URL["/"] not defined
+// URL["/"] = "/blog/" //store
+// URL["/edit"] = "/blog/edit"
+// URL["/"] is defined
+// URL["/"] =?= "/blog/" //compare
+//
+// GET 200 /blog/post/
+// GET 200 /blog/edit
+// PUT 200 /blog/post/
+//
+// //remember actual placeholder value
+// URL["/"] = "/blog/post"
+var matchMethod = function(m1, m2){
+  return (m1.method == m2);
+}
+var matchStatus = function(s1, s2){
+  return (s1.status == s2);
+}
+var matchURL = function(u1, u2){
+  return u1.url == u2;
 }
 
-
-
-var patternMethondStatusURL = function(nodes){
+var patternMethondStatusURL = function(nodes, pattern){
   var ret = false;
   for(var key in nodes){
-    let space = key.split('/')
-    let method = space[0];
-    let url = space[1];
-    if(matchMethod(pattern["0"], method) && matchURL(pattern["0"], url)){
+    let space = key.split('/');
+    let mt = space[0];
+    let url = "/";
+    url+= space.slice(1).join("/");
+    if(matchMethod(pattern["0"], mt) && matchURL(pattern["0"], url)){
       for(var status in nodes[key]){
         if(matchStatus(pattern["0"], status)){
           ret = followUpPatternMethodStatusURL(nodes, key, status, pattern)
@@ -38,18 +125,21 @@ var patternMethondStatusURL = function(nodes){
       }
     }
   }
+  return ret;
 }
 var followUpPatternMethodStatusURL = function(nodes, key, status, pattern){
   var patternSize = Object.keys(pattern).length;
   var  j = 1;
+  if(j == patternSize) return true;
   for(let i = 0; i < nodes[key][status].statusArray.length; i++){
     let finalEnd = nodes[key][status].statusArray[i].finalEnd.split(' ');
     if(finalEnd.length > 1){
-      let method = finalEnd[0].split('/');
-      let url = method[1];
-      let method = method[0];
+      let slash = finalEnd[0].split('/');
+      let method = slash[0];
+      let newUrl = "/";
+      newUrl+= slash.slice(1).join("/");
       let st = finalEnd[1];
-      if(matchMethod(pattern[j], method) && matchStatus(pattern[j], st) && matchURL(pattern[j], url)){
+      if(matchMethod(pattern[j], method) && matchStatus(pattern[j], st) && matchURL(pattern[j], newUrl)){
         key = finalEnd[0];
         status = finalEnd[1];
         j++;
@@ -60,7 +150,7 @@ var followUpPatternMethodStatusURL = function(nodes, key, status, pattern){
   }
   return (j==patternSize);
 }
-var patternMethondStatus = function(nodes){
+var patternMethondStatus = function(nodes, pattern){
   var ret = false;
   for(var key in nodes){
     if(matchMethod(pattern["0"], key.split('/')[0])){
@@ -74,18 +164,10 @@ var patternMethondStatus = function(nodes){
   }
   return ret;
 }
-var matchMethod = function(m1, m2){
-  return (m1.method == m2);
-}
-var matchStatus = function(s1, s2){
-  return (s1.status == s2);
-}
-var matchURL = function(u1, u2){
-  return u1.url == u2;
-}
 var followUpPatternMethodStatus = function(nodes, key, status, pattern){
   var patternSize = Object.keys(pattern).length;
   var  j = 1;
+  if(j == patternSize) return true;
   for(let i = 0; i < nodes[key][status].statusArray.length; i++){
     let finalEnd = nodes[key][status].statusArray[i].finalEnd.split(' ');
     if(finalEnd.length > 1){
@@ -102,6 +184,8 @@ var followUpPatternMethodStatus = function(nodes, key, status, pattern){
   }
   return (j==patternSize);
 }
+
+
 
 // var hasPattern = function(pattern, nodes){
 //   console.log(Object.keys(pattern).length)
@@ -182,50 +266,3 @@ var followUpPatternMethodStatus = function(nodes, key, status, pattern){
 //     xurl : "/"
 //   }
 // }
-//
-//
-// var pattern_variableURL = {
-//   "1" : {
-//
-//     method : "GET",
-//     status : "200",
-//     xurl : "/"
-//   },
-//   "2" : {
-//     method : "GET",
-//     status : "200",
-//     xurl : "/edit"
-//   },
-//   "3" : {
-//     method : "PUT",
-//     status : "200",
-//     xurl : "/"
-//   }
-// }
-//
-//
-// GET 200 /
-// GET 200 /edit
-// PUT 200 /
-//
-// GET 200 /blog/
-// GET 200 /blog/edit
-// PUT 200 /
-//
-// GET 200 /blog/
-// GET 200 /blog/edit
-// PUT 200 /blog/
-//
-// //remember actual placeholder value
-// URL["/"] not defined
-// URL["/"] = "/blog/" //store
-// URL["/edit"] = "/blog/edit"
-// URL["/"] is defined
-// URL["/"] =?= "/blog/" //compare
-//
-// GET 200 /blog/post/
-// GET 200 /blog/edit
-// PUT 200 /blog/post/
-//
-// //remember actual placeholder value
-// URL["/"] = "/blog/post"
