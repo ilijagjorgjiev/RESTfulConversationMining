@@ -1,5 +1,5 @@
 //Sequence Preserving Comparison
-var seqPreservingComparison = function(client, length, nodes, start, incomingXorNodes, endName, tpIndex){
+var seqPreservingComparison = function(client, length, nodes, start, incomingXorNodes, endName, tpIndex, comparisonTableData){
   var prev = start;
   var prevId = start;
   var endConection = {};
@@ -337,4 +337,54 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
     if(p == 100) p = '';
     else p = p+'%';
     return p;
+  }
+  var getComparisonTableNodes = function(nodes, comparisonTableData){
+    var array = [];
+    var totalArray = [];
+    for(var key in nodes){
+      if(comparisonTableData.nodes[key] === undefined){
+        comparisonTableData.nodes[key] = {
+          statuses : {},
+          totalArray : [],
+        }
+      }
+      for(var status in nodes[key]){
+        for(let i = 0; i < nodes[key][status].statusArray.length; i++){
+            if(array.includes(nodes[key][status].tpIpArray[i]) != true){
+            array.push(nodes[key][status].tpIpArray[i]);
+          }
+          if(totalArray.includes(nodes[key][status].tpIpArray[i]) != true) totalArray.push(nodes[key][status].tpIpArray[i]);
+        }
+        // console.log(array);
+        if(array.length > 1) comparisonTableData.overlappingNodes.size++;
+        else comparisonTableData.uniqueNodes.size++;
+
+        if(comparisonTableData.nodes[key].statuses[status] === undefined){
+          comparisonTableData.nodes[key].statuses[status] = [];
+          comparisonTableData.nodes[key].statuses[status] = array;
+        }
+        array = [];
+      }
+      if(totalArray.length > 1) comparisonTableData.overlappingNodes.size++;
+      let l = Object.keys(nodes[key]).length;
+      if(totalArray.length == 1 && l > 1) comparisonTableData.uniqueNodes.size++;
+
+      comparisonTableData.nodes[key].totalArray = totalArray;
+      totalArray = [];
+    }
+    return comparisonTableData;
+  }
+  var increaseAppropriateEdge = function(size, key, status, comparisonTableData, kind){
+    if(kind === "outgoingXOR" && size == 1){
+      if(comparisonTableData.nodes[key].totalArray.length == 1) comparisonTableData.uniqueEdges.size++;
+      else comparisonTableData.overlappingEdges.size++;
+    }
+    else if(kind === "incomingXOR" && size == 1){
+      if(comparisonTableData.nodes[key].totalArray.length == 1) comparisonTableData.uniqueEdges.size++;
+      else comparisonTableData.overlappingEdges.size++;
+    }
+    else if(kind === "middleXOR"){
+      if(comparisonTableData.nodes[key].statuses[status].length == 1) comparisonTableData.uniqueEdges.size++;
+      else comparisonTableData.overlappingEdges.size++;
+    }
   }

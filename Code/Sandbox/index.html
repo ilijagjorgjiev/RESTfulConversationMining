@@ -89,35 +89,50 @@
     var nodes = []
     var incomingXorNodes = {}
     var totalTpIpArray = []
+    var comparisonTableData = {
+      timePorIP : [],
+      uniqueNodes : {
+        size : 0,
+      },
+      overlappingNodes : {
+        size : 0,
+      },
+      uniqueEdges : { size : 0,},
+      overlappingEdges : {size : 0,},
+      nodes : {}
+    }
     if(dataObject.identify === "tp"){
       var timePeriods = dataObject.data;
       for(let i = 0; i < timePeriods.length; i++){
         var start = "start-"+i;
         g.setNode("start-"+i, {shape: "circle", class : "start" + " tpIpColoring-"+i});
-        g.setNode("end-"+i, {shape: "circle", style: "stroke-width: 4; stroke: black", class : "start" + " tpIpColoring-"+i});
-        obj = seqPreservingComparison(timePeriods[i], timePeriods[i].length, nodes, start, incomingXorNodes, "end-"+i, i)
+        g.setNode("end-"+i, {shape: "circle", style: "stroke-width: 4; stroke: black", class : "end" + " tpIpColoring-"+i});
+        obj = seqPreservingComparison(timePeriods[i], timePeriods[i].length, nodes, start, incomingXorNodes, "end-"+i, i, comparisonTableData)
         incomingXorNodes = obj.incomingXorNodes;
         endConnections.push(obj.endConection);
         nodes = obj.nodes;
         totalTpIpArray.push(i);
+        comparisonTableData.timePorIP.push(i);
       }
     }
     else{
-      g.setNode("start-0", { shape: "circle" });
-      g.setNode("end-0", {shape: "circle", style: "stroke-width: 4; stroke: black"})
+      g.setNode("start-0", { shape: "circle", class : "start" + " tpIpColoring-"+0});
+      g.setNode("end-0", {shape: "circle", style: "stroke-width: 4; stroke: black", class : "start" + " tpIpColoring-"+0})
       var length = clients[dataObject].length;
       var client = clients[dataObject];
       var start = "start-0"
-      obj = seqPreservingComparison(client, length, nodes, start, incomingXorNodes, "end-0", 0);
+      obj = seqPreservingComparison(client, length, nodes, start, incomingXorNodes, "end-0", 0, comparisonTableData);
       totalTpIpArray.push(0);
       incomingXorNodes = obj.incomingXorNodes;
       endConnections.push(obj.endConection);
+      comparisonTableData.timePorIP.push(0);
       nodes = obj.nodes;
     }
     var endConection = obj.endConection;
     var totalRequestsData = totalNumberOfRequests(nodes);
     var totalRequests = totalRequestsData.total;
     var maxRequests = totalRequestsData.maxRequests;
+    comparisonTableData = getComparisonTableNodes(nodes, comparisonTableData);
     for(var key in nodes){
       var size = Object.keys(nodes[key]).length;
       if(size == 1){
@@ -158,6 +173,7 @@
     var totalAvgKey = obj.totalAvgKey;
     var maxDelay = obj.MAX;
     var minDelay = obj.MIN;
+    var edges = 0;
     //Set Up Edges
     for(var key in nodes){
       var str = "inXOR-"+key
@@ -166,8 +182,12 @@
       if(size == 1){
         var status = Object.keys(nodes[key])[0]
         if(nodes[key][status].outgoingXOR){
+          console.log("OUTGOING-Size-1");
           g.setEdge(key+' '+status,"XOR-"+key+' '+status,
           {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin});
+          increaseAppropriateEdge(size, key, status, comparisonTableData, "outgoingXOR");
+          edges++;
+          console.log(key, status)
           // g.setEdge("inXOR-"+key, key+' '+status, {label: "delayAvg: "+ delayAvg});
         }
         if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length == 1){
@@ -176,21 +196,34 @@
           g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,
           {label: p,
            class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
+           console.log("INCOMING-Size-1");
+          increaseAppropriateEdge(size, key, status, comparisonTableData, "incomingXOR");
+          edges++;
         }
         if(nodes[key][status].statusArray.length == 1){
           let p = getProbabilityLabel(nodes, nodes[key][status].statusArray[0].start.split(' ')[0], nodes[key][status].statusArray[0].start.split(' ')[1], 1);
           g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,
           { label : p,
             class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
+            console.log("INCOMING-STATUS-LENGTH-1");
+            increaseAppropriateEdge(size, key, status, comparisonTableData, "incomingXOR");
+            edges++;
         }
         if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length > 1){
           g.setEdge("inXOR-"+key, key+' '+status,
           {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin})
+          increaseAppropriateEdge(size, key, status, comparisonTableData, "incomingXOR");
+          edges++;
+          console.log("INCOMING-XOR-SIZE-1")
+          console.log(key, status)
           for(var space in incomingXorNodes[key]){
             var len = incomingXorNodes[key][space][0].length;
             if(len == 1){
               g.setEdge(incomingXorNodes[key][space][0][0], str,
                 {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-0"})
+              console.log("it should be start NODE", incomingXorNodes[key][space][0][0])
+              comparisonTableData.uniqueEdges.size++;
+              edges++;
               }
               else{
                 let avg = getIncomingEdgeIndexDelay(nodes, key, incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
@@ -206,24 +239,35 @@
         else{
           var str1 = "middleXOR-"+key;
           // g.setEdge(str,key,{label: "Delay Average:"+delayAvg});
-          if(Object.keys(incomingXorNodes[key]).length > 1) g.setEdge(str,key, {
+          if(Object.keys(incomingXorNodes[key]).length > 1){
+            g.setEdge(str,key, {
             class: "edge-thickness-"+totalRequests[key] + " " + "delay-coloring-"+bin});
+            increaseAppropriateEdge(1, key, status, comparisonTableData, "incomingXOR");
+            edges++;
+          }
             g.setEdge(key,str1, {class: "edge-thickness-"+totalRequests[key] + " " + "delay-coloring-0"});
+            increaseAppropriateEdge(1, key, status, comparisonTableData, "incomingXOR");
+            edges++;
             for(var status in nodes[key]){
               // console.log(nodes[key][status].avgDelay);
               bin = computeAssignBin(nodes[key][status].avgDelay, maxDelay, 1);
               g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%",
               class: "edge-thickness-" +nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin})
+              increaseAppropriateEdge(1, key, status, comparisonTableData, "middleXOR");
+              edges++;
               // g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%"+'\n'+"Delay Avg:" + (computeDelayAvg(nodes, key, status)/1000/60/60/24), labelType: "html"});
               if(nodes[key][status].outgoingXOR){
                 g.setEdge(key+' '+status, "XOR-"+key+' '+status,
                 {class: "edge-thickness-" + nodes[key][status].statusArray.length + " delay-coloring-0"});
+                increaseAppropriateEdge(1, key, status, comparisonTableData, "middleXOR");
+                edges++;
               }
             }
              multipleIncomingXorSetUp(g, nodes, key, Object.keys(incomingXorNodes[key]).length, maxDelay, 1, incomingXorNodes)
             }
           }
-
+          console.log(comparisonTableData);
+          console.log(edges);
           //Set Up End Node
           for(let i = 0; i < endConnections.length; i++){
             var endConection = endConnections[i];
@@ -274,14 +318,6 @@
           svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id);
             var n = id.split("start-")[1];
             document.body.classList.toggle("enable-path-"+n);
-            // var x = document.getElementsByTagName("STYLE")[3];
-            // console.log(x);
-            // if(x.disabled){
-            //   x.disabled = false;
-            // }
-            // else{
-            //   x.disabled = true;
-            // }
             console.log("Clicked " + id); });
         }
 
