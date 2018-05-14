@@ -6,10 +6,10 @@ var patternMSUW = function(nodes, pattern){
     let mt = space[0];
     let url = "/";
     url+= space.slice(1).join("/");
-    if(placeholder[url] === undefined && matchMethod(pattern["0"], mt)){
+    if(placeholder[pattern[0].url] === undefined && matchMethod(pattern["0"], mt)){
       for(var status in nodes[key]){
         if(matchStatus(pattern["0"], status)){
-          placeholder[url] = pattern["0"].url;
+          placeholder[pattern[0].url] = url;
           ret = followUpPatternMSUW(nodes, key, status, pattern, placeholder)
         }
         if(ret){return ret};
@@ -33,15 +33,15 @@ var followUpPatternMSUW = function(nodes, key, status, pattern, placeholder){
       let st = finalEnd[1];
       console.log(newUrl, method);
       if(matchMethod(pattern[j], method) && matchStatus(pattern[j], st)){
-        if(placeholder[newUrl] === undefined){
-          placeholder[newUrl] = pattern[j].url;
+        if(placeholder[pattern[j].url] === undefined){
+          placeholder[pattern[j].url] = newUrl;
           key = finalEnd[0];
           status = finalEnd[1];
           j++;
           i = -1;
         }
         else{
-          if(matchURL(pattern[j], placeholder[newUrl])){
+          if(newMatchURL(newUrl, placeholder[pattern[j].url])){
             key = finalEnd[0];
             status = finalEnd[1];
             j++;
@@ -53,6 +53,9 @@ var followUpPatternMSUW = function(nodes, key, status, pattern, placeholder){
     if(j == patternSize) return true;
   }
   return (j==patternSize);
+}
+var newMatchURL = function(u1, u2){
+  return u1 == u2;
 }
 // var pattern_variableURL = {
 //   "1" : {
@@ -169,6 +172,7 @@ var followUpPatternMethodStatus = function(nodes, key, status, pattern){
   var  j = 1;
   if(j == patternSize) return true;
   for(let i = 0; i < nodes[key][status].statusArray.length; i++){
+    //get the next conversation node
     let finalEnd = nodes[key][status].statusArray[i].finalEnd.split(' ');
     if(finalEnd.length > 1){
       let method = finalEnd[0].split('/')[0];

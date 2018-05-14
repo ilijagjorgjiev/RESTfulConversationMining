@@ -182,12 +182,12 @@
       if(size == 1){
         var status = Object.keys(nodes[key])[0]
         if(nodes[key][status].outgoingXOR){
-          console.log("OUTGOING-Size-1");
+          // console.log("OUTGOING-Size-1");
           g.setEdge(key+' '+status,"XOR-"+key+' '+status,
           {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin});
           increaseAppropriateEdge(size, key, status, comparisonTableData, "outgoingXOR");
           edges++;
-          console.log(key, status)
+          // console.log(key, status)
           // g.setEdge("inXOR-"+key, key+' '+status, {label: "delayAvg: "+ delayAvg});
         }
         if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length == 1){
@@ -196,7 +196,7 @@
           g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,
           {label: p,
            class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
-           console.log("INCOMING-Size-1");
+           // console.log("INCOMING-Size-1");
           increaseAppropriateEdge(size, key, status, comparisonTableData, "incomingXOR");
           edges++;
         }
@@ -205,7 +205,7 @@
           g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,
           { label : p,
             class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
-            console.log("INCOMING-STATUS-LENGTH-1");
+            // console.log("INCOMING-STATUS-LENGTH-1");
             increaseAppropriateEdge(size, key, status, comparisonTableData, "incomingXOR");
             edges++;
         }
@@ -214,14 +214,14 @@
           {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin})
           increaseAppropriateEdge(size, key, status, comparisonTableData, "incomingXOR");
           edges++;
-          console.log("INCOMING-XOR-SIZE-1")
-          console.log(key, status)
+          // console.log("INCOMING-XOR-SIZE-1")
+          // console.log(key, status)
           for(var space in incomingXorNodes[key]){
             var len = incomingXorNodes[key][space][0].length;
             if(len == 1){
               g.setEdge(incomingXorNodes[key][space][0][0], str,
                 {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-0"})
-              console.log("it should be start NODE", incomingXorNodes[key][space][0][0])
+              // console.log("it should be start NODE", incomingXorNodes[key][space][0][0])
               comparisonTableData.uniqueEdges.size++;
               edges++;
               }
@@ -267,7 +267,7 @@
             }
           }
           console.log(comparisonTableData);
-          console.log(edges);
+          // console.log(edges);
           //Set Up End Node
           for(let i = 0; i < endConnections.length; i++){
             var endConection = endConnections[i];

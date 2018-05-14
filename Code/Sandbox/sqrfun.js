@@ -9,7 +9,7 @@ var seqPreservingComparison = function(client, length, nodes, start, incomingXor
   var s = null;
   var l;
   for(let i = 0; i < length; i++){
-    var str = client[i].method + client[i].location
+    var str = client[i].method + client[i].location;
     var key = client[i].method + ' ' + client[i].location;
     var status = client[i].status;
     if(nodes[str] === undefined){
@@ -355,9 +355,16 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
           }
           if(totalArray.includes(nodes[key][status].tpIpArray[i]) != true) totalArray.push(nodes[key][status].tpIpArray[i]);
         }
-        // console.log(array);
+        console.log(array, key);
         if(array.length > 1) comparisonTableData.overlappingNodes.size++;
         else comparisonTableData.uniqueNodes.size++;
+
+        //nodecounter[array.length]++
+        //nodecounter[1] // uniqueNodes
+        //nodecounter[2] // two IP
+        //nodecounter[3] // three IP
+
+        //nodeipcounter[IP]++ //how many nodes has IP?
 
         if(comparisonTableData.nodes[key].statuses[status] === undefined){
           comparisonTableData.nodes[key].statuses[status] = [];
@@ -365,10 +372,10 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
         }
         array = [];
       }
+      //BUG
       if(totalArray.length > 1) comparisonTableData.overlappingNodes.size++;
       let l = Object.keys(nodes[key]).length;
       if(totalArray.length == 1 && l > 1) comparisonTableData.uniqueNodes.size++;
-
       comparisonTableData.nodes[key].totalArray = totalArray;
       totalArray = [];
     }

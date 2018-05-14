@@ -29,6 +29,7 @@ var conversionPath = function(class_prefix, size){
       sheet.insertRule(".enable-path-"+i+".enable-path-"+j+" " +"."+class_prefix+"-"+i+"."+class_prefix+"-"+j+" { "+st+" }");
     }
   }
+  //Issue: Generalize for n, optimization. 
 }
 var hexToRgb = function(hex) {
     // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
