@@ -24,7 +24,7 @@ var seqPreservingComparison = function(client, length, nodes, start, incomingXor
       "end" : str+' '+status,
       "key" : key,
       "finalEnd" : start,
-      "finalStart" : prev
+      "finalStart" : prev,
     }
     let delay = computeDelay(nodes, node.start, node.dataNode);
     if(k == null || s == null){
@@ -34,6 +34,8 @@ var seqPreservingComparison = function(client, length, nodes, start, incomingXor
     else{
       l = nodes[k][s].statusArray.length;
       nodes[k][s].statusArray[l-1].finalEnd = str+' '+status;
+      // if(k == "DELETE/last" && s == "204") nodes[k][s].statusArray[l-1].finalEnd = "POST/prev" + ' ' + "400";
+      // if(k == "PUT/next" && s == "200") nodes[k][s].statusArray[l-1].finalEnd = "OPTIONS/other" + ' ' + "200";
       k = str;
       s = status;
     }
@@ -355,7 +357,6 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
           }
           if(totalArray.includes(nodes[key][status].tpIpArray[i]) != true) totalArray.push(nodes[key][status].tpIpArray[i]);
         }
-        console.log(array, key);
         if(array.length > 1) comparisonTableData.overlappingNodes.size++;
         else comparisonTableData.uniqueNodes.size++;
 

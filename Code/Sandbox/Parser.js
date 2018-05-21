@@ -3,6 +3,8 @@ var requireFromUrl = require('require-from-url/sync');
 var fs = require('fs');
 var dagre = require("dagre");
 var dagreD3 = require("dagre-d3");
+var Iconv  = require('iconv').Iconv
+var utf8 = require('utf8');
 // var graphlib = requireFromUrl("https://dagrejs.github.io/project/graphlib-dot/v0.6.3/graphlib-dot.js")
 // var d3v4 = requireFromUrl("https://d3js.org/d3.v4.js")
 
@@ -12,10 +14,10 @@ var readParseFile = function(links){
   var logs = [];
   for(let i = 0; i < links.length; i++){
     let str = links[i];
-    let spaces = str.split(' ');
     if(str != ''){
+      let spaces = str.split(' ');
       let obj = {date : spaces[0], time : spaces[1], ip : spaces[2], method : spaces[3], location: spaces[4], status : spaces[5]}
-      logs[i] = obj;
+      logs.push(obj);
     }
   }
   return logs;
@@ -47,12 +49,11 @@ var sortClientByDateTime = function(clients){
   for(var ip in clients){
     if(ip !== undefined){
       for(let i = 0; i < clients[ip].length; i++){
-        // console.log(clients[ip][i])
         let build1 = clients[ip][i].date.split('/')
         let build2 = clients[ip][i].time.split(':')
         let date = new Date();
         date.setDate(build1[0])
-        date.setMonth(build1[1])
+        date.setMonth(build1[1]-1)
         date.setFullYear(build1[2])
         date.setHours(build2[0])
         date.setMinutes(build2[1])
@@ -66,9 +67,10 @@ var sortClientByDateTime = function(clients){
   }
   return clients;
 }
+var links = fs.readFileSync("../../Data/log.txt", "utf8").split('\n')
 
-// var links = fs.readFileSync("../../Data/log.txt", 'utf8').split('\n')
-var links = fs.readFileSync("./demoLog.txt", 'utf8').split('\n')
+// var links = fs.readFileSync("./log2.txt", "ucs2").split('\n');
+// var links = fs.readFileSync("./demoLog.txt", 'utf8').split('\n')
 var logs = readParseFile(links);
 var clients = clientSegmentation(logs);
 clients = sortClientByDateTime(clients);

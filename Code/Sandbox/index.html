@@ -32,7 +32,7 @@
       <div id="VisualizationConfig" style="display: none">
         Node Frequency Coloring: <input type="checkbox" id="nfc" onclick="myFunction()"> <br />
         Edge Frequency Thickness: <input type="checkbox" id="eft" onclick="myFunction1()"> <br />
-        Edge Delay Coloring: <input type="checkbox" id="edc" onclick="myFunction2()">
+        Edge Delay Coloring: <input type="checkbox" id="edc" onclick="myFunction2()"> <br />
       </div>
     </div>
     <svg> </g></svg>
@@ -66,6 +66,7 @@
     el.innerHTML = str;
   }
   var fixVisualizationConfig = function(nfc, eft, edc){
+
     nfc.checked = false;
     eft.checked = false;
     edc.checked = false;
@@ -89,6 +90,7 @@
     var nodes = []
     var incomingXorNodes = {}
     var totalTpIpArray = []
+    var startKey, startStatus;
     var comparisonTableData = {
       timePorIP : [],
       uniqueNodes : {
@@ -103,6 +105,8 @@
     }
     if(dataObject.identify === "tp"){
       var timePeriods = dataObject.data;
+      startKey = timePeriods[0][0].method + timePeriods[0][0].location;
+      startStatus = timePeriods[0][0].status;
       for(let i = 0; i < timePeriods.length; i++){
         var start = "start-"+i;
         g.setNode("start-"+i, {shape: "circle", class : "start" + " tpIpColoring-"+i});
@@ -120,7 +124,10 @@
       g.setNode("end-0", {shape: "circle", style: "stroke-width: 4; stroke: black", class : "start" + " tpIpColoring-"+0})
       var length = clients[dataObject].length;
       var client = clients[dataObject];
+      startKey = client[0].method + client[0].location;
+      startStatus = client[0].status;
       var start = "start-0"
+
       obj = seqPreservingComparison(client, length, nodes, start, incomingXorNodes, "end-0", 0, comparisonTableData);
       totalTpIpArray.push(0);
       incomingXorNodes = obj.incomingXorNodes;
@@ -143,26 +150,26 @@
         g.setNode(key+' '+status, { shape: "rect", label : nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length,
         class:"type-Request method-"+key+' '+status + ' ' + word});
         if(nodes[key][status].outgoingXOR){
-          g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR"});
+          g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
         }
         if((nodes[key][status].statusArray.length) > 1 && Object.keys(incomingXorNodes[key]).length > 1){
           // var bool = checkIfIncomingXorExists(nodes, key, status, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXor-"+key);
           var str = "inXOR-"+key
-          g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR"});
+          g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR incomingXOR"});
         }
       }
       else{
         var st = Object.keys(nodes[key])[0]
         var word = setUpTotalClassForDifferentIpTp(nodes, key);
         g.setNode(key, {shape: "rect", label: nodes[key][st].statusArray[0].key + '\n' + totalRequests[key], class: "type-Request method-"+key + ' ' + word});
-        g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR"});
+        g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR middleXOR"});
         var str = "inXOR-"+key
-        if(Object.keys(incomingXorNodes[key]).length > 1) g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR"});
+        if(Object.keys(incomingXorNodes[key]).length > 1) g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR incomingXOR"});
         for(var status in nodes[key]){
           word = setUpClassForDifferentIpTp(nodes, key, status);
           g.setNode(key+' '+status, {shape: "rect", label : status + '\n' + nodes[key][status].statusArray.length, class:"type-Response method-"+key+' '+status + ' ' + word});
           if(nodes[key][status].outgoingXOR){
-            g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR"});
+            g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
           }
         }
       }
@@ -266,7 +273,7 @@
              multipleIncomingXorSetUp(g, nodes, key, Object.keys(incomingXorNodes[key]).length, maxDelay, 1, incomingXorNodes)
             }
           }
-          console.log(comparisonTableData);
+          // console.log(comparisonTableData);
           // console.log(edges);
           //Set Up End Node
           for(let i = 0; i < endConnections.length; i++){
@@ -291,13 +298,15 @@
           setNodeClasses(g, nodes, totalRequestsData);
           setVisualizationConfig(nfc, eft, edc, maxRequests);
           conversionPath("tpIpColoring", totalTpIpArray.length);
-          var patternFound = patternMethondStatus(nodes, pattern);
-          var patternFound1 = patternMethondStatusURL(nodes, patternURL);
-          var patternFound2 = patternMSUW(nodes, patternWild);
+          // var patternFound = patternMethondStatus(nodes, pattern);
+
+          var patternFound2 = hasPattern(g, nodes, patternMixed);
+          hasPatternWholeGraph(g, dataObject.data, patternMixed, startKey, startStatus);
           // patternMethondStatusURL(nodes);
-          console.log("PATTERN="+patternFound);
-          console.log("PatternURL="+patternFound1);
+          // console.log("PATTERN="+patternFound);
+          // console.log("PatternURL="+patternFound1);
           console.log("patternWild="+patternFound2);
+          // console.log(nodes);
           var svg = d3.select("svg");
           svg.selectAll("*").remove();
           var inner = svg.append("g");

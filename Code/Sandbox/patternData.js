@@ -41,70 +41,117 @@ var patternWild = {
   "0" : {
     method : "OPTIONS",
     status : "200",
-    url : "/other"
+    url : "$1"
   },
   "1" : {
     method : "POST",
     status : "403",
-    url : "/resource/edit"
+    url : "$2"
   },
   "2" : {
     method : "OPTIONS",
     status : "200",
-    url : "/job/2/output"
+    url : "$3"
   },
   "3" : {
     method : "GET",
     status : "303",
-    url : "/other"
+    url : "$1"
   }
 }
-patternURL = patternWild;
-
 var patternMixed = {
   "0" : {
-    method : "OPTIONS",
-    status : "200"
-  }, //match only exact method and status, ignore URL
+    method : "*",
+    status : "*",
+    url : "*"
+  },
   "1" : {
-    method : "POST",
-    status : "403",
-    url : "/resource/edit"
-  }, //match exact method and status, and URL
+    method : "*",
+    status : "500",
+    url : "*"
+  },
   "2" : {
-    method : "OPTIONS",
-    status : "200",
-    xurl : "/1"
-  }, //match exact method and status, and URL placeholder
+    method : "DELETE",
+    status : "*",
+    url : "/last"
+  },
   "3" : {
-    method : "GET",
-    status : "303",
-    xurl : "/1"
-  } //match exact method and status, and URL placeholder
-}
-
-var patternMixed = {
-  "0" : {
-    method : "OPTIONS",
-    status : "200",
-    url : undefined //*
-  }, //match only exact method and status, ignore URL
-  "1" : {
     method : "POST",
-    status : "403",
-    url : "/resource/edit"
-  }, //match exact method and status, and URL
-  "2" : {
+    status : "*",
+    url : "/prev"
+  },
+  "4" :{
+    method : "PUT",
+    status : "*",
+    url : "*",
+  },
+  "5" : {
     method : "OPTIONS",
     status : "200",
     url : "$1"
-  }, //match exact method and status, and URL placeholder
-  "3" : {
+  },
+  "6" : {
+    method : "POST",
+    status : "403",
+    url : "$2"
+  },
+  "7" : {
+    method : "OPTIONS",
+    status : "200",
+    url : "$3"
+  },
+  "8" : {
     method : "GET",
     status : "303",
-    url : "/*/"
-  } //match exact method and status, and URL placeholder
+    url : "$1"
+  }
 }
+// patternURL = patternWild;
+//
+// var patternMixed = {
+//   "0" : {
+//     method : "OPTIONS",
+//     status : "200"
+//   }, //match only exact method and status, ignore URL
+//   "1" : {
+//     method : "POST",
+//     status : "403",
+//     url : "/resource/edit"
+//   }, //match exact method and status, and URL
+//   "2" : {
+//     method : "OPTIONS",
+//     status : "200",
+//     xurl : "/1"
+//   }, //match exact method and status, and URL placeholder
+//   "3" : {
+//     method : "GET",
+//     status : "303",
+//     xurl : "/1"
+//   } //match exact method and status, and URL placeholder
+// }
+//
+// var patternMixed = {
+//   "0" : {
+//     method : "OPTIONS",
+//     status : "200",
+//     url : "*" //*
+//   }, //match only exact method and status, ignore URL
+//   "1" : {
+//     method : "POST",
+//     status : "403",
+//     url : "/resource/edit"
+//   }, //match exact method and status, and URL
+//   "2" : {
+//     method : "OPTIONS",
+//     status : "200",
+//     url : "$1"
+//   }, //match exact method and status, and URL placeholder
+//   "3" : {
+//     method : "GET",
+//     status : "303",
+//     url : "$2"
+//   } //match exact method and status, and URL placeholder
+// }
 
 // * 200 *
 // * 200 /$
