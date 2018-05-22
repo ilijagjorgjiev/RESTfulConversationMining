@@ -16,6 +16,7 @@
   <script src="stylingfun.js"></script>
   <script src="patternMatching.js"></script>
   <script src="patternData.js"></script>
+  <script src="bower_components/jquery/dist/jquery.js"></script>
   <!-- <script type="text/javascript" src="setup.js"></script> -->
   <link rel="stylesheet" href="styles.css">
 
@@ -33,6 +34,7 @@
         Node Frequency Coloring: <input type="checkbox" id="nfc" onclick="myFunction()"> <br />
         Edge Frequency Thickness: <input type="checkbox" id="eft" onclick="myFunction1()"> <br />
         Edge Delay Coloring: <input type="checkbox" id="edc" onclick="myFunction2()"> <br />
+        Show Edge Probability: <input type="checkbox" id="sep" onclick="myFunction3()" <br />
       </div>
     </div>
     <svg> </g></svg>
@@ -65,13 +67,15 @@
     }
     el.innerHTML = str;
   }
-  var fixVisualizationConfig = function(nfc, eft, edc){
+  var fixVisualizationConfig = function(nfc, eft, edc, sep){
 
     nfc.checked = false;
     eft.checked = false;
     edc.checked = false;
+    sep.checked = false;
     deleteStyles();
     disableConversionPaths();
+    disableEdgeProbability();
   }
   //Draw the Graph for the selected IP.
   var drawGraph = function(dataObject){
@@ -82,7 +86,9 @@
     var nfc = document.getElementById("nfc");
     var eft = document.getElementById("eft");
     var edc = document.getElementById("edc");
-    fixVisualizationConfig(nfc, eft, edc);
+    var sep = document.getElementById("sep");
+
+    fixVisualizationConfig(nfc, eft, edc, sep);
     // Here we"re setting nodeclass, which is used by our custom drawNodes function
     // below.
     var obj;
@@ -297,11 +303,20 @@
           });
           setNodeClasses(g, nodes, totalRequestsData);
           setVisualizationConfig(nfc, eft, edc, maxRequests);
+          triggerEdgeProbability(sep);
+          // console.log(list, list[0]);
+          // console.log(list.length);
+          // for (var i = 0; i < list.length; i++) {
+          //   // console.log(i);
+          //   console.log(list[i]);
+          //   // elem.style = "opacity: 0;";
+          //   // console.log(elem.style);
+          // }
           conversionPath("tpIpColoring", totalTpIpArray.length);
           // var patternFound = patternMethondStatus(nodes, pattern);
 
           var patternFound2 = hasPattern(g, nodes, patternMixed);
-          hasPatternWholeGraph(g, dataObject.data, patternMixed, startKey, startStatus);
+          // hasPatternWholeGraph(g, dataObject.data, patternMixed, startKey, startStatus);
           // patternMethondStatusURL(nodes);
           // console.log("PATTERN="+patternFound);
           // console.log("PatternURL="+patternFound1);

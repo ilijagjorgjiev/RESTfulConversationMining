@@ -160,6 +160,28 @@ var getIncomingEdgeIndexDelay = function(nodes, k, node, counter){
     console.log("ERROR IN getIncomingEdgeIndexDelay")
   };
 }
+var triggerEdgeProbability = function(elem){
+  elem.onclick = function(){
+      if(elem.checked != true) disableEdgeProbability()
+      else enableEdgeProbability()
+  }
+}
+var enableEdgeProbability = function(){
+  $(document).ready(function(){
+    var list = document.getElementsByClassName("edgeLabel");
+    for(let i = 0; i < list.length; i++){
+      list[i].style.cssText = "opacity: 1;";
+    }
+  })
+}
+var disableEdgeProbability = function(){
+  $(document).ready(function(){
+    var list = document.getElementsByClassName("edgeLabel");
+    for(let i = 0; i < list.length; i++){
+      list[i].style.cssText = "opacity: 0;";
+    }
+  })
+}
 var setStyles = function(){
   for(let i = 0; i < 3; i++){
     let style = document.createElement('style')
