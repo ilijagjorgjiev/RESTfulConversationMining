@@ -23,6 +23,19 @@ var readParseFile = function(links){
   return logs;
 }
 
+var flatProcessingOfFile = function(links){
+  var logs = [];
+  for(let i = 0; i < links.length; i++){
+    let str = links[i];
+    if(str != ''){
+      let spaces = str.split(' ');
+      let obj = {date : spaces[0], time : spaces[1], ip : spaces[2], method : spaces[3], location: "/", status : spaces[5]}
+      logs.push(obj);
+    }
+  }
+  return logs;
+}
+
 
 //Bug: the logs may contain some undefined entries. Fixed the bug with undefined it was due to an empty line. --Fixed
 

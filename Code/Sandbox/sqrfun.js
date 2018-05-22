@@ -397,7 +397,10 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
     }
   }
 
-  var updateComparisonUniqueness = function(word, dataUniqueness, dataUniquenessNodes, dataNodeIpTp){
+  var updateComparisonUniqueness = function(word, comparisonTableData, key, status){
+    var dataUniqueness = comparisonTableData.uniqueness;
+    var dataUniquenessNodes = comparisonTableData.uniquenessNodes;
+    var dataNodeIpTp = comparisonTableData.nodeIpTp
     word = word.split(' ');
     if(dataUniqueness[word.length-1] === undefined) dataUniqueness[word.length-1] = 1;
     else dataUniqueness[word.length-1]++;
@@ -409,6 +412,16 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
       if(dataNodeIpTp[val] === undefined) dataNodeIpTp[val] = 1;
       else dataNodeIpTp[val]++;
     }
-    if(dataUniquenessNodes[tPiP] === undefined) dataUniquenessNodes[tPiP] = 1;
-    else dataUniquenessNodes[tPiP]++;
+    if(dataUniquenessNodes[tPiP] === undefined) {
+      dataUniquenessNodes[tPiP] = {};
+      dataUniquenessNodes[tPiP].counter = 1;
+      dataUniquenessNodes[tPiP].nodes = [];
+      if(status === undefined) dataUniquenessNodes[tPiP].nodes.push(key);
+      else dataUniquenessNodes[tPiP].nodes.push(key+' '+status);
+    }
+    else{
+      dataUniquenessNodes[tPiP].counter++;
+      if(status === undefined) dataUniquenessNodes[tPiP].nodes.push(key);
+      else dataUniquenessNodes[tPiP].nodes.push(key+' '+status);
+    }
   }

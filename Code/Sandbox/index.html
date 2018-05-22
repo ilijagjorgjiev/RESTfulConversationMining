@@ -160,7 +160,7 @@
         var status = Object.keys(nodes[key])[0]
         var str = "inXOR-"+key
         var word = setUpClassForDifferentIpTp(nodes, key, status);
-        updateComparisonUniqueness(word, comparisonTableData.uniqueness, comparisonTableData.uniquenessNodes, comparisonTableData.nodeIpTp);
+        updateComparisonUniqueness(word, comparisonTableData, key, status);
         if(incomingXorNodes[key] !== undefined) checkIfIncomingXorExists(nodes, key, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXOR-"+key)
         g.setNode(key+' '+status, { shape: "rect", label : nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length,
         class:"type-Request method-"+key+' '+status + ' ' + word});
@@ -176,14 +176,14 @@
       else{
         var st = Object.keys(nodes[key])[0]
         var word = setUpTotalClassForDifferentIpTp(nodes, key);
-        updateComparisonUniqueness(word, comparisonTableData.uniqueness, comparisonTableData.uniquenessNodes, comparisonTableData.nodeIpTp);
+        updateComparisonUniqueness(word, comparisonTableData, key, undefined);
         g.setNode(key, {shape: "rect", label: nodes[key][st].statusArray[0].key + '\n' + totalRequests[key], class: "type-Request method-"+key + ' ' + word});
         g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR middleXOR"});
         var str = "inXOR-"+key
         if(Object.keys(incomingXorNodes[key]).length > 1) g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR incomingXOR"});
         for(var status in nodes[key]){
           word = setUpClassForDifferentIpTp(nodes, key, status);
-          updateComparisonUniqueness(word, comparisonTableData.uniqueness, comparisonTableData.uniquenessNodes, comparisonTableData.nodeIpTp);
+          updateComparisonUniqueness(word, comparisonTableData, key, status);
           g.setNode(key+' '+status, {shape: "rect", label : status + '\n' + nodes[key][status].statusArray.length, class:"type-Response method-"+key+' '+status + ' ' + word});
           if(nodes[key][status].outgoingXOR){
             g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
