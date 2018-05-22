@@ -6,7 +6,7 @@ var disableConversionPaths = function(){
     obj.toggle(obj[0]);
   }
 }
-var conversionPath = function(class_prefix, size){
+var conversionPath = function(class_prefix, size, data){
   let style = document.createElement('style')
 
   // style.disabled = true;
@@ -22,13 +22,35 @@ var conversionPath = function(class_prefix, size){
     let clazz = "."+class_prefix+"-"+i;
     sheet.insertRule(".enable-path-" + i + " " +clazz+" { "+st+" }");
   }
-  for(let i = 0; i < size; i++){
-    for(let j = i + 1; j < size; j++){
-      let color = getGradientColor(hexToRgb(rainbow[i]), hexToRgb(rainbow[j]), 0.5);
+  for(var rules in data){
+    var line = rules.split('-');
+    var color =  hexToRgb(rainbow[line[0]]);
+    for(let i = 1; i < line.length; i++){
+      color = getGradientColor(color, hexToRgb(rainbow[line[i]]), 0.5);
+    }
+    if(line.length > 1){
       let st = "fill: rgb("+color[0]+","+color[1]+","+color[2]+")";
-      sheet.insertRule(".enable-path-"+i+".enable-path-"+j+" " +"."+class_prefix+"-"+i+"."+class_prefix+"-"+j+" { "+st+" }");
+      var str1 = "";
+      var str = "";
+      st = " { "+st+" }";
+      for(let i = 0; i < line.length; i++){
+        str += (".enable-path-"+line[i])
+        str1 += "."+class_prefix+"-"+line[i]
+      }
+      var final = str + " " + str1 + st;
+      console.log(final);
+      sheet.insertRule(final);
+      // sheet.insertRule(".enable-path-"+i+".enable-path-"+j+" " +"."+class_prefix+"-"+i+"."+class_prefix+"-"+j+" { "+st+" }");
     }
   }
+  // for(let i = 0; i < size; i++){
+  //   for(let j = i + 1; j < size; j++){
+  //     let color = getGradientColor(hexToRgb(rainbow[i]), hexToRgb(rainbow[j]), 0.5);
+  //     let st = "fill: rgb("+color[0]+","+color[1]+","+color[2]+")";
+  //     console.log(".enable-path-"+i+".enable-path-"+j+" " +"."+class_prefix+"-"+i+"."+class_prefix+"-"+j+" { "+st+" }");
+  //     sheet.insertRule(".enable-path-"+i+".enable-path-"+j+" " +"."+class_prefix+"-"+i+"."+class_prefix+"-"+j+" { "+st+" }");
+  //   }
+  // }
   //Issue: Generalize for n, optimization.
 }
 var hexToRgb = function(hex) {
@@ -40,6 +62,14 @@ var hexToRgb = function(hex) {
 
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)];
+}
+function componentToHex(c) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
+
+function rgbToHex(r, g, b) {
+    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
 
 var createRainbow = function(size){
@@ -183,7 +213,7 @@ var disableEdgeProbability = function(){
   })
 }
 var setStyles = function(){
-  for(let i = 0; i < 3; i++){
+  for(let i = 0; i < 4; i++){
     let style = document.createElement('style')
 
     style.disabled = true;
@@ -196,7 +226,7 @@ var setStyles = function(){
     x.disabled = true;
   }
 }
-var setVisualizationConfig = function(nfc, eft, edc, maxRequests){
+var setVisualizationConfig = function(nfc, eft, edc, sep, maxRequests){
   var VisualizationConfig = document.getElementById("VisualizationConfig");
   var red = [255,0,0];
   var yellow = [255,255,0];
@@ -207,6 +237,7 @@ var setVisualizationConfig = function(nfc, eft, edc, maxRequests){
   setElementOnClick(nfc, 0);
   setElementOnClick(eft, 1);
   setElementOnClick(edc, 2);
+  setElementOnClick(sep, 3);
   VisualizationConfig.style = "diplay: visible;"
 }
 var setElementOnClick = function(elem, index){

@@ -5,6 +5,8 @@ var dagre = require("dagre");
 var dagreD3 = require("dagre-d3");
 var Iconv  = require('iconv').Iconv
 var utf8 = require('utf8');
+const Route = require('route-parser');
+
 // var graphlib = requireFromUrl("https://dagrejs.github.io/project/graphlib-dot/v0.6.3/graphlib-dot.js")
 // var d3v4 = requireFromUrl("https://d3js.org/d3.v4.js")
 
@@ -17,6 +19,30 @@ var readParseFile = function(links){
     if(str != ''){
       let spaces = str.split(' ');
       let obj = {date : spaces[0], time : spaces[1], ip : spaces[2], method : spaces[3], location: spaces[4], status : spaces[5]}
+      logs.push(obj);
+    }
+  }
+  return logs;
+}
+
+//Read the file and parse it to objects
+//assumes there are routes passed as second parameter
+var readParseURLRouteFile = function(links, routes){
+
+  var logs = [];
+  for(let i = 0; i < links.length; i++){
+    let str = links[i];
+    if(str != ''){
+      let spaces = str.split(' ');
+      var url = spaces[4];
+
+      routes.forEach(function(r) {
+        if (r.match(url)) {
+          url = r.spec;
+        }
+      })
+
+      let obj = {date : spaces[0], time : spaces[1], ip : spaces[2], method : spaces[3], location: url, status : spaces[5]}
       logs.push(obj);
     }
   }
@@ -80,11 +106,20 @@ var sortClientByDateTime = function(clients){
   }
   return clients;
 }
-var links = fs.readFileSync("../../Data/log.txt", "utf8").split('\n')
+// var links = fs.readFileSync("../../Data/log.txt", "utf8").split('\n')
 
-// var links = fs.readFileSync("./log2.txt", "ucs2").split('\n');
+var links = fs.readFileSync("./log2.txt", "ucs2").split('\n');
 // var links = fs.readFileSync("./demoLog.txt", 'utf8').split('\n')
-var logs = readParseFile(links);
+
+//TODO parse a text file with one route per line and create Route objects and push them into the routes array
+var routes = [];
+routes.push(new Route('/content/abstract/scopus_id/:id'));
+routes.push(new Route('/content/serial/title/issn/:id'));
+routes.push(new Route('/content/author/author_id/:id'));
+
+//var logs = readParseFile(links);
+//var logs = readParseURLRouteFile(links,routes);
+ var logs = flatProcessingOfFile(links);
 var clients = clientSegmentation(logs);
 clients = sortClientByDateTime(clients);
 //Save Data into the data.js file.

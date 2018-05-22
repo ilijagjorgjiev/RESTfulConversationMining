@@ -11,6 +11,8 @@
   <script src="bower_components/dagre/dist/dagre.core.js"></script>
   <script src="bower_components/dagre-d3/dist/dagre-d3.core.js"></script>
   <link rel="stylesheet/less" type="text/css" href="bower_components/tyles.less" />
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
   <script src="data.js"></script>
   <script src="sqrfun.js"></script>
   <script src="stylingfun.js"></script>
@@ -38,10 +40,15 @@
       </div>
       <div id="comparisonTableData">
       </div>
+      <div id="piechart"></div>
+      <!-- <svg width="200px" height="200px"></svg> -->
     </div>
-    <svg> </g></svg>
+    <svg id="restalk"> </g></svg>
   </body>
   <script>
+  //LOAD Google Charts
+  // google.charts.load('current', {'packages':['corechart']});
+  // google.charts.setOnLoadCallback(createPieChart);
   // Input related code goes here
 
   // Create the dropdown-list of Clients.
@@ -78,7 +85,7 @@
     deleteStyles();
     disableConversionPaths();
     disableEdgeProbability();
-    clearTable();
+    // clearTable();
   }
   //Draw the Graph for the selected IP.
   var drawGraph = function(dataObject){
@@ -111,7 +118,6 @@
         },
         uniqueEdges : { size : 0,},
         overlappingEdges : {size : 0,},
-        nodes : {}
       },
       uniqueness : {},
       uniquenessNodes : {},
@@ -119,8 +125,8 @@
     }
     if(dataObject.identify === "tp"){
       var timePeriods = dataObject.data;
-      startKey = timePeriods[0][0].method + timePeriods[0][0].location;
-      startStatus = timePeriods[0][0].status;
+      // startKey = timePeriods[0][0].method + timePeriods[0][0].location;
+      // startStatus = timePeriods[0][0].status;
       for(let i = 0; i < timePeriods.length; i++){
         var start = "start-"+i;
         g.setNode("start-"+i, {shape: "circle", class : "start" + " tpIpColoring-"+i});
@@ -153,7 +159,7 @@
     var totalRequestsData = totalNumberOfRequests(nodes);
     var totalRequests = totalRequestsData.total;
     var maxRequests = totalRequestsData.maxRequests;
-    comparisonTableData.uniqueOverlapping = getComparisonTableNodes(nodes, comparisonTableData.uniqueOverlapping);
+    // comparisonTableData.uniqueOverlapping = getComparisonTableNodes(nodes, comparisonTableData.uniqueOverlapping);
     for(var key in nodes){
       var size = Object.keys(nodes[key]).length;
       if(size == 1){
@@ -209,7 +215,7 @@
           // console.log("OUTGOING-Size-1");
           g.setEdge(key+' '+status,"XOR-"+key+' '+status,
           {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin});
-          increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "outgoingXOR");
+          // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "outgoingXOR");
           edges++;
           // console.log(key, status)
           // g.setEdge("inXOR-"+key, key+' '+status, {label: "delayAvg: "+ delayAvg});
@@ -221,7 +227,7 @@
           {label: p,
            class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
            // console.log("INCOMING-Size-1");
-          increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
+          // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
           edges++;
         }
         if(nodes[key][status].statusArray.length == 1){
@@ -230,13 +236,13 @@
           { label : p,
             class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
             // console.log("INCOMING-STATUS-LENGTH-1");
-            increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
+            // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
             edges++;
         }
         if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length > 1){
           g.setEdge("inXOR-"+key, key+' '+status,
           {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin})
-          increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
+          // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
           edges++;
           // console.log("INCOMING-XOR-SIZE-1")
           // console.log(key, status)
@@ -266,24 +272,24 @@
           if(Object.keys(incomingXorNodes[key]).length > 1){
             g.setEdge(str,key, {
             class: "edge-thickness-"+totalRequests[key] + " " + "delay-coloring-"+bin});
-            increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
+            // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
             edges++;
           }
             g.setEdge(key,str1, {class: "edge-thickness-"+totalRequests[key] + " " + "delay-coloring-0"});
-            increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
+            // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
             edges++;
             for(var status in nodes[key]){
               // console.log(nodes[key][status].avgDelay);
               bin = computeAssignBin(nodes[key][status].avgDelay, maxDelay, 1);
               g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%",
               class: "edge-thickness-" +nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin})
-              increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "middleXOR");
+              // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "middleXOR");
               edges++;
               // g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%"+'\n'+"Delay Avg:" + (computeDelayAvg(nodes, key, status)/1000/60/60/24), labelType: "html"});
               if(nodes[key][status].outgoingXOR){
                 g.setEdge(key+' '+status, "XOR-"+key+' '+status,
                 {class: "edge-thickness-" + nodes[key][status].statusArray.length + " delay-coloring-0"});
-                increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "middleXOR");
+                // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "middleXOR");
                 edges++;
               }
             }
@@ -314,20 +320,20 @@
           });
           console.log(edges, comparisonTableData);
           setNodeClasses(g, nodes, totalRequestsData);
-          setVisualizationConfig(nfc, eft, edc, maxRequests);
+          setVisualizationConfig(nfc, eft, edc, sep, maxRequests);
           triggerEdgeProbability(sep);
-          conversionPath("tpIpColoring", totalTpIpArray.length);
+          conversionPath("tpIpColoring", totalTpIpArray.length, comparisonTableData.uniquenessNodes);
           // var patternFound = patternMethondStatus(nodes, pattern);
           // createComparisonUniquenessTable(comparisonTableData.uniqueness);
-          // createComparisonNodeIpTpTable(comparisonTableData.nodeIpTp);
+          createComparisonNodeIpTpTable(comparisonTableData.nodeIpTp);
           var patternFound2 = hasPattern(g, nodes, patternMixed);
           // hasPatternWholeGraph(g, dataObject.data, patternMixed, startKey, startStatus);
-          // patternMethondStatusURL(nodes);
+          // createPieChart();
           // console.log("PATTERN="+patternFound);
           // console.log("PatternURL="+patternFound1);
           console.log("patternWild="+patternFound2);
           // console.log(c);
-          var svg = d3.select("svg");
+          var svg = d3.select("svg#restalk");
           svg.selectAll("*").remove();
           var inner = svg.append("g");
 
@@ -349,50 +355,48 @@
             document.body.classList.toggle("enable-path-"+n);
             console.log("Clicked " + id); });
         }
-        var createComparisonUniquenessTable = function(data){
-          var fx = function(i){
-            if(i == 1) return "Unique Nodes";
-            else return i+"-Tp/Ip";
-          }
-          createTable(data, fx);
-        }
-        var createComparisonNodeIpTpTable = function(data){
-          var fx = function(i){
-            let val = "Tp/Ip-"+i
-            return val;
-          }
-          createTable(data, fx);
-        }
-        var createTable = function(data, fx){
-          var i = 1;
-          var table = document.createElement("TABLE");
-          var container = document.getElementById("comparisonTableData");
-          var x = document.createElement("TR");
-          x.setAttribute("id", "myTr");
-          container.appendChild(table);
-          table.setAttribute("id", "uniquenessTable");
-          table.appendChild(x);
-          var y = document.createElement("TR");
-          y.setAttribute("id", "myTr1");
-          table.appendChild(y);
-          var x = document.getElementById("myTr");
-          var y = document.getElementById("myTr1");
-          for(var input in data){
-            var th = document.createElement("TH")
-            var td = document.createElement("TD");
-            var str = fx(i);
-            var text = document.createTextNode(str);
-            var text1 = document.createTextNode(data[input]);
-            th.appendChild(text);
-            x.appendChild(th);
-            td.appendChild(text1);
-            y.appendChild(td);
-            i++;
-          }
-        }
-        var clearTable = function(){
-          var container = document.getElementById("comparisonTableData");
-          if(container.hasChildNodes()) container.removeChild(container.childNodes[0]);
-        }
+        // google.charts.load('current', {packages: ['corechart', 'table', 'controls', 'gauge']});
+        // google.charts.setOnLoadCallback(drawChart);
+        //
+        // // Draw the chart and set the chart values
+        // function drawChart() {
+        //   var data = google.visualization.arrayToDataTable([
+        //   ['Task', 'Hours per Day'],
+        //   ['Work', 8],
+        //   ['Eat', 2],
+        //   ['TV', 4],
+        //   ['Gym', 2],
+        //   ['Sleep', 8]
+        // ]);
+        //
+        //   // Optional; add a title and set the width and height of the chart
+        //   var options = {'title':'My Average Day', 'width':550, 'height':400};
+        //
+        //   // Display the chart inside the <div> element with id="piechart"
+        //   var chart = new google.visualization.PieChart(document.getElementById('comparisonTableData'));
+        //   chart.draw(data, options);
+        // }
+        // for(var rules in data){
+        //   var line = rules.split('-');
+        //   var color = hexToRgb(rainbow[0]);
+        //   for(let i = 1; i < line.length; i++){
+        //     color = getGradientColor(color, hexToRgb(rainbow[i]), 0.5)
+        //     color = rgbToHex(color[0], color[1], color[2]);
+        //   }
+        //   color = hexToRgb(color);
+        //   if(line.length > 1){
+        //     let st = "fill: rgb("+color[0]+","+color[1]+","+color[2]+")";
+        //     var str1 = "";
+        //     var str = "";
+        //     st = " { "+st+" }";
+        //     for(let i = 0; i < line.length; i++){
+        //       str += (".enable-path-"+i)
+        //       str1 += "."+class_prefix+"-"+i
+        //     }
+        //     var final = str + " " + str1 + st;
+        //     console.log(final);
+        //     // sheet.insertRule(".enable-path-"+i+".enable-path-"+j+" " +"."+class_prefix+"-"+i+"."+class_prefix+"-"+j+" { "+st+" }");
+        //   }
+        // }
         </script>
         </html>

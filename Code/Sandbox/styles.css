@@ -80,7 +80,7 @@ text {
 .dropdown:hover .dropbtn {
     background-color: #3e8e41;
 }
-svg {
+svg#restalk {
   width: 100%;
   height: 800px;
   border: 1px solid #999;
@@ -100,3 +100,7 @@ td, th {
 tr:nth-child(even) {
     background-color: #dddddd;
 }
+
+/* .edgeLabel tspan{
+  fill: green;
+} */

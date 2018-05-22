@@ -340,48 +340,48 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
     else p = p+'%';
     return p;
   }
-  var getComparisonTableNodes = function(nodes, comparisonTableData){
-    var array = [];
-    var totalArray = [];
-    for(var key in nodes){
-      if(comparisonTableData.nodes[key] === undefined){
-        comparisonTableData.nodes[key] = {
-          statuses : {},
-          totalArray : [],
-        }
-      }
-      for(var status in nodes[key]){
-        for(let i = 0; i < nodes[key][status].statusArray.length; i++){
-            if(array.includes(nodes[key][status].tpIpArray[i]) != true){
-            array.push(nodes[key][status].tpIpArray[i]);
-          }
-          if(totalArray.includes(nodes[key][status].tpIpArray[i]) != true) totalArray.push(nodes[key][status].tpIpArray[i]);
-        }
-        if(array.length > 1) comparisonTableData.overlappingNodes.size++;
-        else comparisonTableData.uniqueNodes.size++;
-
-        //nodecounter[array.length]++
-        //nodecounter[1] // uniqueNodes
-        //nodecounter[2] // two IP
-        //nodecounter[3] // three IP
-
-        //nodeipcounter[IP]++ //how many nodes has IP?
-
-        if(comparisonTableData.nodes[key].statuses[status] === undefined){
-          comparisonTableData.nodes[key].statuses[status] = [];
-          comparisonTableData.nodes[key].statuses[status] = array;
-        }
-        array = [];
-      }
-      //BUG
-      if(totalArray.length > 1) comparisonTableData.overlappingNodes.size++;
-      let l = Object.keys(nodes[key]).length;
-      if(totalArray.length == 1 && l > 1) comparisonTableData.uniqueNodes.size++;
-      comparisonTableData.nodes[key].totalArray = totalArray;
-      totalArray = [];
-    }
-    return comparisonTableData;
-  }
+  // var getComparisonTableNodes = function(nodes, comparisonTableData){
+  //   var array = [];
+  //   var totalArray = [];
+  //   for(var key in nodes){
+  //     if(comparisonTableData.nodes[key] === undefined){
+  //       comparisonTableData.nodes[key] = {
+  //         statuses : {},
+  //         totalArray : [],
+  //       }
+  //     }
+  //     for(var status in nodes[key]){
+  //       for(let i = 0; i < nodes[key][status].statusArray.length; i++){
+  //           if(array.includes(nodes[key][status].tpIpArray[i]) != true){
+  //           array.push(nodes[key][status].tpIpArray[i]);
+  //         }
+  //         if(totalArray.includes(nodes[key][status].tpIpArray[i]) != true) totalArray.push(nodes[key][status].tpIpArray[i]);
+  //       }
+  //       if(array.length > 1) comparisonTableData.overlappingNodes.size++;
+  //       else comparisonTableData.uniqueNodes.size++;
+  //
+  //       //nodecounter[array.length]++
+  //       //nodecounter[1] // uniqueNodes
+  //       //nodecounter[2] // two IP
+  //       //nodecounter[3] // three IP
+  //
+  //       //nodeipcounter[IP]++ //how many nodes has IP?
+  //
+  //       if(comparisonTableData.nodes[key].statuses[status] === undefined){
+  //         comparisonTableData.nodes[key].statuses[status] = [];
+  //         comparisonTableData.nodes[key].statuses[status] = array;
+  //       }
+  //       array = [];
+  //     }
+  //     //BUG
+  //     if(totalArray.length > 1) comparisonTableData.overlappingNodes.size++;
+  //     let l = Object.keys(nodes[key]).length;
+  //     if(totalArray.length == 1 && l > 1) comparisonTableData.uniqueNodes.size++;
+  //     comparisonTableData.nodes[key].totalArray = totalArray;
+  //     totalArray = [];
+  //   }
+  //   return comparisonTableData;
+  // }
   var increaseAppropriateEdge = function(size, key, status, comparisonTableData, kind){
     if(kind === "outgoingXOR" && size == 1){
       if(comparisonTableData.nodes[key].totalArray.length == 1) comparisonTableData.uniqueEdges.size++;
@@ -404,6 +404,8 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
     word = word.split(' ');
     if(dataUniqueness[word.length-1] === undefined) dataUniqueness[word.length-1] = 1;
     else dataUniqueness[word.length-1]++;
+    if(word.length > 2) comparisonTableData.uniqueOverlapping.overlappingNodes.size++;
+    else comparisonTableData.uniqueOverlapping.uniqueNodes.size++;
     var tPiP="";
     for(let i = 0; i < word.length-1; i++){
       let val = word[i].split('-')[1];
@@ -424,4 +426,50 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
       if(status === undefined) dataUniquenessNodes[tPiP].nodes.push(key);
       else dataUniquenessNodes[tPiP].nodes.push(key+' '+status);
     }
+  }
+  var createComparisonUniquenessTable = function(data){
+    var fx = function(i){
+      if(i == 1) return "Unique Nodes";
+      else return i+"-Tp/Ip";
+    }
+    createTable(data, fx);
+  }
+  var createComparisonNodeIpTpTable = function(data){
+    var fx = function(i){
+      let val = "Tp/Ip-"+i
+      return val;
+    }
+    createTable(data, fx);
+  }
+  var createTable = function(data, fx){
+    clearTable();
+    var i = 1;
+    var table = document.createElement("TABLE");
+    var container = document.getElementById("comparisonTableData");
+    var x = document.createElement("TR");
+    x.setAttribute("id", "myTr");
+    container.appendChild(table);
+    table.setAttribute("id", "uniquenessTable");
+    table.appendChild(x);
+    var y = document.createElement("TR");
+    y.setAttribute("id", "myTr1");
+    table.appendChild(y);
+    var x = document.getElementById("myTr");
+    var y = document.getElementById("myTr1");
+    for(var input in data){
+      var th = document.createElement("TH")
+      var td = document.createElement("TD");
+      var str = fx(i);
+      var text = document.createTextNode(str);
+      var text1 = document.createTextNode(data[input]);
+      th.appendChild(text);
+      x.appendChild(th);
+      td.appendChild(text1);
+      y.appendChild(td);
+      i++;
+    }
+  }
+  var clearTable = function(){
+    var container = document.getElementById("comparisonTableData");
+    if(container.hasChildNodes()) container.removeChild(container.childNodes[0]);
   }
