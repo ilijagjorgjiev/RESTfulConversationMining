@@ -36,6 +36,8 @@
         Edge Delay Coloring: <input type="checkbox" id="edc" onclick="myFunction2()"> <br />
         Show Edge Probability: <input type="checkbox" id="sep" onclick="myFunction3()" <br />
       </div>
+      <div id="comparisonTableData">
+      </div>
     </div>
     <svg> </g></svg>
   </body>
@@ -76,6 +78,7 @@
     deleteStyles();
     disableConversionPaths();
     disableEdgeProbability();
+    clearTable();
   }
   //Draw the Graph for the selected IP.
   var drawGraph = function(dataObject){
@@ -99,15 +102,20 @@
     var startKey, startStatus;
     var comparisonTableData = {
       timePorIP : [],
-      uniqueNodes : {
-        size : 0,
+      uniqueOverlapping : {
+        uniqueNodes : {
+          size : 0,
+        },
+        overlappingNodes : {
+          size : 0,
+        },
+        uniqueEdges : { size : 0,},
+        overlappingEdges : {size : 0,},
+        nodes : {}
       },
-      overlappingNodes : {
-        size : 0,
-      },
-      uniqueEdges : { size : 0,},
-      overlappingEdges : {size : 0,},
-      nodes : {}
+      uniqueness : {},
+      uniquenessNodes : {},
+      nodeIpTp : {},
     }
     if(dataObject.identify === "tp"){
       var timePeriods = dataObject.data;
@@ -145,13 +153,14 @@
     var totalRequestsData = totalNumberOfRequests(nodes);
     var totalRequests = totalRequestsData.total;
     var maxRequests = totalRequestsData.maxRequests;
-    comparisonTableData = getComparisonTableNodes(nodes, comparisonTableData);
+    comparisonTableData.uniqueOverlapping = getComparisonTableNodes(nodes, comparisonTableData.uniqueOverlapping);
     for(var key in nodes){
       var size = Object.keys(nodes[key]).length;
       if(size == 1){
         var status = Object.keys(nodes[key])[0]
         var str = "inXOR-"+key
         var word = setUpClassForDifferentIpTp(nodes, key, status);
+        updateComparisonUniqueness(word, comparisonTableData.uniqueness, comparisonTableData.uniquenessNodes, comparisonTableData.nodeIpTp);
         if(incomingXorNodes[key] !== undefined) checkIfIncomingXorExists(nodes, key, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXOR-"+key)
         g.setNode(key+' '+status, { shape: "rect", label : nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length,
         class:"type-Request method-"+key+' '+status + ' ' + word});
@@ -167,12 +176,14 @@
       else{
         var st = Object.keys(nodes[key])[0]
         var word = setUpTotalClassForDifferentIpTp(nodes, key);
+        updateComparisonUniqueness(word, comparisonTableData.uniqueness, comparisonTableData.uniquenessNodes, comparisonTableData.nodeIpTp);
         g.setNode(key, {shape: "rect", label: nodes[key][st].statusArray[0].key + '\n' + totalRequests[key], class: "type-Request method-"+key + ' ' + word});
         g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR middleXOR"});
         var str = "inXOR-"+key
         if(Object.keys(incomingXorNodes[key]).length > 1) g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR incomingXOR"});
         for(var status in nodes[key]){
           word = setUpClassForDifferentIpTp(nodes, key, status);
+          updateComparisonUniqueness(word, comparisonTableData.uniqueness, comparisonTableData.uniquenessNodes, comparisonTableData.nodeIpTp);
           g.setNode(key+' '+status, {shape: "rect", label : status + '\n' + nodes[key][status].statusArray.length, class:"type-Response method-"+key+' '+status + ' ' + word});
           if(nodes[key][status].outgoingXOR){
             g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
@@ -198,7 +209,7 @@
           // console.log("OUTGOING-Size-1");
           g.setEdge(key+' '+status,"XOR-"+key+' '+status,
           {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin});
-          increaseAppropriateEdge(size, key, status, comparisonTableData, "outgoingXOR");
+          increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "outgoingXOR");
           edges++;
           // console.log(key, status)
           // g.setEdge("inXOR-"+key, key+' '+status, {label: "delayAvg: "+ delayAvg});
@@ -210,7 +221,7 @@
           {label: p,
            class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
            // console.log("INCOMING-Size-1");
-          increaseAppropriateEdge(size, key, status, comparisonTableData, "incomingXOR");
+          increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
           edges++;
         }
         if(nodes[key][status].statusArray.length == 1){
@@ -219,13 +230,13 @@
           { label : p,
             class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
             // console.log("INCOMING-STATUS-LENGTH-1");
-            increaseAppropriateEdge(size, key, status, comparisonTableData, "incomingXOR");
+            increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
             edges++;
         }
         if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length > 1){
           g.setEdge("inXOR-"+key, key+' '+status,
           {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin})
-          increaseAppropriateEdge(size, key, status, comparisonTableData, "incomingXOR");
+          increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
           edges++;
           // console.log("INCOMING-XOR-SIZE-1")
           // console.log(key, status)
@@ -235,7 +246,7 @@
               g.setEdge(incomingXorNodes[key][space][0][0], str,
                 {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-0"})
               // console.log("it should be start NODE", incomingXorNodes[key][space][0][0])
-              comparisonTableData.uniqueEdges.size++;
+              comparisonTableData.uniqueOverlapping.uniqueEdges.size++;
               edges++;
               }
               else{
@@ -255,24 +266,24 @@
           if(Object.keys(incomingXorNodes[key]).length > 1){
             g.setEdge(str,key, {
             class: "edge-thickness-"+totalRequests[key] + " " + "delay-coloring-"+bin});
-            increaseAppropriateEdge(1, key, status, comparisonTableData, "incomingXOR");
+            increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
             edges++;
           }
             g.setEdge(key,str1, {class: "edge-thickness-"+totalRequests[key] + " " + "delay-coloring-0"});
-            increaseAppropriateEdge(1, key, status, comparisonTableData, "incomingXOR");
+            increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
             edges++;
             for(var status in nodes[key]){
               // console.log(nodes[key][status].avgDelay);
               bin = computeAssignBin(nodes[key][status].avgDelay, maxDelay, 1);
               g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%",
               class: "edge-thickness-" +nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin})
-              increaseAppropriateEdge(1, key, status, comparisonTableData, "middleXOR");
+              increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "middleXOR");
               edges++;
               // g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%"+'\n'+"Delay Avg:" + (computeDelayAvg(nodes, key, status)/1000/60/60/24), labelType: "html"});
               if(nodes[key][status].outgoingXOR){
                 g.setEdge(key+' '+status, "XOR-"+key+' '+status,
                 {class: "edge-thickness-" + nodes[key][status].statusArray.length + " delay-coloring-0"});
-                increaseAppropriateEdge(1, key, status, comparisonTableData, "middleXOR");
+                increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "middleXOR");
                 edges++;
               }
             }
@@ -301,27 +312,21 @@
             // Round the corners of the nodes
             node.rx = node.ry = 5;
           });
+          console.log(edges, comparisonTableData);
           setNodeClasses(g, nodes, totalRequestsData);
           setVisualizationConfig(nfc, eft, edc, maxRequests);
           triggerEdgeProbability(sep);
-          // console.log(list, list[0]);
-          // console.log(list.length);
-          // for (var i = 0; i < list.length; i++) {
-          //   // console.log(i);
-          //   console.log(list[i]);
-          //   // elem.style = "opacity: 0;";
-          //   // console.log(elem.style);
-          // }
           conversionPath("tpIpColoring", totalTpIpArray.length);
           // var patternFound = patternMethondStatus(nodes, pattern);
-
+          // createComparisonUniquenessTable(comparisonTableData.uniqueness);
+          // createComparisonNodeIpTpTable(comparisonTableData.nodeIpTp);
           var patternFound2 = hasPattern(g, nodes, patternMixed);
           // hasPatternWholeGraph(g, dataObject.data, patternMixed, startKey, startStatus);
           // patternMethondStatusURL(nodes);
           // console.log("PATTERN="+patternFound);
           // console.log("PatternURL="+patternFound1);
           console.log("patternWild="+patternFound2);
-          // console.log(nodes);
+          // console.log(c);
           var svg = d3.select("svg");
           svg.selectAll("*").remove();
           var inner = svg.append("g");
@@ -344,6 +349,50 @@
             document.body.classList.toggle("enable-path-"+n);
             console.log("Clicked " + id); });
         }
-
+        var createComparisonUniquenessTable = function(data){
+          var fx = function(i){
+            if(i == 1) return "Unique Nodes";
+            else return i+"-Tp/Ip";
+          }
+          createTable(data, fx);
+        }
+        var createComparisonNodeIpTpTable = function(data){
+          var fx = function(i){
+            let val = "Tp/Ip-"+i
+            return val;
+          }
+          createTable(data, fx);
+        }
+        var createTable = function(data, fx){
+          var i = 1;
+          var table = document.createElement("TABLE");
+          var container = document.getElementById("comparisonTableData");
+          var x = document.createElement("TR");
+          x.setAttribute("id", "myTr");
+          container.appendChild(table);
+          table.setAttribute("id", "uniquenessTable");
+          table.appendChild(x);
+          var y = document.createElement("TR");
+          y.setAttribute("id", "myTr1");
+          table.appendChild(y);
+          var x = document.getElementById("myTr");
+          var y = document.getElementById("myTr1");
+          for(var input in data){
+            var th = document.createElement("TH")
+            var td = document.createElement("TD");
+            var str = fx(i);
+            var text = document.createTextNode(str);
+            var text1 = document.createTextNode(data[input]);
+            th.appendChild(text);
+            x.appendChild(th);
+            td.appendChild(text1);
+            y.appendChild(td);
+            i++;
+          }
+        }
+        var clearTable = function(){
+          var container = document.getElementById("comparisonTableData");
+          if(container.hasChildNodes()) container.removeChild(container.childNodes[0]);
+        }
         </script>
         </html>

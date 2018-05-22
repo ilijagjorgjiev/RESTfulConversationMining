@@ -396,3 +396,19 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
       else comparisonTableData.overlappingEdges.size++;
     }
   }
+
+  var updateComparisonUniqueness = function(word, dataUniqueness, dataUniquenessNodes, dataNodeIpTp){
+    word = word.split(' ');
+    if(dataUniqueness[word.length-1] === undefined) dataUniqueness[word.length-1] = 1;
+    else dataUniqueness[word.length-1]++;
+    var tPiP="";
+    for(let i = 0; i < word.length-1; i++){
+      let val = word[i].split('-')[1];
+      if(i) tPiP += '-' + val
+      else tPiP += val
+      if(dataNodeIpTp[val] === undefined) dataNodeIpTp[val] = 1;
+      else dataNodeIpTp[val]++;
+    }
+    if(dataUniquenessNodes[tPiP] === undefined) dataUniquenessNodes[tPiP] = 1;
+    else dataUniquenessNodes[tPiP]++;
+  }
