@@ -106,18 +106,37 @@ var sortClientByDateTime = function(clients){
   }
   return clients;
 }
-var links = fs.readFileSync("../../Data/log.txt", "utf8").split('\n')
 
+
+var links, routes;
+var argv = process.argv;
+if(argv[2] === undefined) links = fs.readFileSync("./log2.txt", "ucs2").split('\n');
+else links = fs.readFileSync(argv[2], "ucs2").split('\n')
+if(argv[3] != undefined){
+ routes = fs.readFileSync(argv[3], "utf8").split('\n');
+}
+var createRoutes = function(routes){
+var r = [];
+for(let i = 0; i < routes.length; i++){
+  r.push(new Route(routes[i]));
+}
+return r;
+}
+if(routes !== undefined) routes = createRoutes(routes);
+
+// console.log(links, routes);
+
+// var links = fs.readFileSync("../../Data/log.txt", "utf8").split('\n')
 // var links = fs.readFileSync("./log2.txt", "ucs2").split('\n');
 // var links = fs.readFileSync("./demoLog.txt", 'utf8').split('\n')
 
 //TODO parse a text file with one route per line and create Route objects and push them into the routes array
-var routes = [];
-routes.push(new Route('/content/abstract/scopus_id/:id'));
-routes.push(new Route('/content/serial/title/issn/:id'));
-routes.push(new Route('/content/author/author_id/:id'));
+// var routes = [];
+// routes.push(new Route('/content/abstract/scopus_id/:id'));
+// routes.push(new Route('/content/serial/title/issn/:id'));
+// routes.push(new Route('/content/author/author_id/:id'));
 
-var logs = readParseFile(links);
+var logs = readParseURLRouteFile(links, routes);
 //var logs = readParseURLRouteFile(links,routes);
 // var logs = flatProcessingOfFile(links);
 var clients = clientSegmentation(logs);
