@@ -106,9 +106,9 @@ var sortClientByDateTime = function(clients){
   }
   return clients;
 }
-// var links = fs.readFileSync("../../Data/log.txt", "utf8").split('\n')
+var links = fs.readFileSync("../../Data/log.txt", "utf8").split('\n')
 
-var links = fs.readFileSync("./log2.txt", "ucs2").split('\n');
+// var links = fs.readFileSync("./log2.txt", "ucs2").split('\n');
 // var links = fs.readFileSync("./demoLog.txt", 'utf8').split('\n')
 
 //TODO parse a text file with one route per line and create Route objects and push them into the routes array
@@ -117,9 +117,9 @@ routes.push(new Route('/content/abstract/scopus_id/:id'));
 routes.push(new Route('/content/serial/title/issn/:id'));
 routes.push(new Route('/content/author/author_id/:id'));
 
-//var logs = readParseFile(links);
+var logs = readParseFile(links);
 //var logs = readParseURLRouteFile(links,routes);
- var logs = flatProcessingOfFile(links);
+// var logs = flatProcessingOfFile(links);
 var clients = clientSegmentation(logs);
 clients = sortClientByDateTime(clients);
 //Save Data into the data.js file.

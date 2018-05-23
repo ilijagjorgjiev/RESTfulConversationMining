@@ -93,8 +93,8 @@ var setUpPatternVisualization = function(g, nodesVisualization){
   for(let i = 0; i < nodesVisualization.length; i++){
     var full = nodesVisualization[i].method + nodesVisualization[i].url + ' ' + nodesVisualization[i].status;
     var key = nodesVisualization[i].method + nodesVisualization[i].url
-    if(g._nodes[key] != undefined) g._nodes[key].class = "showPattern";
-    g._nodes[full].style = "showPattern";
+    if(g._nodes[key] != undefined) g._nodes[key].style = "fill: blue";
+    g._nodes[full].style = "fill: blue";
   }
 }
 
