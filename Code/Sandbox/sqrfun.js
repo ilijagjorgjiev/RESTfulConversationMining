@@ -431,32 +431,33 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
   var createComparisonUniquenessTable = function(data){
     var fx = function(i){
       if(i == 1) return "Unique Nodes";
-      else return i+"-Tp/Ip";
+      else return i+"-TimeP";
     }
-    createTable(data, fx);
+    createTable(data, fx, "UniquenessTable", "Shared Nodes");
   }
   var createComparisonNodeIpTpTable = function(data){
     var fx = function(i){
-      let val = "Tp/Ip-"+i
+      let val = "TimeP-"+i
       return val;
     }
-    createTable(data, fx);
+    createTable(data, fx, "NodeIpTpTable", "Number of Nodes Each TP has");
   }
-  var createTable = function(data, fx){
-    clearTable();
+  var createTable = function(data, fx, id, caption){
+    // clearTable();
     var i = 1;
     var table = document.createElement("TABLE");
+    table.createCaption();
+    table.innerHTML = "<b>" + caption + "</b>";
     var container = document.getElementById("comparisonTableData");
     var x = document.createElement("TR");
-    x.setAttribute("id", "myTr");
+    console.log(id,x);
+    x.setAttribute("id", ("myTr"+id));
     container.appendChild(table);
-    table.setAttribute("id", "uniquenessTable");
+    table.setAttribute("id", id);
     table.appendChild(x);
     var y = document.createElement("TR");
-    y.setAttribute("id", "myTr1");
+    y.setAttribute("id", ("myTr1"+id));
     table.appendChild(y);
-    var x = document.getElementById("myTr");
-    var y = document.getElementById("myTr1");
     for(var input in data){
       var th = document.createElement("TH")
       var td = document.createElement("TD");
@@ -464,6 +465,7 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
       var text = document.createTextNode(str);
       var text1 = document.createTextNode(data[input]);
       th.appendChild(text);
+      console.log(x);
       x.appendChild(th);
       td.appendChild(text1);
       y.appendChild(td);

@@ -86,8 +86,8 @@
     statusColoring.checked = false;
     deleteStyles();
     disableConversionPaths();
+    clearTable();
     // disableEdgeProbability();
-    // clearTable();
   }
   //Draw the Graph for the selected IP.
   var drawGraph = function(dataObject){
@@ -331,7 +331,7 @@
           // triggerEdgeProbability(sep);
           conversionPath("tpIpColoring", totalTpIpArray.length, comparisonTableData.uniquenessNodes);
           // var patternFound = patternMethondStatus(nodes, pattern);
-          // createComparisonUniquenessTable(comparisonTableData.uniqueness);
+          createComparisonUniquenessTable(comparisonTableData.uniqueness);
           createComparisonNodeIpTpTable(comparisonTableData.nodeIpTp);
           var patternFound2 = hasPattern(g, nodes, patternMixed);
           // hasPatternWholeGraph(g, dataObject.data, patternMixed, startKey, startStatus);
