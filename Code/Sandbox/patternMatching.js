@@ -46,6 +46,7 @@ var hasPattern = function(g, nodes, pattern){
       for(var status in nodes[key]){
         if(identifyStatus(pattern[0], status)){
           nodesVisualization.push(setUpNode(mt, status, url));
+          console.log("start="+key+' '+status);
           ret = followUpPattern(nodes, key, status, pattern, placeholder, 1, nodesVisualization)
         }
         if(ret){
@@ -63,30 +64,46 @@ var hasPattern = function(g, nodes, pattern){
 
 var followUpPattern = function(nodes, key, status, pattern, placeholder, j, nodesVisualization){
  var patternSize = Object.keys(pattern).length;
- // if(key == "GET/job/2" && status == "200")
- var oldPlaceholder = placeholder;
+ var oldPl = placeholder;
+ var ret;
  if(j == patternSize) return true;
-
- for(let i = 0; i < nodes[key][status].statusArray.length; i++){
-   let finalEnd = nodes[key][status].statusArray[i].finalEnd.split(' ');
-   if(finalEnd.length > 1){
-     let slash = finalEnd[0].split('/');
-     let method = slash[0];
-     let newUrl = "/" + slash.slice(1).join("/");
-     let st = finalEnd[1];
-     if(identifyMethod(pattern[j], method) && identifyStatus(pattern[j], st) && identifyURL(pattern[j], newUrl, placeholder)){
-       var node = setUpNode(method, st, newUrl)
-       nodesVisualization.push(node);
-       var val = followUpPattern(nodes, finalEnd[0], finalEnd[1], pattern, placeholder, (j+1), nodesVisualization)
-       if(finalEnd[0]=="PUT/job") console.log(key, status, i, nodes[key][status].statusArray.length);
-       if(val) return true;
-      nodesVisualization.splice(-1,1);
-       placeholder = oldPlaceholder;
-     }
+ if(pattern[j].status == "*"){
+   // if(key=="POST/prev") console.log("HERE");
+   for(var st in nodes[key]){
+     if(key=="POST/prev") console.log(nodes[key], st);
+     ret = fx(nodes, key, st, pattern, placeholder, j, nodesVisualization, patternSize);
+     if(ret) return true;
+     if(!ret && key=="POST/prev") console.log("CAME");
    }
-    if(j == patternSize) return true;
  }
+ else{
+   ret = fx(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize);
+   if(ret) return true;
+ }
+ if(j == patternSize) return true;
  return j == patternSize;
+}
+var fx = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize){
+  if(j == patternSize) return true;
+  var oldPlaceholder = placeholder;
+  for(let i = 0; i < nodes[key][status].statusArray.length; i++){
+    let finalEnd = nodes[key][status].statusArray[i].finalEnd.split(' ');
+    if(finalEnd.length > 1){
+      let slash = finalEnd[0].split('/');
+      let method = slash[0];
+      let newUrl = "/" + slash.slice(1).join("/");
+      let st = finalEnd[1];
+      if(identifyMethod(pattern[j], method) && identifyStatus(pattern[j], st) && identifyURL(pattern[j], newUrl, placeholder)){
+        var node = setUpNode(method, st, newUrl)
+        nodesVisualization.push(node);
+        var val = followUpPattern(nodes, finalEnd[0], finalEnd[1], pattern, placeholder, (j+1), nodesVisualization)
+        if(val) return true;
+       nodesVisualization.splice(-1,1);
+        placeholder = oldPlaceholder;
+      }
+    }
+     if(j == patternSize) return true;
+  }
 }
 
 var setUpPatternVisualization = function(g, nodesVisualization){

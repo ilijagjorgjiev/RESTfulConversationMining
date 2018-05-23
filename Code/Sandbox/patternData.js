@@ -90,21 +90,21 @@ var patternMixed = {
     status : "200",
     url : "$1"
   },
-  "6" : {
-    method : "POST",
-    status : "403",
-    url : "$2"
-  },
-  "7" : {
-    method : "OPTIONS",
-    status : "200",
-    url : "$3"
-  },
-  "8" : {
-    method : "GET",
-    status : "303",
-    url : "$1"
-  }
+  // "6" : {
+  //   method : "POST",
+  //   status : "403",
+  //   url : "$2"
+  // },
+  // "7" : {
+  //   method : "OPTIONS",
+  //   status : "200",
+  //   url : "$3"
+  // },
+  // "8" : {
+  //   method : "GET",
+  //   status : "303",
+  //   url : "$1"
+  // }
 }
 // patternURL = patternWild;
 //

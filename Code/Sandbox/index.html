@@ -67,9 +67,7 @@
     var client = this.clients[clientIP];
     var el = document.getElementById("multiSelect");
     var form = document.getElementById("multiSelectForm");
-    console.log(client);
     var timePeriods = differenceThreshold(client);
-    console.log(timePeriods);
     var str = "";
     for(let i = 0; i < timePeriods.length; i++){
       str += '<option value=\''+i+'\'> Time Period '+ i + '</option>'

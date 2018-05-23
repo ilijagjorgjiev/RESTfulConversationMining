@@ -258,7 +258,6 @@ var differenceThreshold = function(client){
   let diffThreshold = (min+max)/2;
   var timeP = []
   timeP.push(client[0])
-  console.log(client.length);
   for(let i = 1; i < client.length; i++){
     let date = new Date(client[i-1].datetime)
     let date1 = new Date(client[i].datetime)
