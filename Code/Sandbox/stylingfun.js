@@ -190,30 +190,44 @@ var getIncomingEdgeIndexDelay = function(nodes, k, node, counter){
     console.log("ERROR IN getIncomingEdgeIndexDelay")
   };
 }
-var triggerEdgeProbability = function(elem){
-  elem.onclick = function(){
-      if(elem.checked != true) disableEdgeProbability()
-      else enableEdgeProbability()
+// var triggerEdgeProbability = function(elem){
+//   elem.onclick = function(){
+//       if(elem.checked != true) disableEdgeProbability()
+//       else enableEdgeProbability()
+//   }
+// }
+// var enableEdgeProbability = function(){
+//   $(document).ready(function(){
+//     var list = document.getElementsByClassName("edgeLabel");
+//     for(let i = 0; i < list.length; i++){
+//       list[i].style.cssText = "opacity: 1;";
+//     }
+//   })
+// }
+// var disableEdgeProbability = function(){
+//   $(document).ready(function(){
+//     var list = document.getElementsByClassName("edgeLabel");
+//     for(let i = 0; i < list.length; i++){
+//       list[i].style.cssText = "opacity: 0;";
+//     }
+//   })
+// }
+var hasStatus = function(statusObj, status){
+  if(statusObj[status] === undefined) statusObj[status] = true;
+}
+var setStatusColoring = function(statusObj, class_prefix, sheet){
+  var size = Object.keys(statusObj).length;
+  var rainbow = createRainbow(size);
+  var i = 0;
+  for(var status in statusObj){
+    var st = "fill: "+rainbow[i];
+    var clazz = "."+class_prefix+"-"+status;
+    sheet.insertRule(clazz+" { "+st+" }");
+    i++;
   }
 }
-var enableEdgeProbability = function(){
-  $(document).ready(function(){
-    var list = document.getElementsByClassName("edgeLabel");
-    for(let i = 0; i < list.length; i++){
-      list[i].style.cssText = "opacity: 1;";
-    }
-  })
-}
-var disableEdgeProbability = function(){
-  $(document).ready(function(){
-    var list = document.getElementsByClassName("edgeLabel");
-    for(let i = 0; i < list.length; i++){
-      list[i].style.cssText = "opacity: 0;";
-    }
-  })
-}
 var setStyles = function(){
-  for(let i = 0; i < 4; i++){
+  for(let i = 0; i < 5; i++){
     let style = document.createElement('style')
 
     style.disabled = true;
@@ -226,7 +240,22 @@ var setStyles = function(){
     x.disabled = true;
   }
 }
-var setVisualizationConfig = function(nfc, eft, edc, sep, maxRequests){
+var setEdgeProbabilityStyle = function(elem, class_prefix, sheet){
+  var st = "opacity: 0;"
+  var clazz = "."+class_prefix;
+  sheet.insertRule(clazz+" { "+st+" }");
+  var x = document.getElementsByTagName("STYLE")[3]
+  x.disabled = false;
+  elem.onclick = function(){
+    if(elem.checked == true){
+      x.disabled = true;
+    }
+    else{
+      x.disabled = false;;
+    }
+  };
+}
+var setVisualizationConfig = function(nfc, eft, edc, sep, statusColoring, maxRequests, statusObj){
   var VisualizationConfig = document.getElementById("VisualizationConfig");
   var red = [255,0,0];
   var yellow = [255,255,0];
@@ -234,10 +263,12 @@ var setVisualizationConfig = function(nfc, eft, edc, sep, maxRequests){
   setNodeFrequencyColoring(red, yellow, "totalRequest", 1, maxRequests, document.getElementsByTagName("STYLE")[0].sheet);
   setEdgeFrequencyThickness("edge-thickness", 1, maxRequests, document.getElementsByTagName("STYLE")[1].sheet);
   setDelayFrequencyColoring(red, yellow, "delay-coloring", 0, 128, document.getElementsByTagName("STYLE")[2].sheet)
+  setStatusColoring(statusObj, "status", document.getElementsByTagName("STYLE")[4].sheet);
+  setEdgeProbabilityStyle(sep, "edgeLabel tspan", document.getElementsByTagName("STYLE")[3].sheet);
   setElementOnClick(nfc, 0);
   setElementOnClick(eft, 1);
   setElementOnClick(edc, 2);
-  setElementOnClick(sep, 3);
+  setElementOnClick(statusColoring, 4);
   VisualizationConfig.style = "diplay: visible;"
 }
 var setElementOnClick = function(elem, index){

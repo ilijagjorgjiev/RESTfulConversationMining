@@ -36,7 +36,8 @@
         Node Frequency Coloring: <input type="checkbox" id="nfc" onclick="myFunction()"> <br />
         Edge Frequency Thickness: <input type="checkbox" id="eft" onclick="myFunction1()"> <br />
         Edge Delay Coloring: <input type="checkbox" id="edc" onclick="myFunction2()"> <br />
-        Show Edge Probability: <input type="checkbox" id="sep" onclick="myFunction3()" <br />
+        Show Edge Probability: <input type="checkbox" id="sep" onclick="myFunction3()"> <br />
+        Status Coloring: <input type="checkbox" id="statusColoring"> <br />
       </div>
       <div id="comparisonTableData">
       </div>
@@ -76,15 +77,16 @@
     }
     el.innerHTML = str;
   }
-  var fixVisualizationConfig = function(nfc, eft, edc, sep){
+  var fixVisualizationConfig = function(nfc, eft, edc, sep, statusColoring){
 
     nfc.checked = false;
     eft.checked = false;
     edc.checked = false;
     sep.checked = false;
+    statusColoring.checked = false;
     deleteStyles();
     disableConversionPaths();
-    disableEdgeProbability();
+    // disableEdgeProbability();
     // clearTable();
   }
   //Draw the Graph for the selected IP.
@@ -97,10 +99,12 @@
     var eft = document.getElementById("eft");
     var edc = document.getElementById("edc");
     var sep = document.getElementById("sep");
+    var statusColoring = document.getElementById("statusColoring");
 
-    fixVisualizationConfig(nfc, eft, edc, sep);
+    fixVisualizationConfig(nfc, eft, edc, sep, statusColoring);
     // Here we"re setting nodeclass, which is used by our custom drawNodes function
     // below.
+    var statusObj = {};
     var obj;
     var endConnections = []
     var nodes = []
@@ -167,9 +171,10 @@
         var str = "inXOR-"+key
         var word = setUpClassForDifferentIpTp(nodes, key, status);
         updateComparisonUniqueness(word, comparisonTableData, key, status);
+        hasStatus(statusObj, status);
         if(incomingXorNodes[key] !== undefined) checkIfIncomingXorExists(nodes, key, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXOR-"+key)
         g.setNode(key+' '+status, { shape: "rect", label : nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length,
-        class:"type-Request method-"+key+' '+status + ' ' + word});
+        class:"type-Request method-"+key+' '+status + ' ' + word + ' ' + "status-"+status});
         if(nodes[key][status].outgoingXOR){
           g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
         }
@@ -190,7 +195,8 @@
         for(var status in nodes[key]){
           word = setUpClassForDifferentIpTp(nodes, key, status);
           updateComparisonUniqueness(word, comparisonTableData, key, status);
-          g.setNode(key+' '+status, {shape: "rect", label : status + '\n' + nodes[key][status].statusArray.length, class:"type-Response method-"+key+' '+status + ' ' + word});
+          hasStatus(statusObj, status);
+          g.setNode(key+' '+status, {shape: "rect", label : status + '\n' + nodes[key][status].statusArray.length, class:"type-Response method-"+key+' '+status + ' ' + word + ' ' + "status-"+status});
           if(nodes[key][status].outgoingXOR){
             g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
           }
@@ -320,8 +326,8 @@
           });
           console.log(edges, comparisonTableData);
           setNodeClasses(g, nodes, totalRequestsData);
-          setVisualizationConfig(nfc, eft, edc, sep, maxRequests);
-          triggerEdgeProbability(sep);
+          setVisualizationConfig(nfc, eft, edc, sep, statusColoring, maxRequests, statusObj);
+          // triggerEdgeProbability(sep);
           conversionPath("tpIpColoring", totalTpIpArray.length, comparisonTableData.uniquenessNodes);
           // var patternFound = patternMethondStatus(nodes, pattern);
           // createComparisonUniquenessTable(comparisonTableData.uniqueness);
