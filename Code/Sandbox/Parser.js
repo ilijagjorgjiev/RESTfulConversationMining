@@ -111,7 +111,7 @@ var sortClientByDateTime = function(clients){
 var links, routes;
 var argv = process.argv;
 if(argv[2] === undefined) links = fs.readFileSync("./log2.txt", "ucs2").split('\n');
-else links = fs.readFileSync(argv[2], "utf8").split('\n')
+else links = fs.readFileSync(argv[2], "ucs2").split('\n')
 if(argv[3] != undefined){
  routes = fs.readFileSync(argv[3], "utf8").split('\n');
 }
@@ -124,7 +124,6 @@ return r;
 }
 if(routes !== undefined) routes = createRoutes(routes);
 
-// console.log(links, routes);
 
 // var links = fs.readFileSync("../../Data/log.txt", "utf8").split('\n')
 // var links = fs.readFileSync("./log2.txt", "ucs2").split('\n');
@@ -136,14 +135,37 @@ if(routes !== undefined) routes = createRoutes(routes);
 // routes.push(new Route('/content/serial/title/issn/:id'));
 // routes.push(new Route('/content/author/author_id/:id'));
 
-var logs = readParseFile(links, routes);
+var createData = function(links, routes, fx){
+  var logs;
+  if(routes !== undefined){
+    logs = fx(links, routes);
+  }
+  else{
+    logs = fx(links);
+  }
+  var clients = clientSegmentation(logs);
+  clients = sortClientByDateTime(clients);
+  // console.log(clients);
+  return clients;
+}
+// var logs = readParseFile(links);
 //var logs = readParseURLRouteFile(links,routes);
 // var logs = flatProcessingOfFile(links);
-var clients = clientSegmentation(logs);
-clients = sortClientByDateTime(clients);
-//Save Data into the data.js file.
+// var clients = clientSegmentation(logs);
+// clients = sortClientByDateTime(clients);
+var parseRouteData, sequentialParser, flatParser;
+if(routes !== undefined) parseRouteData = createData(links, routes, readParseURLRouteFile);
+sequentialParser = createData(links, undefined, readParseFile);
+flatParser = createData(links, undefined, flatProcessingOfFile);
+// console.log(parseRouteData);
+var data = {};
+data.FlatData = flatParser;
+data.ParseRouteData = parseRouteData;
+data.SequentialData = sequentialParser;
+// Save Data into the data.js file.
+// console.log(data);
 var filepath = "data.js"
-var content = "var clients = " + JSON.stringify(clients);
+var content = "var data = " + JSON.stringify(data);
 fs.writeFile(filepath, content, (err) => {
   if (err) throw err;
 

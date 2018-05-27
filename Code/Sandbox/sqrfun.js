@@ -450,7 +450,7 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
     table.innerHTML = "<b>" + caption + "</b>";
     var container = document.getElementById("comparisonTableData");
     var x = document.createElement("TR");
-    console.log(id,x);
+    // console.log(id,x);
     x.setAttribute("id", ("myTr"+id));
     container.appendChild(table);
     table.setAttribute("id", id);
@@ -465,7 +465,7 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
       var text = document.createTextNode(str);
       var text1 = document.createTextNode(data[input]);
       th.appendChild(text);
-      console.log(x);
+      // console.log(x);
       x.appendChild(th);
       td.appendChild(text1);
       y.appendChild(td);
@@ -474,5 +474,7 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
   }
   var clearTable = function(){
     var container = document.getElementById("comparisonTableData");
-    if(container.hasChildNodes()) container.removeChild(container.childNodes[0]);
+    while(container.hasChildNodes()) {
+      container.removeChild(container.childNodes[0])
+    };
   }

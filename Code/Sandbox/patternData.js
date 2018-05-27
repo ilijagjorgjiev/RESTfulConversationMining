@@ -1,3 +1,5 @@
+var user_select_patterns = {pattern : pattern,  patternURL : patternURL, patternWild : patternWild};
+
 var pattern = {
   "0" : {
     method : "GET",
@@ -40,23 +42,33 @@ var patternURL = {
 var patternWild = {
   "0" : {
     method : "OPTIONS",
-    status : "200",
+    status : "404",
     url : "$1"
   },
   "1" : {
-    method : "POST",
-    status : "403",
+    method : "*",
+    status : "404",
     url : "$2"
   },
   "2" : {
-    method : "OPTIONS",
-    status : "200",
-    url : "$3"
+    method : "*",
+    status : "500",
+    url : "$1"
   },
   "3" : {
-    method : "GET",
-    status : "303",
-    url : "$1"
+    method : "DELETE",
+    status : "*",
+    url : "$3"
+  },
+  "4" : {
+    method : "OPTIONS",
+    status : "*",
+    url : "*",
+  },
+  "5" : {
+    method : "DELETE",
+    status : "500",
+    "url" : "$1"
   }
 }
 var patternMixed = {
@@ -84,12 +96,10 @@ var patternMixed = {
     method : "PUT",
     status : "*",
     url : "*",
-  },
-  "5" : {
-    method : "OPTIONS",
-    status : "200",
-    url : "$1"
-  },
+  }}
+
+  var user_select_patterns = {pattern : pattern,  patternURL : patternURL, patternWild : patternWild, patternMixed : patternMixed};
+
   // "6" : {
   //   method : "POST",
   //   status : "403",
@@ -105,7 +115,6 @@ var patternMixed = {
   //   status : "303",
   //   url : "$1"
   // }
-}
 // patternURL = patternWild;
 //
 // var patternMixed = {
@@ -134,7 +143,7 @@ var patternMixed = {
 //   "0" : {
 //     method : "OPTIONS",
 //     status : "200",
-//     url : "*" //*
+//     url : $1
 //   }, //match only exact method and status, ignore URL
 //   "1" : {
 //     method : "POST",
@@ -149,7 +158,7 @@ var patternMixed = {
 //   "3" : {
 //     method : "GET",
 //     status : "303",
-//     url : "$2"
+//     url : "$1"
 //   } //match exact method and status, and URL placeholder
 // }
 

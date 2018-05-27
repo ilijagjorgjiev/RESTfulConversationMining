@@ -8,7 +8,6 @@ var identifyStatus = function(s1, s2){
 }
 var identifyURL = function(u1, u2, placeholder){
   if(u1.url[0] == "$"){
-    console.log(placeholder, u1.url);
     if(placeholder[u1.url] === undefined){
       placeholder[u1.url] = u2;
       return true;
@@ -37,6 +36,7 @@ var hasPattern = function(g, nodes, pattern){
   var placeholder = {};
   var oldpl;
   var nodesVisualization = [];
+  var matrixNodesVisualization = [];
   for(var key in nodes){
     let space = key.split("/");
     let mt = space[0];
@@ -46,12 +46,8 @@ var hasPattern = function(g, nodes, pattern){
       for(var status in nodes[key]){
         if(identifyStatus(pattern[0], status)){
           nodesVisualization.push(setUpNode(mt, status, url));
-          console.log("start="+key+' '+status);
-          ret = followUpPattern(nodes, key, status, pattern, placeholder, 1, nodesVisualization)
-        }
-        if(ret){
-          setUpPatternVisualization(g, nodesVisualization);
-          return ret;
+          console.log("start="+key+" "+status);
+          followUpPattern(nodes, key, status, pattern, placeholder, 1, nodesVisualization, matrixNodesVisualization)
         }
         placeholder = oldpl;
         nodesVisualization.splice(-1,1);
@@ -59,32 +55,37 @@ var hasPattern = function(g, nodes, pattern){
     }
     placeholder = {};
   }
+  if(matrixNodesVisualization.length > 0) setUpPatternVisualization(g, matrixNodesVisualization);
   return ret;
 }
 
-var followUpPattern = function(nodes, key, status, pattern, placeholder, j, nodesVisualization){
- var patternSize = Object.keys(pattern).length;
- var oldPl = placeholder;
- var ret;
- if(j == patternSize) return true;
- if(pattern[j].status == "*"){
-   // if(key=="POST/prev") console.log("HERE");
-   for(var st in nodes[key]){
-     if(key=="POST/prev") console.log(nodes[key], st);
-     ret = fx(nodes, key, st, pattern, placeholder, j, nodesVisualization, patternSize);
-     if(ret) return true;
-     if(!ret && key=="POST/prev") console.log("CAME");
-   }
- }
- else{
-   ret = fx(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize);
-   if(ret) return true;
- }
- if(j == patternSize) return true;
- return j == patternSize;
+var followUpPattern = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, matrixNodesVisualization){
+  var patternSize = Object.keys(pattern).length;
+  var oldPl = placeholder;
+  console.log("continue="+key+" "+status, j);
+  if(pattern[j-1].status == "*" && j != 1){
+    nodesVisualization.splice(-1,1);
+    let slash = key.split('/');
+    let method = slash[0];
+    let newUrl = "/" + slash.slice(1).join("/");
+    for(var st in nodes[key]){
+      var node = setUpNode(method, st, newUrl)
+      nodesVisualization.push(node);
+      fx(nodes, key, st, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization);
+      nodesVisualization.splice(-1,1);
+    }
+  }
+  else{
+    fx(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization);
+  }
+  return;
 }
-var fx = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize){
-  if(j == patternSize) return true;
+var fx = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization){
+  if(j == patternSize) {
+    var newArray = nodesVisualization.slice();
+    matrixNodesVisualization.push(newArray);
+    return;
+  }
   var oldPlaceholder = placeholder;
   for(let i = 0; i < nodes[key][status].statusArray.length; i++){
     let finalEnd = nodes[key][status].statusArray[i].finalEnd.split(' ');
@@ -93,28 +94,57 @@ var fx = function(nodes, key, status, pattern, placeholder, j, nodesVisualizatio
       let method = slash[0];
       let newUrl = "/" + slash.slice(1).join("/");
       let st = finalEnd[1];
+      if(key == "DELETE/job" && status == "400") console.log(method, st, newUrl);
       if(identifyMethod(pattern[j], method) && identifyStatus(pattern[j], st) && identifyURL(pattern[j], newUrl, placeholder)){
         var node = setUpNode(method, st, newUrl)
         nodesVisualization.push(node);
-        var val = followUpPattern(nodes, finalEnd[0], finalEnd[1], pattern, placeholder, (j+1), nodesVisualization)
-        if(val) return true;
-       nodesVisualization.splice(-1,1);
+        if((j+1) == patternSize){
+          var newArray = nodesVisualization.slice();
+          matrixNodesVisualization.push(newArray);
+        }
+        else{
+          var val = followUpPattern(nodes, finalEnd[0], finalEnd[1], pattern, placeholder, j+1, nodesVisualization, matrixNodesVisualization)
+        }
+        nodesVisualization.splice(-1,1);
         placeholder = oldPlaceholder;
       }
     }
-     if(j == patternSize) return true;
   }
+  return;
 }
 
-var setUpPatternVisualization = function(g, nodesVisualization){
-  for(let i = 0; i < nodesVisualization.length; i++){
-    var full = nodesVisualization[i].method + nodesVisualization[i].url + ' ' + nodesVisualization[i].status;
-    var key = nodesVisualization[i].method + nodesVisualization[i].url
-    if(g._nodes[key] != undefined) g._nodes[key].style = "fill: blue";
-    g._nodes[full].style = "fill: blue";
+var setUpPatternVisualization = function(g, matrixNodesVisualization){
+  var rainbow = createRainbow(matrixNodesVisualization.length);
+  for(let j = 0; j < matrixNodesVisualization.length; j++){
+    var nodesVisualization = matrixNodesVisualization[j];
+    console.log(nodesVisualization);
+    for(let i = 0; i < nodesVisualization.length; i++){
+      var full = nodesVisualization[i].method + nodesVisualization[i].url + ' ' + nodesVisualization[i].status;
+      var key = nodesVisualization[i].method + nodesVisualization[i].url
+      if(g._nodes[key] != undefined) g._nodes[key].style = "fill: "+rainbow[j];
+      g._nodes[full].style = "fill: "+rainbow[j];
+    }
   }
 }
+var createRainbow = function(size){
+  var rainbow = new Array(size);
 
+  for (var i=0; i<size; i++) {
+    var red   = sin_to_hex(i, 0 * Math.PI * 2/3, size); // 0   deg
+    var blue  = sin_to_hex(i, 1 * Math.PI * 2/3, size); // 120 deg
+    var green = sin_to_hex(i, 2 * Math.PI * 2/3, size); // 240 deg
+
+    rainbow[i] = "#"+ red + green + blue;
+  }
+  return rainbow;
+}
+function sin_to_hex(i, phase, size) {
+  var sin = Math.sin(Math.PI / size * 2 * i + phase);
+  var int = Math.floor(sin * 127) + 128;
+  var hex = int.toString(16);
+
+  return hex.length === 1 ? "0"+hex : hex;
+}
 // var hasPatternWholeGraph = function(g, nodes, pattern, startKey, startStatus){
 //   var ret = false;
 //   var nodesVisualization = []
