@@ -442,6 +442,32 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
     }
     createTable(data, fx, "NodeIpTpTable", "Number of Nodes Each TP has");
   }
+  var createPieChart = function(data){
+    var arr = [];
+    console.log(data);
+    arr.push(["Task", "Hours Per Day"]);
+    for(var elem in data){
+      const oldElem = elem;
+      elem = elem.split('-')
+      if(elem.length > 1){
+        // console.log(oldElem);
+        arr.push(["Nodes " + oldElem, data[oldElem].counter]);
+      }
+      else{
+        arr.push(["Node " + oldElem, data[oldElem].counter]);
+      }
+    }
+    // console.log(arr);
+    var data = google.visualization.arrayToDataTable(arr);
+
+    // Optional; add a title and set the width and height of the chart
+    var options = {'title':'PieChart', 'width':"40%", 'height': "200px"};
+
+    // Display the chart inside the <div> element with id="piechart"
+    var chart = new google.visualization.PieChart(document.getElementById('comparisonTableData'));
+    chart.draw(data, options);
+
+  }
   var createTable = function(data, fx, id, caption){
     // clearTable();
     var i = 1;

@@ -111,7 +111,7 @@ var sortClientByDateTime = function(clients){
 var links, routes;
 var argv = process.argv;
 if(argv[2] === undefined) links = fs.readFileSync("./log2.txt", "ucs2").split('\n');
-else links = fs.readFileSync(argv[2], "ucs2").split('\n')
+else links = fs.readFileSync(argv[2], "utf8").split('\n')
 if(argv[3] != undefined){
  routes = fs.readFileSync(argv[3], "utf8").split('\n');
 }

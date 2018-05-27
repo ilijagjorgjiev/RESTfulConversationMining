@@ -38,7 +38,6 @@ var conversionPath = function(class_prefix, size, data){
         str1 += "."+class_prefix+"-"+line[i]
       }
       var final = str + " " + str1 + st;
-      console.log(final);
       sheet.insertRule(final);
       // sheet.insertRule(".enable-path-"+i+".enable-path-"+j+" " +"."+class_prefix+"-"+i+"."+class_prefix+"-"+j+" { "+st+" }");
     }
