@@ -2,7 +2,7 @@
 var seqPreservingComparison = function(client, length, nodes, start, incomingXorNodes, endName, tpIndex, comparisonTableData){
   var prev = start;
   var prevId = start;
-  var endConection = {};
+  var endConnection = {};
   var edges = [];
   var finalEnd;
   var k = null;
@@ -55,14 +55,14 @@ var seqPreservingComparison = function(client, length, nodes, start, incomingXor
     prevId = i;
     nodes[str][status].statusArray.push(node)
     if(i == (length-1)){
-      endConection.e1 = prev;
+      endConnection.e1 = prev;
       l = nodes[str][status].statusArray.length;
       nodes[k][s].statusArray[l-1].finalEnd = endName;
     }
   }
   nodes = outgoingXOR(nodes);
   nodes = incomingXOR(nodes, start, incomingXorNodes);
-  nodes.endConection = endConection;
+  nodes.endConnection = endConnection;
   return nodes;
 }
 var outgoingXOR = function(nodes){
@@ -221,23 +221,37 @@ var totalNumberOfRequests = function(nodes){
   "maxRequests" : max};
 }
 
-var getSelectedPeriods = function(timePeriods){
-  var elem = document.getElementById("multiSelect");
-  var result = [];
+// var getSelectedPeriods = function(timePeriods){
+//   var elem = document.getElementById("multiSelect");
+//   var result = [];
+//   var options = elem && elem.options;
+//   var opt;
+//   for (let i=0, iLen=options.length; i<iLen; i++) {
+//     opt = options[i];
+//
+//     if (opt.selected) {
+//       result.push(timePeriods[parseInt(opt.value)] || timePeriods[parseInt(opt.text)]);
+//     }
+//   }
+//   var obj = {
+//     "identify" : "tp",
+//     "data" : result
+//   }
+//   return result;
+//   // drawGraph(obj);
+// }
+var getSelectedIPs = function(clients, elem){
+  var result = {};
   var options = elem && elem.options;
   var opt;
   for (let i=0, iLen=options.length; i<iLen; i++) {
     opt = options[i];
 
     if (opt.selected) {
-      result.push(timePeriods[parseInt(opt.value)] || timePeriods[parseInt(opt.text)]);
+      result[opt.value] = (clients[opt.value] || clients[parseInt(opt.text)]);
     }
   }
-  var obj = {
-    "identify" : "tp",
-    "data" : result
-  }
-  drawGraph(obj);
+  return result;
 }
 
 var differenceThreshold = function(client){
@@ -403,6 +417,7 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
     var dataUniquenessNodes = comparisonTableData.uniquenessNodes;
     var dataNodeIpTp = comparisonTableData.nodeIpTp
     word = word.split(' ');
+    word.sort().reverse();
     if(dataUniqueness[word.length-1] === undefined) dataUniqueness[word.length-1] = 1;
     else dataUniqueness[word.length-1]++;
     if(word.length > 2) comparisonTableData.uniqueOverlapping.overlappingNodes.size++;
@@ -431,7 +446,8 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
   var createComparisonUniquenessTable = function(data){
     var fx = function(data, arr){
       for(var node in data){
-        arr.push(["Node-"+node, data[node]]);
+        if(node == 1) arr.push(["Unique Nodes", data[node]]);
+        else arr.push(["Shared-"+node, data[node]]);
       }
     }
     return createPieChart(data, fx, "Number of Shared Nodes");
@@ -439,7 +455,7 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
   var createComparisonNodeIpTpTable = function(data){
     var fx = function(data, arr){
       for(var node in data){
-        arr.push(["Node-"+node, data[node]]);
+        arr.push(["IP/TP Nodes-"+node, data[node]]);
       }
     }
     return createPieChart(data, fx, "IP/TP Number of Nodes")

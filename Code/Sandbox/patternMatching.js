@@ -114,7 +114,7 @@ var fx = function(nodes, key, status, pattern, placeholder, j, nodesVisualizatio
 }
 
 var setUpPatternVisualization = function(g, matrixNodesVisualization){
-  var rainbow = createRainbow(matrixNodesVisualization.length);
+  var rainbow = createRainbowDiff(matrixNodesVisualization.length);
   for(let j = 0; j < matrixNodesVisualization.length; j++){
     var nodesVisualization = matrixNodesVisualization[j];
     console.log(nodesVisualization);
@@ -126,9 +126,8 @@ var setUpPatternVisualization = function(g, matrixNodesVisualization){
     }
   }
 }
-var createRainbow = function(size){
+var createRainbowDiff = function(size){
   var rainbow = new Array(size);
-
   for (var i=0; i<size; i++) {
     var red   = sin_to_hex(i, 0 * Math.PI * 2/3, size); // 0   deg
     var blue  = sin_to_hex(i, 1 * Math.PI * 2/3, size); // 120 deg

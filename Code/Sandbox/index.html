@@ -30,8 +30,10 @@
   <body>
     <div id="Container" style="display: flex">
       <button onclick="goBack()">Go Back</button>
-      <div class="dropdown" style="float: left">
-        <button class="dropbtn" onmouseover="displayClients()">Clients</button>
+      <div id="Clients" style="float: left">
+        <select id="multiSelect-Clients" multiple="multiple">
+        </select>
+        <!-- <button class="dropbtn" onmouseover="displayClients()">Clients</button> -->
       </div>
       <select id="multiSelect" multiple="multiple">
       </select>
@@ -108,6 +110,25 @@
   //Get the Data
   var clients = localStorage.getItem('objectToPass');
   clients = JSON.parse(clients);
+
+  // Create the list of Clients.
+  var displayClients = function(){
+    var div = document.getElementById("multiSelect-Clients");
+    var str = '';
+    for(let client in clients){
+      let option = document.createElement("option");
+      option.onmouseenter = function(){
+        displayTimePeriods(client);
+      }
+      let linkText = document.createTextNode(client);
+      option.value = client;
+      option.appendChild(linkText);
+      div.appendChild(option);
+      // str+=('<option value=' + client + 'onmouseenter="displayTimePeriods(\''+ client +'\')" onclick="drawGraph(\''+client +'\')"> '+ client + '</option> ');
+    }
+  }
+
+  displayClients();
   // localStorage.removeItem('objectToPass');
   //LOAD Google Charts
   var globalGraph, globalNodes;
@@ -157,16 +178,16 @@
       var form = document.getElementById("formId")
       form.onsubmit = getPattern;
     })
-    // Create the dropdown-list of Clients.
-    var displayClients = function(){
-      var div = document.getElementsByClassName("dropdown");
-      var str = '<div class="dropdown-content"> '
-      for(var client in clients){
-        str+=('<a onmouseover="displayTimePeriods(\''+ client +'\')" onclick="drawGraph(\''+client +'\')"> '+ client + '</a> ')
-      }
-      str+=('</div>')
-      div[0].innerHTML += str;
-    }
+    // // Create the dropdown-list of Clients.
+    // var displayClients = function(){
+    //   var div = document.getElementsByClassName("clients");
+    //   var str = '';
+    //   for(var client in clients){
+    //     str+=('<a onmouseover="displayTimePeriods(\''+ client +'\')" onclick="drawGraph(\''+client +'\')"> '+ client + '</a> ')
+    //   }
+    //   // str+=('');
+    //   div[0].innerHTML += str;
+    // }
     var displayPatterns = function(){
       var div = document.getElementById("predefinedPatterns");
       var str =  document.createElement("div");
@@ -200,7 +221,12 @@
         str += '<option value=\''+i+'\'> Time Period '+ i + '</option>'
       }
       form.onclick = function(){
-        getSelectedPeriods(timePeriods);
+        var elem1 = document.getElementById("multiSelect");
+        var elem2 = document.getElementById("multiSelect-Clients");
+        var ret1 = getSelectedIPs(timePeriods, elem1);
+        var ret2 = getSelectedIPs(clients, elem2);
+        if(Object.keys(ret1).length) drawGraph(ret1);
+        else drawGraph(ret2);
       }
       el.innerHTML = str;
     }
@@ -221,7 +247,6 @@
       var g = new dagreD3.graphlib.Graph()
       .setGraph({})
       .setDefaultEdgeLabel(function() { return {}; });
-
       globalGraph = g;
       var nfc = document.getElementById("nfc");
       var eft = document.getElementById("eft");
@@ -234,7 +259,7 @@
       // below.
       var statusObj = {};
       var obj;
-      var endConnections = []
+      var endConnections = {};
       var nodes = []
       var incomingXorNodes = {}
       var totalTpIpArray = []
@@ -255,40 +280,19 @@
         uniquenessNodes : {},
         nodeIpTp : {},
       }
-      if(dataObject.identify === "tp"){
-        var timePeriods = dataObject.data;
-        console.log(timePeriods);
-        // startKey = timePeriods[0][0].method + timePeriods[0][0].location;
-        // startStatus = timePeriods[0][0].status;
-        for(let i = 0; i < timePeriods.length; i++){
-          var start = "start-"+i;
-          g.setNode("start-"+i, {shape: "circle", class : "start" + " tpIpColoring-"+i});
-          g.setNode("end-"+i, {shape: "circle", style: "stroke-width: 4; stroke: black", class : "end" + " tpIpColoring-"+i});
-          obj = seqPreservingComparison(timePeriods[i], timePeriods[i].length, nodes, start, incomingXorNodes, "end-"+i, i, comparisonTableData)
-          incomingXorNodes = obj.incomingXorNodes;
-          endConnections.push(obj.endConection);
-          nodes = obj.nodes;
-          totalTpIpArray.push(i);
-          comparisonTableData.timePorIP.push(i);
-        }
-      }
-      else{
-        g.setNode("start-0", { shape: "circle", class : "start" + " tpIpColoring-"+0});
-        g.setNode("end-0", {shape: "circle", style: "stroke-width: 4; stroke: black", class : "start" + " tpIpColoring-"+0})
-        var length = clients[dataObject].length;
-        var client = clients[dataObject];
-        startKey = client[0].method + client[0].location;
-        startStatus = client[0].status;
-        var start = "start-0"
-
-        obj = seqPreservingComparison(client, length, nodes, start, incomingXorNodes, "end-0", 0, comparisonTableData);
-        totalTpIpArray.push(0);
+      for(let client in dataObject){
+        let start = "start-"+client;
+        g.setNode(start, {shape: "circle", class : "start" + " tpIpColoring-"+client});
+        g.setNode("end-"+client, {shape: "circle", style: "stroke-width: 4; stroke: black", class : "start" + " tpIpColoring-"+client})
+        let length = dataObject[client].length;
+        let cl = dataObject[client];
+        obj = seqPreservingComparison(cl, length, nodes, start, incomingXorNodes, "end-"+client, client, comparisonTableData);
+        totalTpIpArray.push(client);
         incomingXorNodes = obj.incomingXorNodes;
-        endConnections.push(obj.endConection);
-        comparisonTableData.timePorIP.push(0);
+        endConnections[client]= obj.endConnection.e1;
+        comparisonTableData.timePorIP.push(client);
         nodes = obj.nodes;
       }
-      var endConection = obj.endConection;
       var totalRequestsData = totalNumberOfRequests(nodes);
       var totalRequests = totalRequestsData.total;
       var maxRequests = totalRequestsData.maxRequests;
@@ -434,22 +438,24 @@
                 // console.log(comparisonTableData);
                 // console.log(edges);
                 //Set Up End Node
-                for(let i = 0; i < endConnections.length; i++){
-                  var endConection = endConnections[i];
-                  var spaces =  endConection.e1.split(' ');
+                for(var end in endConnections){
+                  var endConnection = endConnections[end];
+                  var spaces =  endConnection.split(' ');
                   var k = spaces[0]
                   var s = spaces[1]
                   if(nodes[k][s].outgoingXOR){
-                    g.setEdge("XOR-"+k+' '+s, "end-"+i, {
+                    g.setEdge("XOR-"+k+' '+s, "end-"+end, {
                       label : roundUp(1/totalRequests[k]*100,1)+"%",
                       class: "edge-thickness-1 delay-coloring-0"})
                     }
                     else{
-                      g.setEdge(k+' '+s, "end-"+i, {class: "edge-thickness-1 delay-coloring-0"});
+                      g.setEdge(k+' '+s, "end-"+end, {class: "edge-thickness-1 delay-coloring-0"});
                     }
                   }
                   g.nodes().forEach(function(v) {
                     var node = g.node(v);
+                    // console.log(node);
+                    // console.log(g.nodes())
                     // Round the corners of the nodes
                     node.rx = node.ry = 5;
                   });
@@ -457,7 +463,8 @@
                   setNodeClasses(g, nodes, totalRequestsData);
                   setVisualizationConfig(nfc, eft, edc, sep, statusColoring, maxRequests, statusObj);
                   // triggerEdgeProbability(sep);
-                  conversionPath("tpIpColoring", totalTpIpArray.length, comparisonTableData.uniquenessNodes);
+                  console.log(totalTpIpArray, comparisonTableData.uniquenessNodes);
+                  conversionPath("tpIpColoring", totalTpIpArray.length, comparisonTableData.uniquenessNodes, totalTpIpArray);
                   var patternFound;
                   var convSharingNodes = createConversationSharingNodes(comparisonTableData.uniquenessNodes);
                   var numOfSharedNodes = createComparisonUniquenessTable(comparisonTableData.uniqueness);
@@ -536,8 +543,6 @@
                     window.history.back();
                   }
                   function displayPieChar(arr, options, id){
-                    console.log(options);
-                    // console.log(chart);
                     data = google.visualization.arrayToDataTable(arr);
                     var chart = new google.visualization.PieChart(document.getElementById(id));
                     chart.style = "display: block";

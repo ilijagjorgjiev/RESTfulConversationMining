@@ -6,7 +6,7 @@ var disableConversionPaths = function(){
     obj.toggle(obj[0]);
   }
 }
-var conversionPath = function(class_prefix, size, data){
+var conversionPath = function(class_prefix, size, data, totalTpIpArray){
   let style = document.createElement('style')
 
   // style.disabled = true;
@@ -15,15 +15,17 @@ var conversionPath = function(class_prefix, size, data){
 
   // Add the <style> element to the page
   document.head.appendChild(style);
-  var rainbow = createRainbow(size);
+  var rainbow = createRainbow(size, totalTpIpArray);
+  console.log(rainbow);
   var sheet = style.sheet;
-  for(let i = 0; i < size; i++){
+  for(let i in totalTpIpArray){
     let st = "fill: "+rainbow[i];
     let clazz = "."+class_prefix+"-"+i;
     sheet.insertRule(".enable-path-" + i + " " +clazz+" { "+st+" }");
   }
   for(var rules in data){
     var line = rules.split('-');
+    console.log(line[0]);
     var color =  hexToRgb(rainbow[line[0]]);
     for(let i = 1; i < line.length; i++){
       color = getGradientColor(color, hexToRgb(rainbow[line[i]]), 0.5);
@@ -52,13 +54,12 @@ var conversionPath = function(class_prefix, size, data){
   // }
   //Issue: Generalize for n, optimization.
 }
-var hexToRgb = function(hex) {
+var hexToRgb = function(hex){
     // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
     var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
     hex = hex.replace(shorthandRegex, function(m, r, g, b) {
         return r + r + g + g + b + b;
     });
-
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)];
 }
@@ -71,15 +72,14 @@ function rgbToHex(r, g, b) {
     return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
 
-var createRainbow = function(size){
-  var rainbow = new Array(size);
-
-  for (var i=0; i<size; i++) {
+var createRainbow = function(size, totalTpIpArray){
+  var rainbow = {};
+  for (let i in totalTpIpArray) {
     var red   = sin_to_hex(i, 0 * Math.PI * 2/3, size); // 0   deg
     var blue  = sin_to_hex(i, 1 * Math.PI * 2/3, size); // 120 deg
     var green = sin_to_hex(i, 2 * Math.PI * 2/3, size); // 240 deg
 
-    rainbow[i] = "#"+ red + green + blue;
+    rainbow[totalTpIpArray[i]] = "#"+ red + green + blue;
   }
   return rainbow;
 }
