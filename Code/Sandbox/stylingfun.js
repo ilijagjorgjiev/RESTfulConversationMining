@@ -15,8 +15,7 @@ var conversionPath = function(class_prefix, size, data, totalTpIpArray){
 
   // Add the <style> element to the page
   document.head.appendChild(style);
-  var rainbow = createRainbow(size, totalTpIpArray);
-  console.log(rainbow);
+  var rainbow = createRainbow(size);
   var sheet = style.sheet;
   for(let i in totalTpIpArray){
     let st = "fill: "+rainbow[i];
@@ -24,8 +23,8 @@ var conversionPath = function(class_prefix, size, data, totalTpIpArray){
     sheet.insertRule(".enable-path-" + i + " " +clazz+" { "+st+" }");
   }
   for(var rules in data){
+    // console.log(data[rules]);
     var line = rules.split('-');
-    console.log(line[0]);
     var color =  hexToRgb(rainbow[line[0]]);
     for(let i = 1; i < line.length; i++){
       color = getGradientColor(color, hexToRgb(rainbow[line[i]]), 0.5);
@@ -36,6 +35,7 @@ var conversionPath = function(class_prefix, size, data, totalTpIpArray){
       var str = "";
       st = " { "+st+" }";
       for(let i = 0; i < line.length; i++){
+        console.log(line[i]);
         str += (".enable-path-"+line[i])
         str1 += "."+class_prefix+"-"+line[i]
       }
@@ -72,14 +72,14 @@ function rgbToHex(r, g, b) {
     return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
 
-var createRainbow = function(size, totalTpIpArray){
+var createRainbow = function(size){
   var rainbow = {};
-  for (let i in totalTpIpArray) {
+  for (let i=0; i < size; i ++) {
     var red   = sin_to_hex(i, 0 * Math.PI * 2/3, size); // 0   deg
     var blue  = sin_to_hex(i, 1 * Math.PI * 2/3, size); // 120 deg
     var green = sin_to_hex(i, 2 * Math.PI * 2/3, size); // 240 deg
 
-    rainbow[totalTpIpArray[i]] = "#"+ red + green + blue;
+    rainbow[i] = "#"+ red + green + blue;
   }
   return rainbow;
 }
@@ -350,11 +350,14 @@ var roundUp = function(num, precision){
   return Math.ceil(num * precision) / precision
 }
 var setUpClassForDifferentIpTp = function(nodes, key, status){
-  var word = "";
+  var _word = "";
   for(let i = 0; i < nodes[key][status].tpIpArray.length; i++){
-    word += ('tpIpColoring-' + nodes[key][status].tpIpArray[i] + ' ');
+    let current = nodes[key][status].tpIpArray[i].split('-');
+    console.log(i+"->"+current[0]);
+    _word += ('tpIpColoring-' + current[0] + ' ');
   }
-  return word;
+  console.log("setUpClassForDifferentIpTp("+key+")"+_word);
+  return _word;
 }
 var setUpTotalClassForDifferentIpTp = function(nodes, key){
   var array = [];

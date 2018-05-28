@@ -60,7 +60,7 @@
     </div>
     <div style="display: flex">
       <svg id="restalk"> </g></svg>
-      <div id="pieCharts">
+      <!-- <div id="pieCharts">
         <div id="piechart-1">
 
         </div>
@@ -70,7 +70,7 @@
         <div id="piechart-3">
 
         </div>
-      </div>
+      </div> -->
         <!-- <div id="myCarousel" class="carousel slide" data-ride="carousel">
           Indicators
           <ol class="carousel-indicators">
@@ -192,12 +192,13 @@
       var div = document.getElementById("predefinedPatterns");
       var str =  document.createElement("div");
       str.classList.add("dropdown-content");
-      for(var pattern in user_select_patterns){
-        var obj = user_select_patterns[pattern];
-        var a = document.createElement('a');
-        var linkText = document.createTextNode(pattern);
+      for(let pattern in user_select_patterns){
+        let obj = user_select_patterns[pattern];
+        let a = document.createElement('a');
+        let linkText = document.createTextNode(pattern);
         a.appendChild(linkText);
         a.addEventListener("click", function(){
+          console.log(obj);
           checkPatterns(obj);
         })
         str.appendChild(a);
@@ -487,9 +488,9 @@
                   // console.log("PATTERN="+patternFound);
                   // console.log("PatternURL="+patternFound1);
                   // console.log("patternWild="+patternFound2);
-                  displayPieChar(numOfNodes.data, numOfNodes.options, "piechart-1");
-                  displayPieChar(numOfSharedNodes.data, numOfSharedNodes.options, "piechart-2");
-                  displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-3");
+                  // displayPieChar(numOfNodes.data, numOfNodes.options, "piechart-1");
+                  // displayPieChar(numOfSharedNodes.data, numOfSharedNodes.options, "piechart-2");
+                  // displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-3");
                   // console.log(c);
                   renderSvg(g);
                   // displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-1");

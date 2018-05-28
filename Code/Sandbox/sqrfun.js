@@ -416,15 +416,15 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
     var dataUniqueness = comparisonTableData.uniqueness;
     var dataUniquenessNodes = comparisonTableData.uniquenessNodes;
     var dataNodeIpTp = comparisonTableData.nodeIpTp
-    word = word.split(' ');
-    word.sort().reverse();
-    if(dataUniqueness[word.length-1] === undefined) dataUniqueness[word.length-1] = 1;
-    else dataUniqueness[word.length-1]++;
-    if(word.length > 2) comparisonTableData.uniqueOverlapping.overlappingNodes.size++;
+    var _word = word.split(' ');
+    _word.sort().reverse();
+    if(dataUniqueness[_word.length-1] === undefined) dataUniqueness[_word.length-1] = 1;
+    else dataUniqueness[_word.length-1]++;
+    if(_word.length > 2) comparisonTableData.uniqueOverlapping.overlappingNodes.size++;
     else comparisonTableData.uniqueOverlapping.uniqueNodes.size++;
     var tPiP="";
-    for(let i = 0; i < word.length-1; i++){
-      let val = word[i].split('-')[1];
+    for(let i = 0; i < _word.length-1; i++){
+      let val = _word[i].split('-')[1];
       if(i) tPiP += '-' + val
       else tPiP += val
       if(dataNodeIpTp[val] === undefined) dataNodeIpTp[val] = 1;

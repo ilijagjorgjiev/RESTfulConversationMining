@@ -1,4 +1,3 @@
-var user_select_patterns = {pattern : pattern,  patternURL : patternURL, patternWild : patternWild};
 
 var pattern = {
   "0" : {
