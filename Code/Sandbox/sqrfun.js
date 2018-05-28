@@ -429,54 +429,55 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
     }
   }
   var createComparisonUniquenessTable = function(data){
-    var fx = function(i){
-      if(i == 1) return "Unique Nodes";
-      else return i+"-TimeP";
+    var fx = function(data, arr){
+      for(var node in data){
+        arr.push(["Node-"+node, data[node]]);
+      }
     }
-    createTable(data, fx, "UniquenessTable", "Shared Nodes");
+    return createPieChart(data, fx, "Number of Shared Nodes");
   }
   var createComparisonNodeIpTpTable = function(data){
-    var fx = function(i){
-      let val = "TimeP-"+i
-      return val;
+    var fx = function(data, arr){
+      for(var node in data){
+        arr.push(["Node-"+node, data[node]]);
+      }
     }
-    createTable(data, fx, "NodeIpTpTable", "Number of Nodes Each TP has");
+    return createPieChart(data, fx, "IP/TP Number of Nodes")
   }
-  var createPieChart = function(data){
-    var arr = [];
-    console.log(data);
-    arr.push(["Task", "Hours Per Day"]);
+  var createConversationSharingNodes = function(data){
+    var fx = function(data, arr){
     for(var elem in data){
       const oldElem = elem;
       elem = elem.split('-')
       if(elem.length > 1){
-        // console.log(oldElem);
-        arr.push(["Nodes " + oldElem, data[oldElem].counter]);
+        arr.push(["IP/TP " + oldElem, data[oldElem].counter]);
       }
       else{
-        arr.push(["Node " + oldElem, data[oldElem].counter]);
+        arr.push(["IP/TP " + oldElem, data[oldElem].counter]);
       }
     }
-    // console.log(arr);
-    var data = google.visualization.arrayToDataTable(arr);
-
+  }
+    return createPieChart(data, fx, "IP/TP Shared Nodes")
+  }
+  var createPieChart = function(data, fx, title){
+    var arr = []
+    arr.push(["Task", "Hours Per Day"]);
+    fx(data, arr);
     // Optional; add a title and set the width and height of the chart
-    var options = {'title':'PieChart', 'width':"40%", 'height': "200px"};
+    var options = {'title': title, 'width':"50%", 'height': "200px"};
 
     // Display the chart inside the <div> element with id="piechart"
-    var chart = new google.visualization.PieChart(document.getElementById('comparisonTableData'));
-    chart.draw(data, options);
+    return {data : arr,
+            options : options}
 
   }
   var createTable = function(data, fx, id, caption){
-    // clearTable();
     var i = 1;
     var table = document.createElement("TABLE");
     table.createCaption();
     table.innerHTML = "<b>" + caption + "</b>";
     var container = document.getElementById("comparisonTableData");
     var x = document.createElement("TR");
-    // console.log(id,x);
     x.setAttribute("id", ("myTr"+id));
     container.appendChild(table);
     table.setAttribute("id", id);

@@ -1,502 +1,548 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>RESTful Conversation Mining</title>
+  <meta charset="utf-8">
+  <title>RESTful Conversation Mining</title>
 
-<script src="https://d3js.org/d3.v4.js"></script>
-<script src="https://dagrejs.github.io/project/graphlib-dot/v0.6.3/graphlib-dot.js"></script>
-<script src="bower_components/lodash/lodash.js"></script>
-<script src="bower_components/graphlib/dist/graphlib.core.js"></script>
-<script src="bower_components/dagre/dist/dagre.core.js"></script>
-<script src="bower_components/dagre-d3/dist/dagre-d3.core.js"></script>
-<link rel="stylesheet/less" type="text/css" href="bower_components/tyles.less" />
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-<script type="text/javascript" src="https://www.google.com/jsapi"></script>
-<!-- <script src="firstData.js"></script> -->
-<!-- <script src="routesData.js"></script> -->
-<!-- <script src="data.js"></script> -->
-<script src="sqrfun.js"></script>
-<script src="stylingfun.js"></script>
-<script src="patternMatching.js"></script>
-<script src="patternData.js"></script>
-<script src="bower_components/jquery/dist/jquery.js"></script>
-<!-- <script type="text/javascript" src="setup.js"></script> -->
-<link rel="stylesheet" href="styles.css">
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://dagrejs.github.io/project/graphlib-dot/v0.6.3/graphlib-dot.js"></script>
+  <script src="bower_components/lodash/lodash.js"></script>
+  <script src="bower_components/graphlib/dist/graphlib.core.js"></script>
+  <script src="bower_components/dagre/dist/dagre.core.js"></script>
+  <script src="bower_components/dagre-d3/dist/dagre-d3.core.js"></script>
+  <link rel="stylesheet/less" type="text/css" href="bower_components/tyles.less" />
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <!-- <script src="firstData.js"></script> -->
+  <!-- <script src="routesData.js"></script> -->
+  <!-- <script src="data.js"></script> -->
+  <script src="sqrfun.js"></script>
+  <script src="stylingfun.js"></script>
+  <script src="patternMatching.js"></script>
+  <script src="patternData.js"></script>
+  <script src="bower_components/jquery/dist/jquery.js"></script>
+  <!-- <script type="text/javascript" src="setup.js"></script> -->
+  <link rel="stylesheet" href="styles.css">
 
-<body>
-<div id="Container" style="display: flex">
-<button onclick="goBack()">Go Back</button>
-<div class="dropdown" style="float: left">
-  <button class="dropbtn" onmouseover="displayClients()">Clients</button>
-</div>
-<select id="multiSelect" multiple="multiple">
-</select>
-<button id="multiSelectForm" type="submit"/> Draw </button>
-<div id="Btns">
-</div>
-<div id="VisualizationConfig" style="display: none">
-  Node Frequency Coloring: <input type="checkbox" id="nfc" onclick="myFunction()"> <br />
-  Edge Frequency Thickness: <input type="checkbox" id="eft" onclick="myFunction1()"> <br />
-  Edge Delay Coloring: <input type="checkbox" id="edc" onclick="myFunction2()"> <br />
-  Show Edge Probability: <input type="checkbox" id="sep" onclick="myFunction3()"> <br />
-  Status Coloring: <input type="checkbox" id="statusColoring"> <br />
-  <form  id="formId" onsubmit="getPattern()">
-    <input type="file" name="fname" id="dataId" style="display: none;">
-    <input type="button" value="Choose a Pattern" onclick="document.getElementById('dataId').click();" />
-    <input type="submit" />
-  </form>
-</div>
-<div id="predefinedPatterns" class="dropdown" style="float: left">
-  <button class="dropbtn" onmouseover="displayPatterns()">Patterns</button>
-</div>
-<div id="piechart"></div>
-<!-- <svg width="200px" height="200px"></svg> -->
-</div>
-<div style="display: flex">
-<svg id="restalk"> </g></svg>
-<div id="comparisonTableData">
-  <div id="piechart"></div>
-</div>
-</div>
-</body>
-<script>
-//Get the Data
-var clients = localStorage.getItem('objectToPass');
-clients = JSON.parse(clients);
-// localStorage.removeItem('objectToPass');
-//LOAD Google Charts
-var globalGraph, globalNodes;
-// google.charts.load('current', {'packages':['corechart']});
-// google.charts.setOnLoadCallback(createPieChart);
-// Input related code goes here
-function getPattern(e){
-var x = e.preventDefault();
-var file = document.getElementById('dataId');
+  <body>
+    <div id="Container" style="display: flex">
+      <button onclick="goBack()">Go Back</button>
+      <div class="dropdown" style="float: left">
+        <button class="dropbtn" onmouseover="displayClients()">Clients</button>
+      </div>
+      <select id="multiSelect" multiple="multiple">
+      </select>
+      <button id="multiSelectForm" type="submit"/> Draw </button>
+      <div id="Btns">
+      </div>
+      <div id="VisualizationConfig" style="display: none">
+        Node Frequency Coloring: <input type="checkbox" id="nfc" onclick="myFunction()"> <br />
+        Edge Frequency Thickness: <input type="checkbox" id="eft" onclick="myFunction1()"> <br />
+        Edge Delay Coloring: <input type="checkbox" id="edc" onclick="myFunction2()"> <br />
+        Show Edge Probability: <input type="checkbox" id="sep" onclick="myFunction3()"> <br />
+        Status Coloring: <input type="checkbox" id="statusColoring"> <br />
+        <form  id="formId" onsubmit="getPattern()">
+          <input type="file" name="fname" id="dataId" style="display: none;">
+          <input type="button" value="Choose a Pattern" onclick="document.getElementById('dataId').click();" />
+          <input type="submit" />
+        </form>
+      </div>
+      <div id="predefinedPatterns" class="dropdown" style="float: left">
+        <button class="dropbtn" onmouseover="displayPatterns()">Patterns</button>
+      </div>
+      <div id="piechart"></div>
+      <!-- <svg width="200px" height="200px"></svg> -->
+    </div>
+    <div style="display: flex">
+      <svg id="restalk"> </g></svg>
+      <div id="pieCharts">
+        <div id="piechart-1">
 
-if(file.files.length)
-{
-var reader = new FileReader();
+        </div>
+        <div id="piechart-2">
 
-reader.onload = function(e)
-{
-  pattern = e.target.result;
-  console.log("here");
-  hasPattern(g, globalNodes, patternMixed);
-  var svg = d3.select("svg#restalk");
-  svg.selectAll("*").remove();
-  var inner = svg.append("g");
+        </div>
+        <div id="piechart-3">
 
-  // Set up zoom support
-  var zoom = d3.zoom().on("zoom", function() {
-    inner.attr("transform", d3.event.transform);
-  });
-  svg.call(zoom);
+        </div>
+      </div>
+        <!-- <div id="myCarousel" class="carousel slide" data-ride="carousel">
+          Indicators
+          <ol class="carousel-indicators">
+            <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+            <li data-target="#myCarousel" data-slide-to="1"></li>
+            <li data-target="#myCarousel" data-slide-to="2"></li>
+          </ol>
 
-  // Create the renderer
-  var render = new dagreD3.render();
-  // Run the renderer. This is what draws the final graph.
-  render(inner, g);
-  // Center the graph
-  var initialScale = 0.2;
-  svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
-  svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id);
-    var n = id.split("start-")[1];
-    document.body.classList.toggle("enable-path-"+n);
-    console.log("Clicked " + id); });
-  };
+          Wrapper for slides
+          <div class="carousel-inner">
+            <div class="item active">
+              <div id="piechart-1" class="col-sm-6 col-md-6 col-lg-12" style="width: 100%; height: 500px;"></div>
+            </div>
 
-  reader.readAsBinaryString(file.files[0]);
-}
-}
-$(document).ready(function(){
-var form = document.getElementById("formId")
-form.onsubmit = getPattern;
-})
-// Create the dropdown-list of Clients.
-var displayClients = function(){
-var div = document.getElementsByClassName("dropdown");
-var str = '<div class="dropdown-content"> '
-for(var client in clients){
-  str+=('<a onmouseover="displayTimePeriods(\''+ client +'\')" onclick="drawGraph(\''+client +'\')"> '+ client + '</a> ')
-}
-str+=('</div>')
-div[0].innerHTML += str;
-}
-var displayPatterns = function(){
-var div = document.getElementById("predefinedPatterns");
-var str =  document.createElement("div");
-str.classList.add("dropdown-content");
-for(var pattern in user_select_patterns){
-  var obj = user_select_patterns[pattern];
-  var a = document.createElement('a');
-  var linkText = document.createTextNode(pattern);
-  a.appendChild(linkText);
-  a.addEventListener("click", function(){
-    checkPatterns(obj);
-  })
-  str.appendChild(a);
-}
-div.appendChild(str);
-}
-var checkPatterns = function(pattern){
-if(globalGraph === undefined) console.log("GLOBAL GRAPH NOT SET UP")
-else{
-  hasPattern(globalGraph, globalNodes, pattern);
-  renderSvg(globalGraph);
-}
-}
-var displayTimePeriods = function(clientIP){
-var client = this.clients[clientIP];
-var el = document.getElementById("multiSelect");
-var form = document.getElementById("multiSelectForm");
-var timePeriods = differenceThreshold(client);
-var str = "";
-for(let i = 0; i < timePeriods.length; i++){
-  str += '<option value=\''+i+'\'> Time Period '+ i + '</option>'
-}
-form.onclick = function(){
-  getSelectedPeriods(timePeriods);
-}
-el.innerHTML = str;
-}
-var fixVisualizationConfig = function(nfc, eft, edc, sep, statusColoring){
+            <div class="item">
+              <div id="piechart-2" class="col-sm-6 col-md-6 col-lg-12" style="width: 100%; height: 500px;"></div>
+            </div>
 
-nfc.checked = false;
-eft.checked = false;
-edc.checked = false;
-sep.checked = false;
-statusColoring.checked = false;
-deleteStyles();
-disableConversionPaths();
-clearTable();
-// disableEdgeProbability();
-}
-//Draw the Graph for the selected IP.
-var drawGraph = function(dataObject){
-var g = new dagreD3.graphlib.Graph()
-.setGraph({})
-.setDefaultEdgeLabel(function() { return {}; });
+            <div class="item">
+              <div id="piechart-3" class="col-sm-6 col-md-6 col-lg-12" style="width: 100%; height: 500px;"></div>
+            </div>
+          </div>
 
-globalGraph = g;
-var nfc = document.getElementById("nfc");
-var eft = document.getElementById("eft");
-var edc = document.getElementById("edc");
-var sep = document.getElementById("sep");
-var statusColoring = document.getElementById("statusColoring");
+          Left and right controls
+          <a class="left carousel-control" href="#myCarousel" data-slide="prev">
+            <span class="glyphicon glyphicon-chevron-left"></span>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="right carousel-control" href="#myCarousel" data-slide="next">
+            <span class="glyphicon glyphicon-chevron-right"></span>
+            <span class="sr-only">Next</span>
+          </a>
+        </div> -->
+      </div>
+  </body>
+  <script>
+  //Get the Data
+  var clients = localStorage.getItem('objectToPass');
+  clients = JSON.parse(clients);
+  // localStorage.removeItem('objectToPass');
+  //LOAD Google Charts
+  var globalGraph, globalNodes;
+  google.load("visualization", "1", {packages:["corechart"]});
+  // google.charts.setOnLoadCallback(createPieChart);
+  // Input related code goes here
+  function getPattern(e){
+    var x = e.preventDefault();
+    var file = document.getElementById('dataId');
 
-fixVisualizationConfig(nfc, eft, edc, sep, statusColoring);
-// Here we"re setting nodeclass, which is used by our custom drawNodes function
-// below.
-var statusObj = {};
-var obj;
-var endConnections = []
-var nodes = []
-var incomingXorNodes = {}
-var totalTpIpArray = []
-var startKey, startStatus;
-var comparisonTableData = {
-  timePorIP : [],
-  uniqueOverlapping : {
-    uniqueNodes : {
-      size : 0,
-    },
-    overlappingNodes : {
-      size : 0,
-    },
-    uniqueEdges : { size : 0,},
-    overlappingEdges : {size : 0,},
-  },
-  uniqueness : {},
-  uniquenessNodes : {},
-  nodeIpTp : {},
-}
-if(dataObject.identify === "tp"){
-  var timePeriods = dataObject.data;
-  console.log(timePeriods);
-  // startKey = timePeriods[0][0].method + timePeriods[0][0].location;
-  // startStatus = timePeriods[0][0].status;
-  for(let i = 0; i < timePeriods.length; i++){
-    var start = "start-"+i;
-    g.setNode("start-"+i, {shape: "circle", class : "start" + " tpIpColoring-"+i});
-    g.setNode("end-"+i, {shape: "circle", style: "stroke-width: 4; stroke: black", class : "end" + " tpIpColoring-"+i});
-    obj = seqPreservingComparison(timePeriods[i], timePeriods[i].length, nodes, start, incomingXorNodes, "end-"+i, i, comparisonTableData)
-    incomingXorNodes = obj.incomingXorNodes;
-    endConnections.push(obj.endConection);
-    nodes = obj.nodes;
-    totalTpIpArray.push(i);
-    comparisonTableData.timePorIP.push(i);
-  }
-}
-else{
-  g.setNode("start-0", { shape: "circle", class : "start" + " tpIpColoring-"+0});
-  g.setNode("end-0", {shape: "circle", style: "stroke-width: 4; stroke: black", class : "start" + " tpIpColoring-"+0})
-  var length = clients[dataObject].length;
-  var client = clients[dataObject];
-  startKey = client[0].method + client[0].location;
-  startStatus = client[0].status;
-  var start = "start-0"
+    if(file.files.length)
+    {
+      var reader = new FileReader();
 
-  obj = seqPreservingComparison(client, length, nodes, start, incomingXorNodes, "end-0", 0, comparisonTableData);
-  totalTpIpArray.push(0);
-  incomingXorNodes = obj.incomingXorNodes;
-  endConnections.push(obj.endConection);
-  comparisonTableData.timePorIP.push(0);
-  nodes = obj.nodes;
-}
-var endConection = obj.endConection;
-var totalRequestsData = totalNumberOfRequests(nodes);
-var totalRequests = totalRequestsData.total;
-var maxRequests = totalRequestsData.maxRequests;
-// comparisonTableData.uniqueOverlapping = getComparisonTableNodes(nodes, comparisonTableData.uniqueOverlapping);
-for(var key in nodes){
-  var size = Object.keys(nodes[key]).length;
-  if(size == 1){
-    var status = Object.keys(nodes[key])[0]
-    var str = "inXOR-"+key
-    var word = setUpClassForDifferentIpTp(nodes, key, status);
-    updateComparisonUniqueness(word, comparisonTableData, key, status);
-    hasStatus(statusObj, status);
-    if(incomingXorNodes[key] !== undefined) checkIfIncomingXorExists(nodes, key, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXOR-"+key)
-    g.setNode(key+' '+status, { shape: "rect", label : nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length,
-    class:"type-Request method-"+key+' '+status + ' ' + word + ' ' + "status-"+status});
-    if(nodes[key][status].outgoingXOR){
-      g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
-    }
-    if((nodes[key][status].statusArray.length) > 1 && Object.keys(incomingXorNodes[key]).length > 1){
-      // var bool = checkIfIncomingXorExists(nodes, key, status, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXor-"+key);
-      var str = "inXOR-"+key
-      g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR incomingXOR"});
-    }
-  }
-  else{
-    var st = Object.keys(nodes[key])[0]
-    var word = setUpTotalClassForDifferentIpTp(nodes, key);
-    updateComparisonUniqueness(word, comparisonTableData, key, undefined);
-    g.setNode(key, {shape: "rect", label: nodes[key][st].statusArray[0].key + '\n' + totalRequests[key], class: "type-Request method-"+key + ' ' + word});
-    g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR middleXOR"});
-    var str = "inXOR-"+key
-    if(Object.keys(incomingXorNodes[key]).length > 1) g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR incomingXOR"});
-    for(var status in nodes[key]){
-      word = setUpClassForDifferentIpTp(nodes, key, status);
-      updateComparisonUniqueness(word, comparisonTableData, key, status);
-      hasStatus(statusObj, status);
-      g.setNode(key+' '+status, {shape: "rect", label : status + '\n' + nodes[key][status].statusArray.length, class:"type-Response method-"+key+' '+status + ' ' + word + ' ' + "status-"+status});
-      if(nodes[key][status].outgoingXOR){
-        g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
+      reader.onload = function(e)
+      {
+        pattern = e.target.result;
+        console.log("here");
+        hasPattern(g, globalNodes, patternMixed);
+        var svg = d3.select("svg#restalk");
+        svg.selectAll("*").remove();
+        var inner = svg.append("g");
+
+        // Set up zoom support
+        var zoom = d3.zoom().on("zoom", function() {
+          inner.attr("transform", d3.event.transform);
+        });
+        svg.call(zoom);
+
+        // Create the renderer
+        var render = new dagreD3.render();
+        // Run the renderer. This is what draws the final graph.
+        render(inner, g);
+        // Center the graph
+        var initialScale = 0.2;
+        svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
+        svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id);
+          var n = id.split("start-")[1];
+          document.body.classList.toggle("enable-path-"+n);
+          console.log("Clicked " + id); });
+        };
+
+        reader.readAsBinaryString(file.files[0]);
       }
     }
-  }
-}
-//Compute Delay Avgs
-obj = computeMinMaxAvgDelayVal(nodes);
-nodes = obj.nodes;
-var totalAvgKey = obj.totalAvgKey;
-var maxDelay = obj.MAX;
-var minDelay = obj.MIN;
-var edges = 0;
-//Set Up Edges
-for(var key in nodes){
-  var str = "inXOR-"+key
-  var size = Object.keys(nodes[key]).length
-  var bin = computeAssignBin(totalAvgKey[key].totalDelayAvgKey, maxDelay, 1);
-  if(size == 1){
-    var status = Object.keys(nodes[key])[0]
-    if(nodes[key][status].outgoingXOR){
-      // console.log("OUTGOING-Size-1");
-      g.setEdge(key+' '+status,"XOR-"+key+' '+status,
-      {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin});
-      // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "outgoingXOR");
-      edges++;
-      // console.log(key, status)
-      // g.setEdge("inXOR-"+key, key+' '+status, {label: "delayAvg: "+ delayAvg});
-    }
-    if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length == 1){
-      let space = Object.keys(incomingXorNodes[key])[0]
-      let p = getProbabilityLabel(nodes, nodes[key][status].statusArray[0].start.split(' ')[0], nodes[key][status].statusArray[0].start.split(' ')[1], incomingXorNodes[key][space].length);
-      g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,
-      {label: p,
-        class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
-        // console.log("INCOMING-Size-1");
-        // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
-        edges++;
+    $(document).ready(function(){
+      var form = document.getElementById("formId")
+      form.onsubmit = getPattern;
+    })
+    // Create the dropdown-list of Clients.
+    var displayClients = function(){
+      var div = document.getElementsByClassName("dropdown");
+      var str = '<div class="dropdown-content"> '
+      for(var client in clients){
+        str+=('<a onmouseover="displayTimePeriods(\''+ client +'\')" onclick="drawGraph(\''+client +'\')"> '+ client + '</a> ')
       }
-      if(nodes[key][status].statusArray.length == 1){
-        let p = getProbabilityLabel(nodes, nodes[key][status].statusArray[0].start.split(' ')[0], nodes[key][status].statusArray[0].start.split(' ')[1], 1);
-        g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,
-        { label : p,
-          class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
-          // console.log("INCOMING-STATUS-LENGTH-1");
-          // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
-          edges++;
+      str+=('</div>')
+      div[0].innerHTML += str;
+    }
+    var displayPatterns = function(){
+      var div = document.getElementById("predefinedPatterns");
+      var str =  document.createElement("div");
+      str.classList.add("dropdown-content");
+      for(var pattern in user_select_patterns){
+        var obj = user_select_patterns[pattern];
+        var a = document.createElement('a');
+        var linkText = document.createTextNode(pattern);
+        a.appendChild(linkText);
+        a.addEventListener("click", function(){
+          checkPatterns(obj);
+        })
+        str.appendChild(a);
+      }
+      div.appendChild(str);
+    }
+    var checkPatterns = function(pattern){
+      if(globalGraph === undefined) console.log("GLOBAL GRAPH NOT SET UP")
+      else{
+        hasPattern(globalGraph, globalNodes, pattern);
+        renderSvg(globalGraph);
+      }
+    }
+    var displayTimePeriods = function(clientIP){
+      var client = this.clients[clientIP];
+      var el = document.getElementById("multiSelect");
+      var form = document.getElementById("multiSelectForm");
+      var timePeriods = differenceThreshold(client);
+      var str = "";
+      for(let i = 0; i < timePeriods.length; i++){
+        str += '<option value=\''+i+'\'> Time Period '+ i + '</option>'
+      }
+      form.onclick = function(){
+        getSelectedPeriods(timePeriods);
+      }
+      el.innerHTML = str;
+    }
+    var fixVisualizationConfig = function(nfc, eft, edc, sep, statusColoring){
+
+      nfc.checked = false;
+      eft.checked = false;
+      edc.checked = false;
+      sep.checked = false;
+      statusColoring.checked = false;
+      deleteStyles();
+      disableConversionPaths();
+      // clearTable();
+      // disableEdgeProbability();
+    }
+    //Draw the Graph for the selected IP.
+    var drawGraph = function(dataObject){
+      var g = new dagreD3.graphlib.Graph()
+      .setGraph({})
+      .setDefaultEdgeLabel(function() { return {}; });
+
+      globalGraph = g;
+      var nfc = document.getElementById("nfc");
+      var eft = document.getElementById("eft");
+      var edc = document.getElementById("edc");
+      var sep = document.getElementById("sep");
+      var statusColoring = document.getElementById("statusColoring");
+
+      fixVisualizationConfig(nfc, eft, edc, sep, statusColoring);
+      // Here we"re setting nodeclass, which is used by our custom drawNodes function
+      // below.
+      var statusObj = {};
+      var obj;
+      var endConnections = []
+      var nodes = []
+      var incomingXorNodes = {}
+      var totalTpIpArray = []
+      var startKey, startStatus;
+      var comparisonTableData = {
+        timePorIP : [],
+        uniqueOverlapping : {
+          uniqueNodes : {
+            size : 0,
+          },
+          overlappingNodes : {
+            size : 0,
+          },
+          uniqueEdges : { size : 0,},
+          overlappingEdges : {size : 0,},
+        },
+        uniqueness : {},
+        uniquenessNodes : {},
+        nodeIpTp : {},
+      }
+      if(dataObject.identify === "tp"){
+        var timePeriods = dataObject.data;
+        console.log(timePeriods);
+        // startKey = timePeriods[0][0].method + timePeriods[0][0].location;
+        // startStatus = timePeriods[0][0].status;
+        for(let i = 0; i < timePeriods.length; i++){
+          var start = "start-"+i;
+          g.setNode("start-"+i, {shape: "circle", class : "start" + " tpIpColoring-"+i});
+          g.setNode("end-"+i, {shape: "circle", style: "stroke-width: 4; stroke: black", class : "end" + " tpIpColoring-"+i});
+          obj = seqPreservingComparison(timePeriods[i], timePeriods[i].length, nodes, start, incomingXorNodes, "end-"+i, i, comparisonTableData)
+          incomingXorNodes = obj.incomingXorNodes;
+          endConnections.push(obj.endConection);
+          nodes = obj.nodes;
+          totalTpIpArray.push(i);
+          comparisonTableData.timePorIP.push(i);
         }
-        if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length > 1){
-          g.setEdge("inXOR-"+key, key+' '+status,
-          {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin})
-          // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
-          edges++;
-          // console.log("INCOMING-XOR-SIZE-1")
-          // console.log(key, status)
-          for(var space in incomingXorNodes[key]){
-            var len = incomingXorNodes[key][space][0].length;
-            if(len == 1){
-              g.setEdge(incomingXorNodes[key][space][0][0], str,
-                {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-0"})
-                // console.log("it should be start NODE", incomingXorNodes[key][space][0][0])
-                comparisonTableData.uniqueOverlapping.uniqueEdges.size++;
-                edges++;
-              }
-              else{
-                let avg = getIncomingEdgeIndexDelay(nodes, key, incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
-                bin = computeAssignBin(avg, maxDelay, 1);
-                let p = getProbabilityLabel(nodes, incomingXorNodes[key][space][0][0], incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
-                g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], str,
-                { label : p,
-                  class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
-                }
-              }
+      }
+      else{
+        g.setNode("start-0", { shape: "circle", class : "start" + " tpIpColoring-"+0});
+        g.setNode("end-0", {shape: "circle", style: "stroke-width: 4; stroke: black", class : "start" + " tpIpColoring-"+0})
+        var length = clients[dataObject].length;
+        var client = clients[dataObject];
+        startKey = client[0].method + client[0].location;
+        startStatus = client[0].status;
+        var start = "start-0"
+
+        obj = seqPreservingComparison(client, length, nodes, start, incomingXorNodes, "end-0", 0, comparisonTableData);
+        totalTpIpArray.push(0);
+        incomingXorNodes = obj.incomingXorNodes;
+        endConnections.push(obj.endConection);
+        comparisonTableData.timePorIP.push(0);
+        nodes = obj.nodes;
+      }
+      var endConection = obj.endConection;
+      var totalRequestsData = totalNumberOfRequests(nodes);
+      var totalRequests = totalRequestsData.total;
+      var maxRequests = totalRequestsData.maxRequests;
+      // comparisonTableData.uniqueOverlapping = getComparisonTableNodes(nodes, comparisonTableData.uniqueOverlapping);
+      for(var key in nodes){
+        var size = Object.keys(nodes[key]).length;
+        if(size == 1){
+          var status = Object.keys(nodes[key])[0]
+          var str = "inXOR-"+key
+          var word = setUpClassForDifferentIpTp(nodes, key, status);
+          updateComparisonUniqueness(word, comparisonTableData, key, status);
+          hasStatus(statusObj, status);
+          if(incomingXorNodes[key] !== undefined) checkIfIncomingXorExists(nodes, key, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXOR-"+key)
+          g.setNode(key+' '+status, { shape: "rect", label : nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length,
+          class:"type-Request method-"+key+' '+status + ' ' + word + ' ' + "status-"+status});
+          if(nodes[key][status].outgoingXOR){
+            g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
+          }
+          if((nodes[key][status].statusArray.length) > 1 && Object.keys(incomingXorNodes[key]).length > 1){
+            // var bool = checkIfIncomingXorExists(nodes, key, status, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXor-"+key);
+            var str = "inXOR-"+key
+            g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR incomingXOR"});
+          }
+        }
+        else{
+          var st = Object.keys(nodes[key])[0]
+          var word = setUpTotalClassForDifferentIpTp(nodes, key);
+          updateComparisonUniqueness(word, comparisonTableData, key, undefined);
+          g.setNode(key, {shape: "rect", label: nodes[key][st].statusArray[0].key + '\n' + totalRequests[key], class: "type-Request method-"+key + ' ' + word});
+          g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR middleXOR"});
+          var str = "inXOR-"+key
+          if(Object.keys(incomingXorNodes[key]).length > 1) g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR incomingXOR"});
+          for(var status in nodes[key]){
+            word = setUpClassForDifferentIpTp(nodes, key, status);
+            updateComparisonUniqueness(word, comparisonTableData, key, status);
+            hasStatus(statusObj, status);
+            g.setNode(key+' '+status, {shape: "rect", label : status + '\n' + nodes[key][status].statusArray.length, class:"type-Response method-"+key+' '+status + ' ' + word + ' ' + "status-"+status});
+            if(nodes[key][status].outgoingXOR){
+              g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
             }
           }
-          else{
-            var str1 = "middleXOR-"+key;
-            // g.setEdge(str,key,{label: "Delay Average:"+delayAvg});
-            if(Object.keys(incomingXorNodes[key]).length > 1){
-              g.setEdge(str,key, {
-                class: "edge-thickness-"+totalRequests[key] + " " + "delay-coloring-"+bin});
-                // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
-                edges++;
-              }
-              g.setEdge(key,str1, {class: "edge-thickness-"+totalRequests[key] + " " + "delay-coloring-0"});
-              // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
+        }
+      }
+      //Compute Delay Avgs
+      obj = computeMinMaxAvgDelayVal(nodes);
+      nodes = obj.nodes;
+      var totalAvgKey = obj.totalAvgKey;
+      var maxDelay = obj.MAX;
+      var minDelay = obj.MIN;
+      var edges = 0;
+      //Set Up Edges
+      for(var key in nodes){
+        var str = "inXOR-"+key
+        var size = Object.keys(nodes[key]).length
+        var bin = computeAssignBin(totalAvgKey[key].totalDelayAvgKey, maxDelay, 1);
+        if(size == 1){
+          var status = Object.keys(nodes[key])[0]
+          if(nodes[key][status].outgoingXOR){
+            // console.log("OUTGOING-Size-1");
+            g.setEdge(key+' '+status,"XOR-"+key+' '+status,
+            {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin});
+            // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "outgoingXOR");
+            edges++;
+            // console.log(key, status)
+            // g.setEdge("inXOR-"+key, key+' '+status, {label: "delayAvg: "+ delayAvg});
+          }
+          if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length == 1){
+            let space = Object.keys(incomingXorNodes[key])[0]
+            let p = getProbabilityLabel(nodes, nodes[key][status].statusArray[0].start.split(' ')[0], nodes[key][status].statusArray[0].start.split(' ')[1], incomingXorNodes[key][space].length);
+            g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,
+            {label: p,
+              class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
+              // console.log("INCOMING-Size-1");
+              // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
               edges++;
-              for(var status in nodes[key]){
-                // console.log(nodes[key][status].avgDelay);
-                bin = computeAssignBin(nodes[key][status].avgDelay, maxDelay, 1);
-                g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%",
-                class: "edge-thickness-" +nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin})
-                // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "middleXOR");
+            }
+            if(nodes[key][status].statusArray.length == 1){
+              let p = getProbabilityLabel(nodes, nodes[key][status].statusArray[0].start.split(' ')[0], nodes[key][status].statusArray[0].start.split(' ')[1], 1);
+              g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,
+              { label : p,
+                class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
+                // console.log("INCOMING-STATUS-LENGTH-1");
+                // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
                 edges++;
-                // g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%"+'\n'+"Delay Avg:" + (computeDelayAvg(nodes, key, status)/1000/60/60/24), labelType: "html"});
-                if(nodes[key][status].outgoingXOR){
-                  g.setEdge(key+' '+status, "XOR-"+key+' '+status,
-                  {class: "edge-thickness-" + nodes[key][status].statusArray.length + " delay-coloring-0"});
-                  // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "middleXOR");
-                  edges++;
+              }
+              if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length > 1){
+                g.setEdge("inXOR-"+key, key+' '+status,
+                {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin})
+                // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
+                edges++;
+                // console.log("INCOMING-XOR-SIZE-1")
+                // console.log(key, status)
+                for(var space in incomingXorNodes[key]){
+                  var len = incomingXorNodes[key][space][0].length;
+                  if(len == 1){
+                    g.setEdge(incomingXorNodes[key][space][0][0], str,
+                      {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-0"})
+                      // console.log("it should be start NODE", incomingXorNodes[key][space][0][0])
+                      comparisonTableData.uniqueOverlapping.uniqueEdges.size++;
+                      edges++;
+                    }
+                    else{
+                      let avg = getIncomingEdgeIndexDelay(nodes, key, incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
+                      bin = computeAssignBin(avg, maxDelay, 1);
+                      let p = getProbabilityLabel(nodes, incomingXorNodes[key][space][0][0], incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
+                      g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], str,
+                      { label : p,
+                        class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
+                      }
+                    }
+                  }
                 }
-              }
-              multipleIncomingXorSetUp(g, nodes, key, Object.keys(incomingXorNodes[key]).length, maxDelay, 1, incomingXorNodes)
-            }
-          }
-          // console.log(comparisonTableData);
-          // console.log(edges);
-          //Set Up End Node
-          for(let i = 0; i < endConnections.length; i++){
-            var endConection = endConnections[i];
-            var spaces =  endConection.e1.split(' ');
-            var k = spaces[0]
-            var s = spaces[1]
-            if(nodes[k][s].outgoingXOR){
-              g.setEdge("XOR-"+k+' '+s, "end-"+i, {
-                label : roundUp(1/totalRequests[k]*100,1)+"%",
-                class: "edge-thickness-1 delay-coloring-0"})
-              }
-              else{
-                g.setEdge(k+' '+s, "end-"+i, {class: "edge-thickness-1 delay-coloring-0"});
-              }
-            }
-            g.nodes().forEach(function(v) {
-              var node = g.node(v);
-              // Round the corners of the nodes
-              node.rx = node.ry = 5;
-            });
-            // console.log(edges, comparisonTableData);
-            setNodeClasses(g, nodes, totalRequestsData);
-            setVisualizationConfig(nfc, eft, edc, sep, statusColoring, maxRequests, statusObj);
-            // triggerEdgeProbability(sep);
-            conversionPath("tpIpColoring", totalTpIpArray.length, comparisonTableData.uniquenessNodes);
-            var patternFound;
-            createPieChart(comparisonTableData.uniquenessNodes);
-            // createComparisonUniquenessTable(comparisonTableData.uniqueness);
-            // createComparisonNodeIpTpTable(comparisonTableData.nodeIpTp);
-            // createPieChart(comparisonTableData.uniqueness);
-            globalNodes = nodes;
-            globalGraph = g;
-            // var patternFound2 = hasPattern(g, nodes, patternWild);
-            // hasPatternWholeGraph(g, dataObject.data, patternMixed, startKey, startStatus);
-            // createPieChart();
-            // console.log("PATTERN="+patternFound);
-            // console.log("PatternURL="+patternFound1);
-            // console.log("patternWild="+patternFound2);
-            // console.log(c);
-            renderSvg(g);
-            // var svg = d3.select("svg#restalk");
-            // svg.selectAll("*").remove();
-            // var inner = svg.append("g");
-            //
-            // // Set up zoom support
-            // var zoom = d3.zoom().on("zoom", function() {
-            //   inner.attr("transform", d3.event.transform);
-            // });
-            // svg.call(zoom);
-            //
-            // // Create the renderer
-            // var render = new dagreD3.render();
-            // // Run the renderer. This is what draws the final graph.
-            // render(inner, g);
-            // // Center the graph
-            // var initialScale = 0.2;
-            // svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
-            // svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id);
-            //   var n = id.split("start-")[1];
-            //   document.body.classList.toggle("enable-path-"+n);
-            //   console.log("Clicked " + id); });
-          }
-          var renderSvg = function(g){
-            var svg = d3.select("svg#restalk");
-            svg.select("g").remove();
-            var inner = svg.append("g");
+                else{
+                  var str1 = "middleXOR-"+key;
+                  // g.setEdge(str,key,{label: "Delay Average:"+delayAvg});
+                  if(Object.keys(incomingXorNodes[key]).length > 1){
+                    g.setEdge(str,key, {
+                      class: "edge-thickness-"+totalRequests[key] + " " + "delay-coloring-"+bin});
+                      // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
+                      edges++;
+                    }
+                    g.setEdge(key,str1, {class: "edge-thickness-"+totalRequests[key] + " " + "delay-coloring-0"});
+                    // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
+                    edges++;
+                    for(var status in nodes[key]){
+                      // console.log(nodes[key][status].avgDelay);
+                      bin = computeAssignBin(nodes[key][status].avgDelay, maxDelay, 1);
+                      g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%",
+                      class: "edge-thickness-" +nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin})
+                      // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "middleXOR");
+                      edges++;
+                      // g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%"+'\n'+"Delay Avg:" + (computeDelayAvg(nodes, key, status)/1000/60/60/24), labelType: "html"});
+                      if(nodes[key][status].outgoingXOR){
+                        g.setEdge(key+' '+status, "XOR-"+key+' '+status,
+                        {class: "edge-thickness-" + nodes[key][status].statusArray.length + " delay-coloring-0"});
+                        // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "middleXOR");
+                        edges++;
+                      }
+                    }
+                    multipleIncomingXorSetUp(g, nodes, key, Object.keys(incomingXorNodes[key]).length, maxDelay, 1, incomingXorNodes)
+                  }
+                }
+                // console.log(comparisonTableData);
+                // console.log(edges);
+                //Set Up End Node
+                for(let i = 0; i < endConnections.length; i++){
+                  var endConection = endConnections[i];
+                  var spaces =  endConection.e1.split(' ');
+                  var k = spaces[0]
+                  var s = spaces[1]
+                  if(nodes[k][s].outgoingXOR){
+                    g.setEdge("XOR-"+k+' '+s, "end-"+i, {
+                      label : roundUp(1/totalRequests[k]*100,1)+"%",
+                      class: "edge-thickness-1 delay-coloring-0"})
+                    }
+                    else{
+                      g.setEdge(k+' '+s, "end-"+i, {class: "edge-thickness-1 delay-coloring-0"});
+                    }
+                  }
+                  g.nodes().forEach(function(v) {
+                    var node = g.node(v);
+                    // Round the corners of the nodes
+                    node.rx = node.ry = 5;
+                  });
+                  // console.log(edges, comparisonTableData);
+                  setNodeClasses(g, nodes, totalRequestsData);
+                  setVisualizationConfig(nfc, eft, edc, sep, statusColoring, maxRequests, statusObj);
+                  // triggerEdgeProbability(sep);
+                  conversionPath("tpIpColoring", totalTpIpArray.length, comparisonTableData.uniquenessNodes);
+                  var patternFound;
+                  var convSharingNodes = createConversationSharingNodes(comparisonTableData.uniquenessNodes);
+                  var numOfSharedNodes = createComparisonUniquenessTable(comparisonTableData.uniqueness);
+                  var numOfNodes = createComparisonNodeIpTpTable(comparisonTableData.nodeIpTp);
+                  // $(document).ready(function(){
+                  //   console.log(document.getElementById("piechart-1"));
+                  //   displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-1");
+                  // })
+                  // window.onload = function() {
+                  //     console.log(document.getElementById("piechart-1"));
+                  //     displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-1");
+                  // };
+                  // displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-1");
+                  // createPieChart(comparisonTableData.uniqueness);
+                  globalNodes = nodes;
+                  globalGraph = g;
+                  // var patternFound2 = hasPattern(g, nodes, patternWild);
+                  // hasPatternWholeGraph(g, dataObject.data, patternMixed, startKey, startStatus);
+                  // createPieChart();
+                  // console.log("PATTERN="+patternFound);
+                  // console.log("PatternURL="+patternFound1);
+                  // console.log("patternWild="+patternFound2);
+                  displayPieChar(numOfNodes.data, numOfNodes.options, "piechart-1");
+                  displayPieChar(numOfSharedNodes.data, numOfSharedNodes.options, "piechart-2");
+                  displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-3");
+                  // console.log(c);
+                  renderSvg(g);
+                  // displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-1");
+                  // displayPieChar(numOfNodes.data, numOfNodes.options, "piechart-2");
+                  // var svg = d3.select("svg#restalk");
+                  // svg.selectAll("*").remove();
+                  // var inner = svg.append("g");
+                  //
+                  // // Set up zoom support
+                  // var zoom = d3.zoom().on("zoom", function() {
+                  //   inner.attr("transform", d3.event.transform);
+                  // });
+                  // svg.call(zoom);
+                  //
+                  // // Create the renderer
+                  // var render = new dagreD3.render();
+                  // // Run the renderer. This is what draws the final graph.
+                  // render(inner, g);
+                  // // Center the graph
+                  // var initialScale = 0.2;
+                  // svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
+                  // svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id);
+                  //   var n = id.split("start-")[1];
+                  //   document.body.classList.toggle("enable-path-"+n);
+                  //   console.log("Clicked " + id); });
+                }
+                var renderSvg = function(g){
+                  var svg = d3.select("svg#restalk");
+                  svg.select("g").remove();
+                  var inner = svg.append("g");
 
-            // Set up zoom support
-            var zoom = d3.zoom().on("zoom", function() {
-              inner.attr("transform", d3.event.transform);
-            });
-            svg.call(zoom);
+                  // Set up zoom support
+                  var zoom = d3.zoom().on("zoom", function() {
+                    inner.attr("transform", d3.event.transform);
+                  });
+                  svg.call(zoom);
 
-            // Create the renderer
-            var render = new dagreD3.render();
-            // Run the renderer. This is what draws the final graph.
-            render(inner, g);
-            // Center the graph
-            var initialScale = 0.2;
-            svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
-            svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id);
-              var n = id.split("start-")[1];
-              document.body.classList.toggle("enable-path-"+n);
-              console.log("Clicked " + id); });
-            }
-            function goBack() {
-              window.history.back();
-            }
-            google.charts.load('current', {packages: ['corechart', 'table', 'controls', 'gauge']});
-            // google.charts.setOnLoadCallback(drawChart);
-
-            // Draw the chart and set the chart values
-            function drawChart() {
-              var data = google.visualization.arrayToDataTable([
-              ['Task', 'Hours per Day'],
-              ['Work', 8],
-              ['Eat', 2],
-              ['TV', 4],
-              ['Gym', 2],
-              ['Sleep', 8]
-            ]);
-
-              // Optional; add a title and set the width and height of the chart
-              var options = {'title':'My Average Day', 'width':550, 'height':400};
-
-              // Display the chart inside the <div> element with id="piechart"
-              var chart = new google.visualization.PieChart(document.getElementById('comparisonTableData'));
-              chart.draw(data, options);
-            }
-            </script>
-            </html>
+                  // Create the renderer
+                  var render = new dagreD3.render();
+                  // Run the renderer. This is what draws the final graph.
+                  render(inner, g);
+                  // Center the graph
+                  var initialScale = 0.2;
+                  svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
+                  svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id);
+                    var n = id.split("start-")[1];
+                    document.body.classList.toggle("enable-path-"+n);
+                    console.log("Clicked " + id); });
+                  }
+                  function goBack() {
+                    window.history.back();
+                  }
+                  function displayPieChar(arr, options, id){
+                    console.log(options);
+                    // console.log(chart);
+                    data = google.visualization.arrayToDataTable(arr);
+                    var chart = new google.visualization.PieChart(document.getElementById(id));
+                    chart.style = "display: block";
+                    chart.draw(data, options);
+                  }
+                  // google.charts.load('visualization', '1.0', {packages: ['corechart', 'table', 'controls', 'gauge']});
+                  </script>
+                  </html>
