@@ -35,7 +35,6 @@ var conversionPath = function(class_prefix, size, data, totalTpIpArray){
       var str = "";
       st = " { "+st+" }";
       for(let i = 0; i < line.length; i++){
-        console.log(line[i]);
         str += (".enable-path-"+line[i])
         str1 += "."+class_prefix+"-"+line[i]
       }

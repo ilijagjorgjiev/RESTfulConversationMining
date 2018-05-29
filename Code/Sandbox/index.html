@@ -464,8 +464,8 @@
                   setNodeClasses(g, nodes, totalRequestsData);
                   setVisualizationConfig(nfc, eft, edc, sep, statusColoring, maxRequests, statusObj);
                   // triggerEdgeProbability(sep);
-                  console.log(totalTpIpArray, comparisonTableData.uniquenessNodes);
-                  conversionPath("tpIpColoring", totalTpIpArray.length, comparisonTableData.uniquenessNodes, totalTpIpArray);
+                  // console.log(totalTpIpArray, comparisonTableData.uniquenessNodes);
+                  // conversionPath("tpIpColoring", totalTpIpArray.length, comparisonTableData.uniquenessNodes, totalTpIpArray);
                   var patternFound;
                   var convSharingNodes = createConversationSharingNodes(comparisonTableData.uniquenessNodes);
                   var numOfSharedNodes = createComparisonUniquenessTable(comparisonTableData.uniqueness);
@@ -480,6 +480,7 @@
                   // };
                   // displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-1");
                   // createPieChart(comparisonTableData.uniqueness);
+                  console.log(nodes);
                   globalNodes = nodes;
                   globalGraph = g;
                   // var patternFound2 = hasPattern(g, nodes, patternWild);

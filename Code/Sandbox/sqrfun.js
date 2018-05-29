@@ -61,7 +61,9 @@ var seqPreservingComparison = function(client, length, nodes, start, incomingXor
     }
   }
   nodes = outgoingXOR(nodes);
+  // console.log(nodes);
   nodes = incomingXOR(nodes, start, incomingXorNodes);
+  // console./log(incomingXorNodes);
   nodes.endConnection = endConnection;
   return nodes;
 }
@@ -91,9 +93,11 @@ var outgoingXOR = function(nodes){
     for(var status in nodes[key]){
       for(let i = 0; i < nodes[key][status].statusArray.length; i++){
         for(let j = 0; j < counterArray.length; j++){
+          // if("GET/poll/1/vote/1" == key) console.log(nodes[key][status].statusArray[i].start);
           if(counterArray[j] == nodes[key][status].statusArray[i].start){
-            // console.log(counterArray[j]);
+            if("GET/poll/1/vote/1" == key) console.log(nodes[key][status].statusArray[i].start);
             nodes[key][status].statusArray[i].start = "XOR-" + counterArray[j];
+            // console.log(nodes[key][status].statusArray[i].start, status, i);
           }
         }
       }
@@ -102,31 +106,34 @@ var outgoingXOR = function(nodes){
   return nodes;
 }
 var incomingXOR = function(nodes, start, incomingXorNodes){
+  // console.log(nodes);
   var incomingXorKeys = []
   var keyCounter = 0;
   var keyArray = []
   for(var key in nodes){
     keyArray.push(key);
   }
+  // for(let i = 0; i < keyArray.length; i++){
+  //   for(var key in nodes){
+  //     for(var status in nodes[key]){
+  //       for(let j = 0; j < nodes[key][status].statusArray.length; j++){
+  //         let spaces = nodes[key][status].statusArray[j].end.split(' ');
+  //         if((spaces[0] == start && i == 0) || spaces[0] == "XOR-"+keyArray[i] || spaces[0] == keyArray[i]){
+  //           // console.log(spaces[0]);
+  //           keyCounter++;
+  //         }
+  //       }
+  //     }
+  //   }
+  //   if(keyCounter > 1){
+  //     incomingXorKeys.push({ "key" : keyArray[i], "id" : i})
+  //   }
+  //   keyCounter = 0;
+  // }
+  // console.log(incomingXorKeys);
   for(let i = 0; i < keyArray.length; i++){
     for(var key in nodes){
-      for(var status in nodes[key]){
-        for(let j = 0; j < nodes[key][status].statusArray.length; j++){
-          let spaces = nodes[key][status].statusArray[j].end.split(' ');
-          if((spaces[0] == start && i == 0) || spaces[0] == "XOR-"+keyArray[i] || spaces[0] == keyArray[i]){
-            keyCounter++;
-          }
-        }
-      }
-    }
-    if(keyCounter > 1){
-      incomingXorKeys.push({ "key" : keyArray[i], "id" : i})
-    }
-    keyCounter = 0;
-  }
-  for(let i = 0; i < incomingXorKeys.length; i++){
-    for(var key in nodes){
-      if(key == incomingXorKeys[i].key){
+      if(key == keyArray[i]){
         for(var status in nodes[key]){
           for(let j = 0; j < nodes[key][status].statusArray.length; j++){
             if(nodes[key][status].statusArray[j].start !== "inXOR-" + key){
@@ -139,6 +146,20 @@ var incomingXOR = function(nodes, start, incomingXorNodes){
                 incomingXorNodes[key][spaces] = [];
               }
               incomingXorNodes[key][spaces].push(spaces.split(' '));
+            }
+            else{
+              let spaces = nodes[key][status].statusArray[j].finalStart.split(' ');
+              if(spaces.length > 1 && nodes[spaces[0]][spaces[1]].outgoingXOR && incomingXorNodes[key][spaces[0]+' '+spaces[1]] !== undefined){
+                let newKey = "XOR-"+spaces[0]+' '+spaces[1];
+                if(incomingXorNodes[key][newKey] === undefined){
+                  incomingXorNodes[key][newKey] = []
+                }
+                for(let k = 0; k < incomingXorNodes[key][spaces[0]+' '+spaces[1]].length; k++){
+                  var formKey = "XOR-"+spaces[0] + ' ' + spaces[1];
+                  incomingXorNodes[key][newKey].push(formKey.split(' '));
+                }
+                delete incomingXorNodes[key][spaces[0]+' '+spaces[1]];
+              }
             }
           }
         }
