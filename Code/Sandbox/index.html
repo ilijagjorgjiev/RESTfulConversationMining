@@ -113,6 +113,7 @@
 
   // Create the list of Clients.
   var displayClients = function(){
+    let i = 0;
     var div = document.getElementById("multiSelect-Clients");
     var str = '';
     for(let client in clients){
@@ -120,10 +121,11 @@
       option.onmouseenter = function(){
         displayTimePeriods(client);
       }
-      let linkText = document.createTextNode(client);
-      option.value = client;
+      let linkText = document.createTextNode(i+"-"+client);
+      option.value = i+"-"+client;
       option.appendChild(linkText);
       div.appendChild(option);
+      i++;
       // str+=('<option value=' + client + 'onmouseenter="displayTimePeriods(\''+ client +'\')" onclick="drawGraph(\''+client +'\')"> '+ client + '</option> ');
     }
   }
@@ -226,6 +228,7 @@
         var elem2 = document.getElementById("multiSelect-Clients");
         var ret1 = getSelectedIPs(timePeriods, elem1);
         var ret2 = getSelectedIPs(clients, elem2);
+
         if(Object.keys(ret1).length) drawGraph(ret1);
         else drawGraph(ret2);
       }
@@ -453,6 +456,7 @@
                       g.setEdge(k+' '+s, "end-"+end, {class: "edge-thickness-1 delay-coloring-0"});
                     }
                   }
+                  console.log(nodes);
                   g.nodes().forEach(function(v) {
                     var node = g.node(v);
                     // console.log(node);
@@ -464,8 +468,7 @@
                   setNodeClasses(g, nodes, totalRequestsData);
                   setVisualizationConfig(nfc, eft, edc, sep, statusColoring, maxRequests, statusObj);
                   // triggerEdgeProbability(sep);
-                  // console.log(totalTpIpArray, comparisonTableData.uniquenessNodes);
-                  // conversionPath("tpIpColoring", totalTpIpArray.length, comparisonTableData.uniquenessNodes, totalTpIpArray);
+                  var rainbows = conversionPath("tpIpColoring", totalTpIpArray.length, totalTpIpArray, comparisonTableData.uniquenessNodes);
                   var patternFound;
                   var convSharingNodes = createConversationSharingNodes(comparisonTableData.uniquenessNodes);
                   var numOfSharedNodes = createComparisonUniquenessTable(comparisonTableData.uniqueness);
@@ -480,7 +483,6 @@
                   // };
                   // displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-1");
                   // createPieChart(comparisonTableData.uniqueness);
-                  console.log(nodes);
                   globalNodes = nodes;
                   globalGraph = g;
                   // var patternFound2 = hasPattern(g, nodes, patternWild);
@@ -489,9 +491,9 @@
                   // console.log("PATTERN="+patternFound);
                   // console.log("PatternURL="+patternFound1);
                   // console.log("patternWild="+patternFound2);
-                  displayPieChar(numOfNodes.data, numOfNodes.options, "piechart-1");
-                  displayPieChar(numOfSharedNodes.data, numOfSharedNodes.options, "piechart-2");
-                  displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-3");
+                  displayPieChar(numOfNodes.data, numOfNodes.options, "piechart-1", rainbows.nodesRainbow, undefined);
+                  displayPieChar(numOfSharedNodes.data, numOfSharedNodes.options, "piechart-2", undefined);
+                  displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-3", rainbows.pieChartRainbow, comparisonTableData.uniquenessNodes);
                   // console.log(c);
                   renderSvg(g);
                   // displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-1");
@@ -544,8 +546,20 @@
                   function goBack() {
                     window.history.back();
                   }
-                  function displayPieChar(arr, options, id){
+                  function displayPieChar(arr, options, id, rainbow, rules){
                     data = google.visualization.arrayToDataTable(arr);
+                    if(id === "piechart-3"){
+                      options.colors = []
+                      for(var rule in rules){
+                        options.colors.push(rainbow[rule]);
+                      }
+                    }
+                    else if (id == "piechart-1"){
+                      options.colors = []
+                      for(let i in rainbow){
+                        options.colors.push(rainbow[i]);
+                      }
+                    }
                     var chart = new google.visualization.PieChart(document.getElementById(id));
                     chart.style = "display: block";
                     chart.draw(data, options);

@@ -9,13 +9,13 @@ var seqPreservingComparison = function(client, length, nodes, start, incomingXor
   var s = null;
   var l;
   for(let i = 0; i < length; i++){
-    var str = client[i].method + client[i].location;
-    var key = client[i].method + ' ' + client[i].location;
-    var status = client[i].status;
+    let str = client[i].method + client[i].location;
+    let key = client[i].method + ' ' + client[i].location;
+    let status = client[i].status;
     if(nodes[str] === undefined){
       nodes[str] = {}
     }
-    var node = {
+    let node = {
       "id" : i,
       "startId" : prevId,
       "endId" : i,
@@ -51,9 +51,9 @@ var seqPreservingComparison = function(client, length, nodes, start, incomingXor
       nodes[str][status].tpIpArray.push(tpIndex);
     }
     nodes[str][status].delayArray.push(delay);
+    nodes[str][status].statusArray.push(node)
     prev = str + ' ' + status;
     prevId = i;
-    nodes[str][status].statusArray.push(node)
     if(i == (length-1)){
       endConnection.e1 = prev;
       l = nodes[str][status].statusArray.length;
@@ -61,9 +61,7 @@ var seqPreservingComparison = function(client, length, nodes, start, incomingXor
     }
   }
   nodes = outgoingXOR(nodes);
-  // console.log(nodes);
   nodes = incomingXOR(nodes, start, incomingXorNodes);
-  // console./log(incomingXorNodes);
   nodes.endConnection = endConnection;
   return nodes;
 }
@@ -95,7 +93,6 @@ var outgoingXOR = function(nodes){
         for(let j = 0; j < counterArray.length; j++){
           // if("GET/poll/1/vote/1" == key) console.log(nodes[key][status].statusArray[i].start);
           if(counterArray[j] == nodes[key][status].statusArray[i].start){
-            if("GET/poll/1/vote/1" == key) console.log(nodes[key][status].statusArray[i].start);
             nodes[key][status].statusArray[i].start = "XOR-" + counterArray[j];
             // console.log(nodes[key][status].statusArray[i].start, status, i);
           }
@@ -113,27 +110,27 @@ var incomingXOR = function(nodes, start, incomingXorNodes){
   for(var key in nodes){
     keyArray.push(key);
   }
-  // for(let i = 0; i < keyArray.length; i++){
-  //   for(var key in nodes){
-  //     for(var status in nodes[key]){
-  //       for(let j = 0; j < nodes[key][status].statusArray.length; j++){
-  //         let spaces = nodes[key][status].statusArray[j].end.split(' ');
-  //         if((spaces[0] == start && i == 0) || spaces[0] == "XOR-"+keyArray[i] || spaces[0] == keyArray[i]){
-  //           // console.log(spaces[0]);
-  //           keyCounter++;
-  //         }
-  //       }
-  //     }
-  //   }
-  //   if(keyCounter > 1){
-  //     incomingXorKeys.push({ "key" : keyArray[i], "id" : i})
-  //   }
-  //   keyCounter = 0;
-  // }
-  // console.log(incomingXorKeys);
   for(let i = 0; i < keyArray.length; i++){
     for(var key in nodes){
-      if(key == keyArray[i]){
+      for(var status in nodes[key]){
+        for(let j = 0; j < nodes[key][status].statusArray.length; j++){
+          let spaces = nodes[key][status].statusArray[j].end.split(' ');
+          if((spaces[0] == start && i == 0) || spaces[0] == "XOR-"+keyArray[i] || spaces[0] == keyArray[i]){
+            // console.log(spaces[0]);
+            keyCounter++;
+          }
+        }
+      }
+    }
+    if(keyCounter > 1){
+      incomingXorKeys.push({ "key" : keyArray[i], "id" : i})
+    }
+    keyCounter = 0;
+  }
+  // console.log(incomingXorKeys);
+  for(let i = 0; i < incomingXorKeys.length; i++){
+    for(var key in nodes){
+      if(key == incomingXorKeys[i].key){
         for(var status in nodes[key]){
           for(let j = 0; j < nodes[key][status].statusArray.length; j++){
             if(nodes[key][status].statusArray[j].start !== "inXOR-" + key){
@@ -268,8 +265,15 @@ var getSelectedIPs = function(clients, elem){
   for (let i=0, iLen=options.length; i<iLen; i++) {
     opt = options[i];
 
-    if (opt.selected) {
-      result[opt.value] = (clients[opt.value] || clients[parseInt(opt.text)]);
+    if (opt.selected){
+      let iptp = opt.value.split('-');
+      let val = iptp;
+      let val1 = iptp;
+      if(iptp.length > 1){
+        val = iptp[0];
+        val1 = iptp[1]
+      }
+      result[val] = (clients[val1] || clients[parseInt(opt.text)]);
     }
   }
   return result;

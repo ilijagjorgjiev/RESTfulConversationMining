@@ -126,7 +126,7 @@ var setUpPatternVisualization = function(g, matrixNodesVisualization){
     }
   }
 }
-var createRainbowDiff = function(size){
+var createRainbow = function(size){
   var rainbow = new Array(size);
   for (var i=0; i<size; i++) {
     var red   = sin_to_hex(i, 0 * Math.PI * 2/3, size); // 0   deg

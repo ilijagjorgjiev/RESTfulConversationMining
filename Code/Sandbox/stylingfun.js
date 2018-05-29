@@ -6,79 +6,103 @@ var disableConversionPaths = function(){
     obj.toggle(obj[0]);
   }
 }
-var conversionPath = function(class_prefix, size, data, totalTpIpArray){
+var conversionPath = function(class_prefix, size, totalTpIpArray, data){
   let style = document.createElement('style')
 
   // style.disabled = true;
   // WebKit hack :(
   style.appendChild(document.createTextNode(""));
-
   // Add the <style> element to the page
   document.head.appendChild(style);
-  var rainbow = createRainbow(size);
+  var rainbow = createRainbowDiff(size, totalTpIpArray);
+  var pieChartRainbow = {};
   var sheet = style.sheet;
   for(let i in totalTpIpArray){
-    let st = "fill: "+rainbow[i];
-    let clazz = "."+class_prefix+"-"+i;
-    sheet.insertRule(".enable-path-" + i + " " +clazz+" { "+st+" }");
+    let st = "fill: "+rainbow[totalTpIpArray[i]];
+    let clazz = "."+class_prefix+"-"+totalTpIpArray[i];
+    pieChartRainbow[totalTpIpArray[i]] = rainbow[totalTpIpArray[i]];
+    sheet.insertRule(".enable-path-" + totalTpIpArray[i] + " " +clazz+" { "+st+" }");
   }
-  for(var rules in data){
-    // console.log(data[rules]);
-    var line = rules.split('-');
-    var color =  hexToRgb(rainbow[line[0]]);
-    for(let i = 1; i < line.length; i++){
-      color = getGradientColor(color, hexToRgb(rainbow[line[i]]), 0.5);
-    }
-    if(line.length > 1){
+  createPieChartColors(pieChartRainbow, data);
+  let combinations = getCombinations(totalTpIpArray);
+  for(let i = 0; i < combinations.length; i++){
+    let subComb = combinations[i].split('');
+    subComb.reverse();
+    let color =  hexToRgb(rainbow[subComb[0]]);
+    let str1 = "."+class_prefix+"-"+subComb[0];
+    let str = ".enable-path-"+subComb[0];
+    let weight = 0.5;
+    let factor = 0.1;
+    for(let j = 1; j < subComb.length; j++){
+      color = getGradientColor(color, hexToRgb(rainbow[subComb[j]]), weight);
       let st = "fill: rgb("+color[0]+","+color[1]+","+color[2]+")";
-      var str1 = "";
-      var str = "";
       st = " { "+st+" }";
-      for(let i = 0; i < line.length; i++){
-        str += (".enable-path-"+line[i])
-        str1 += "."+class_prefix+"-"+line[i]
-      }
-      var final = str + " " + str1 + st;
+      str += (".enable-path-"+subComb[j])
+      str1 += "."+class_prefix+"-"+subComb[j]
+      let final = str + " " + str1 + st;
+      weight += factor;
+      factor = 0;
       sheet.insertRule(final);
-      // sheet.insertRule(".enable-path-"+i+".enable-path-"+j+" " +"."+class_prefix+"-"+i+"."+class_prefix+"-"+j+" { "+st+" }");
     }
   }
-  // for(let i = 0; i < size; i++){
-  //   for(let j = i + 1; j < size; j++){
-  //     let color = getGradientColor(hexToRgb(rainbow[i]), hexToRgb(rainbow[j]), 0.5);
-  //     let st = "fill: rgb("+color[0]+","+color[1]+","+color[2]+")";
-  //     console.log(".enable-path-"+i+".enable-path-"+j+" " +"."+class_prefix+"-"+i+"."+class_prefix+"-"+j+" { "+st+" }");
-  //     sheet.insertRule(".enable-path-"+i+".enable-path-"+j+" " +"."+class_prefix+"-"+i+"."+class_prefix+"-"+j+" { "+st+" }");
-  //   }
-  // }
-  //Issue: Generalize for n, optimization.
+  return {pieChartRainbow : pieChartRainbow,
+          nodesRainbow : rainbow};
+}
+var createPieChartColors = function(pieChartRainbow, data){
+  for(rule in data){
+    var line = rule.split('-');
+    if(line.length > 1){
+      let color =  hexToRgb(pieChartRainbow[line[0]]);
+      let weight = 0.5;
+      let factor = 0.1;
+      for(let i = 1; i < line.length; i++){
+        color = getGradientColor(color, hexToRgb(pieChartRainbow[line[i]]), weight);
+        weight += factor;
+        factor = 0;
+      }
+      pieChartRainbow[rule] = rgbToHex(color);
+    }
+  }
+}
+var getCombinations = function(chars){
+  var result = [];
+  var f = function(prefix, chars) {
+    for (var i = 0; i < chars.length; i++) {
+      if(prefix != '') result.push(prefix + chars[i]);
+      f(prefix + chars[i], chars.slice(i + 1));
+    }
+  }
+  f('', chars);
+  return result;
 }
 var hexToRgb = function(hex){
-    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-    var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-    hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-        return r + r + g + g + b + b;
-    });
-    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)];
+  // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+  var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+  hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+    return r + r + g + g + b + b;
+  });
+  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)];
 }
-function componentToHex(c) {
-    var hex = c.toString(16);
-    return hex.length == 1 ? "0" + hex : hex;
-}
-
-function rgbToHex(r, g, b) {
-    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+function componentToHex(c){
+  var hex = c.toString(16);
+  return hex.length == 1 ? "0" + hex : hex;
 }
 
-var createRainbow = function(size){
+function rgbToHex(arr) {
+  return "#" + componentToHex(arr[0]) + componentToHex(arr[1]) + componentToHex(arr[2]);
+}
+
+var createRainbowDiff = function(size, totalTpIpArray){
   var rainbow = {};
-  for (let i=0; i < size; i ++) {
-    var red   = sin_to_hex(i, 0 * Math.PI * 2/3, size); // 0   deg
-    var blue  = sin_to_hex(i, 1 * Math.PI * 2/3, size); // 120 deg
-    var green = sin_to_hex(i, 2 * Math.PI * 2/3, size); // 240 deg
+  let j = 0;
+  for (let i in totalTpIpArray) {
+    var red   = sin_to_hex(j, 0 * Math.PI * 2/3, size); // 0   deg
+    var blue  = sin_to_hex(j, 1 * Math.PI * 2/3, size); // 120 deg
+    var green = sin_to_hex(j, 2 * Math.PI * 2/3, size); // 240 deg
 
-    rainbow[i] = "#"+ red + green + blue;
+    rainbow[totalTpIpArray[i]] = "#"+ red + green + blue;
+    j++;
   }
   return rainbow;
 }
@@ -351,11 +375,9 @@ var roundUp = function(num, precision){
 var setUpClassForDifferentIpTp = function(nodes, key, status){
   var _word = "";
   for(let i = 0; i < nodes[key][status].tpIpArray.length; i++){
-    let current = nodes[key][status].tpIpArray[i].split('-');
-    console.log(i+"->"+current[0]);
-    _word += ('tpIpColoring-' + current[0] + ' ');
+    let current = nodes[key][status].tpIpArray[i]
+    _word += ('tpIpColoring-' + current + ' ');
   }
-  console.log("setUpClassForDifferentIpTp("+key+")"+_word);
   return _word;
 }
 var setUpTotalClassForDifferentIpTp = function(nodes, key){
