@@ -112,19 +112,26 @@ var fx = function(nodes, key, status, pattern, placeholder, j, nodesVisualizatio
   }
   return;
 }
-
 var setUpPatternVisualization = function(g, matrixNodesVisualization){
-  var rainbow = createRainbowDiff(matrixNodesVisualization.length);
+  var rainbow = createRainbow(matrixNodesVisualization.length);
+  var style = document.getElementsByTagName("STYLE")[5];
+  var sheet = document.getElementsByTagName("STYLE")[5].sheet;
+  var clazz;
   for(let j = 0; j < matrixNodesVisualization.length; j++){
     var nodesVisualization = matrixNodesVisualization[j];
-    console.log(nodesVisualization);
     for(let i = 0; i < nodesVisualization.length; i++){
       var full = nodesVisualization[i].method + nodesVisualization[i].url + ' ' + nodesVisualization[i].status;
       var key = nodesVisualization[i].method + nodesVisualization[i].url
-      if(g._nodes[key] != undefined) g._nodes[key].style = "fill: "+rainbow[j];
-      g._nodes[full].style = "fill: "+rainbow[j];
+      let st = "fill: "+rainbow[j];
+      if(g._nodes[key] != undefined){
+        clazz = getPatternClassName(key, undefined);
+        sheet.insertRule("."+clazz+"{ "+st+" }");
+      }
+      clazz = getPatternClassName(key, nodesVisualization[i].status);
+      sheet.insertRule("."+clazz+"{ "+st+" }");
     }
   }
+  style.disabled = false;
 }
 var createRainbow = function(size){
   var rainbow = new Array(size);
@@ -143,6 +150,12 @@ function sin_to_hex(i, phase, size) {
   var hex = int.toString(16);
 
   return hex.length === 1 ? "0"+hex : hex;
+}
+var getPatternClassName = function(key, status){
+  let _key = key.split('/');
+  let clazz = _key[0]+"-"+_key[1];
+  if(status !== undefined) clazz += "-"+status;
+  return clazz;
 }
 // var hasPatternWholeGraph = function(g, nodes, pattern, startKey, startStatus){
 //   var ret = false;

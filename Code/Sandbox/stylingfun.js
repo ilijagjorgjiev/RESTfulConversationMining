@@ -249,7 +249,7 @@ var setStatusColoring = function(statusObj, class_prefix, sheet){
   }
 }
 var setStyles = function(){
-  for(let i = 0; i < 5; i++){
+  for(let i = 0; i < 6; i++){
     let style = document.createElement('style')
 
     style.disabled = true;
