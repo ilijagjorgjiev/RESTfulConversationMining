@@ -55,8 +55,13 @@ var hasPattern = function(g, nodes, pattern){
     }
     placeholder = {};
   }
-  if(matrixNodesVisualization.length > 0) setUpPatternVisualization(g, matrixNodesVisualization);
-  return ret;
+  if(matrixNodesVisualization.length > 0){
+    return{
+      bool : true,
+      matrixNodesVisualization : matrixNodesVisualization
+    }
+  }
+  return false;
 }
 
 var followUpPattern = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, matrixNodesVisualization){
@@ -113,8 +118,17 @@ var fx = function(nodes, key, status, pattern, placeholder, j, nodesVisualizatio
   return;
 }
 var setUpPatternVisualization = function(g, matrixNodesVisualization){
+  let style = document.createElement('style')
+
+  style.disabled = true;
+  // WebKit hack :(
+  style.appendChild(document.createTextNode(""));
+
+  // Add the <style> element to the page
+  document.head.appendChild(style);
+
   var rainbow = createRainbow(matrixNodesVisualization.length);
-  var style = document.getElementsByTagName("STYLE")[5];
+  var st = document.getElementsByTagName("STYLE")[5];
   var sheet = document.getElementsByTagName("STYLE")[5].sheet;
   var clazz;
   for(let j = 0; j < matrixNodesVisualization.length; j++){
@@ -122,16 +136,19 @@ var setUpPatternVisualization = function(g, matrixNodesVisualization){
     for(let i = 0; i < nodesVisualization.length; i++){
       var full = nodesVisualization[i].method + nodesVisualization[i].url + ' ' + nodesVisualization[i].status;
       var key = nodesVisualization[i].method + nodesVisualization[i].url
+
       let st = "fill: "+rainbow[j];
-      if(g._nodes[key] != undefined){
+      if(g._nodes[key] !== undefined){
         clazz = getPatternClassName(key, undefined);
+        console.log(clazz);
         sheet.insertRule("."+clazz+"{ "+st+" }");
       }
       clazz = getPatternClassName(key, nodesVisualization[i].status);
+      console.log(clazz);
       sheet.insertRule("."+clazz+"{ "+st+" }");
     }
   }
-  style.disabled = false;
+  st.disabled = true;
 }
 var createRainbow = function(size){
   var rainbow = new Array(size);
@@ -144,16 +161,13 @@ var createRainbow = function(size){
   }
   return rainbow;
 }
-function sin_to_hex(i, phase, size) {
-  var sin = Math.sin(Math.PI / size * 2 * i + phase);
-  var int = Math.floor(sin * 127) + 128;
-  var hex = int.toString(16);
-
-  return hex.length === 1 ? "0"+hex : hex;
-}
 var getPatternClassName = function(key, status){
   let _key = key.split('/');
-  let clazz = _key[0]+"-"+_key[1];
+  let clazz = '';
+  for(let i = 0; i < _key.length; i++){
+    if(i == 0) clazz += _key[i]
+    else clazz += ("-"+_key[i])
+  }
   if(status !== undefined) clazz += "-"+status;
   return clazz;
 }

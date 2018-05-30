@@ -48,13 +48,17 @@
         Status Coloring: <input type="checkbox" id="statusColoring"> <br />
         <form  id="formId" onsubmit="getPattern()">
           <input type="file" name="fname" id="dataId" style="display: none;">
-          <input type="button" value="Choose a Pattern" onclick="document.getElementById('dataId').click();" />
+          <input type="button" value="Add a Pattern" onclick="document.getElementById('dataId').click();" />
           <input type="submit" />
         </form>
       </div>
-      <div id="predefinedPatterns" class="dropdown" style="float: left">
-        <button class="dropbtn" onmouseover="displayPatterns()">Patterns</button>
+    <div id="patternMenu">
+      <select id="predefinedPatterns"></select>
+      <div id=patternButtons style="display: block">
+        <button id="visualizePattern" onclick="visualizePattern()"> Visualize </button>
+        <button id="hasPattern" onclick="hasPatternClick()"> Search Graph </button>
       </div>
+    </div>
       <div id="piechart"></div>
       <!-- <svg width="200px" height="200px"></svg> -->
     </div>
@@ -70,41 +74,6 @@
         <div id="piechart-3">
 
         </div>
-      </div>
-        <!-- <div id="myCarousel" class="carousel slide" data-ride="carousel">
-          Indicators
-          <ol class="carousel-indicators">
-            <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
-            <li data-target="#myCarousel" data-slide-to="1"></li>
-            <li data-target="#myCarousel" data-slide-to="2"></li>
-          </ol>
-
-          Wrapper for slides
-          <div class="carousel-inner">
-            <div class="item active">
-              <div id="piechart-1" class="col-sm-6 col-md-6 col-lg-12" style="width: 100%; height: 500px;"></div>
-            </div>
-
-            <div class="item">
-              <div id="piechart-2" class="col-sm-6 col-md-6 col-lg-12" style="width: 100%; height: 500px;"></div>
-            </div>
-
-            <div class="item">
-              <div id="piechart-3" class="col-sm-6 col-md-6 col-lg-12" style="width: 100%; height: 500px;"></div>
-            </div>
-          </div>
-
-          Left and right controls
-          <a class="left carousel-control" href="#myCarousel" data-slide="prev">
-            <span class="glyphicon glyphicon-chevron-left"></span>
-            <span class="sr-only">Previous</span>
-          </a>
-          <a class="right carousel-control" href="#myCarousel" data-slide="next">
-            <span class="glyphicon glyphicon-chevron-right"></span>
-            <span class="sr-only">Next</span>
-          </a>
-        </div> -->
-      </div>
   </body>
   <script>
   //Get the Data
@@ -150,67 +119,100 @@
         pattern = e.target.result;
         console.log("here");
         hasPattern(g, globalNodes, patternMixed);
-        var svg = d3.select("svg#restalk");
-        svg.selectAll("*").remove();
-        var inner = svg.append("g");
-
-        // Set up zoom support
-        var zoom = d3.zoom().on("zoom", function() {
-          inner.attr("transform", d3.event.transform);
-        });
-        svg.call(zoom);
-
-        // Create the renderer
-        var render = new dagreD3.render();
-        // Run the renderer. This is what draws the final graph.
-        render(inner, g);
-        // Center the graph
-        var initialScale = 0.2;
-        svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
-        svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id);
-          var n = id.split("start-")[1];
-          document.body.classList.toggle("enable-path-"+n);
-          console.log("Clicked " + id); });
-        };
-
-        reader.readAsBinaryString(file.files[0]);
       }
     }
+  }
     $(document).ready(function(){
       var form = document.getElementById("formId")
       form.onsubmit = getPattern;
     })
-    // // Create the dropdown-list of Clients.
-    // var displayClients = function(){
-    //   var div = document.getElementsByClassName("clients");
-    //   var str = '';
-    //   for(var client in clients){
-    //     str+=('<a onmouseover="displayTimePeriods(\''+ client +'\')" onclick="drawGraph(\''+client +'\')"> '+ client + '</a> ')
-    //   }
-    //   // str+=('');
-    //   div[0].innerHTML += str;
-    // }
     var displayPatterns = function(){
       var div = document.getElementById("predefinedPatterns");
-      var str =  document.createElement("div");
-      str.classList.add("dropdown-content");
       for(let pattern in user_select_patterns){
         let obj = user_select_patterns[pattern];
-        let a = document.createElement('a');
+        let option = document.createElement("option");
         let linkText = document.createTextNode(pattern);
-        a.appendChild(linkText);
-        a.addEventListener("click", function(){
-          checkPatterns(obj);
-        })
-        str.appendChild(a);
+        option.appendChild(linkText);
+        option.value = pattern;
+        div.appendChild(option);
       }
-      div.appendChild(str);
     }
+    displayPatterns();
     var checkPatterns = function(pattern){
+
       if(globalGraph === undefined) console.log("GLOBAL GRAPH NOT SET UP")
       else{
-        hasPattern(globalGraph, globalNodes, pattern);
-        // renderSvg(globalGraph);
+        clearPatternMenu();
+        let obj = hasPattern(globalGraph, globalNodes, pattern);
+        if(obj.bool){
+          let div = document.getElementById("patternButtons");
+          let newDiv = document.createElement("div");
+          var x = document.createElement("INPUT");
+          x.setAttribute("id", "vizPatternGraph");
+          x.setAttribute("type", "checkbox");
+          let label = document.createElement("LABEL");
+          label.setAttribute("for", "vizPatternGraph");
+          setUpPatternVisualization(globalGraph, obj.matrixNodesVisualization);
+          x.onclick = function(){
+            let elem = document.getElementById("vizPatternGraph");
+            var y = document.getElementsByTagName("STYLE")[5];
+            if(elem.checked){
+              y.disabled = false;
+            }
+            else{
+              y.disabled = true;
+            }
+          }
+          let btn2 = document.createElement("p");
+          let txt1 = document.createTextNode("VisualizePatternInGraph")
+          let txt2 = document.createTextNode("Pattern was FOUND")
+          label.appendChild(txt1);
+          btn2.appendChild(txt2);
+          div.appendChild(btn2);
+          newDiv.appendChild(x);
+          div.appendChild(x);
+          div.appendChild(label);
+        }
+      }
+    }
+    var clearPatternMenu = function(){
+      let div = document.getElementById("patternButtons");
+      let x = document.getElementsByTagName("STYLE");
+      let btn1 = document.createElement("BUTTON");
+      let btn2 = document.createElement("BUTTON");
+      let txt1 = document.createTextNode("Visualize");
+      let txt2 = document.createTextNode("Search Graph");
+      btn1.onclick = visualizePattern;
+      btn2.onclick = hasPatternClick;
+      btn1.appendChild(txt1);
+      btn2.appendChild(txt2);
+      while(div.hasChildNodes()) div.removeChild(div.childNodes[0])
+      x[5].remove();
+      div.appendChild(btn1);
+      div.appendChild(btn2);
+    }
+    var visualizePattern = function(){
+      
+    }
+    var disablePatternStyle = function(){
+      let elem = document.getElementById("vizPatternGraph");
+      var y = document.getElementsByTagName("STYLE")[5];
+      if(elem.checked){
+        y.disabled = true
+        elem.checked = false;
+      }
+    }
+    // var clearPatternVisualization(){
+    //   // var x = document.getElementsByTagName("STYLE")[5];
+    //   // x.disabled = true;
+    // }
+    var hasPatternClick = function(){
+      if(globalGraph === undefined) console.log("Draw a graph")
+      else{
+          var section = document.getElementById("predefinedPatterns");
+          var options = section && section.options;
+          var value = options[options.selectedIndex].value;
+          checkPatterns(user_select_patterns[value]);
       }
     }
     var displayTimePeriods = function(clientIP){
@@ -342,6 +344,7 @@
           }
         }
       }
+
       //Compute Delay Avgs
       obj = computeMinMaxAvgDelayVal(nodes);
       nodes = obj.nodes;

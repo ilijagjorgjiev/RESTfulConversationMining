@@ -249,7 +249,7 @@ var setStatusColoring = function(statusObj, class_prefix, sheet){
   }
 }
 var setStyles = function(){
-  for(let i = 0; i < 6; i++){
+  for(let i = 0; i < 5; i++){
     let style = document.createElement('style')
 
     style.disabled = true;
@@ -300,6 +300,7 @@ var setElementOnClick = function(elem, index){
       x.disabled = true;
     }
     else{
+      disablePatternStyle();
       var x = document.getElementsByTagName("STYLE")[index];
       x.disabled = false;;
     }
