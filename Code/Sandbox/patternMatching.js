@@ -1,9 +1,9 @@
 var identifyMethod = function(m1, m2){
-  if(m1.method == "*") return true;
+  if(m1.method == "*" || m1.method == "any") return true;
   else return (m1.method == m2);
 }
 var identifyStatus = function(s1, s2){
-  if(s1.status == "*") return true;
+  if(s1.status == "*" || s1.status == "any") return true;
   else return (s1.status == s2);
 }
 var identifyURL = function(u1, u2, placeholder){
@@ -67,8 +67,7 @@ var hasPattern = function(g, nodes, pattern){
 var followUpPattern = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, matrixNodesVisualization){
   var patternSize = Object.keys(pattern).length;
   var oldPl = placeholder;
-  console.log("continue="+key+" "+status, j);
-  if(pattern[j-1].status == "*" && j != 1){
+  if((pattern[j-1].status == "*" || pattern[j-1].status == "any") && j != 1){
     nodesVisualization.splice(-1,1);
     let slash = key.split('/');
     let method = slash[0];
@@ -99,7 +98,6 @@ var fx = function(nodes, key, status, pattern, placeholder, j, nodesVisualizatio
       let method = slash[0];
       let newUrl = "/" + slash.slice(1).join("/");
       let st = finalEnd[1];
-      if(key == "DELETE/job" && status == "400") console.log(method, st, newUrl);
       if(identifyMethod(pattern[j], method) && identifyStatus(pattern[j], st) && identifyURL(pattern[j], newUrl, placeholder)){
         var node = setUpNode(method, st, newUrl)
         nodesVisualization.push(node);
@@ -148,7 +146,7 @@ var setUpPatternVisualization = function(g, matrixNodesVisualization){
       sheet.insertRule("."+clazz+"{ "+st+" }");
     }
   }
-  st.disabled = true;
+  st.disabled = false;
 }
 var createRainbow = function(size){
   var rainbow = new Array(size);

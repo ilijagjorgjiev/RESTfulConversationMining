@@ -1,5 +1,5 @@
 //Sequence Preserving Comparison
-var seqPreservingComparison = function(client, length, nodes, start, incomingXorNodes, endName, tpIndex, comparisonTableData){
+var seqPreservingComparison = function(client, length, nodes, start, incomingXorNodes, endName, tpIndex){
   var prev = start;
   var prevId = start;
   var endConnection = {};

@@ -81,10 +81,15 @@ text {
     background-color: #3e8e41;
 }
 svg#restalk {
-  width: 100%;
+  flex-grow: 2;
   height: 800px;
   border: 1px solid #999;
   overflow: hidden;
+}
+svg#vizPattern {
+  flex-grow: 1;
+  border: 1px solid #999;
+  height: 87%;
 }
 table {
     font-family: arial, sans-serif;

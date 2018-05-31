@@ -1,4 +1,8 @@
 
+var getClassForNode = function(word, patternClazz, nodes, key, status){
+  var clazz = "type-Request method-"+key+' '+status + ' ' + patternClazz + ' ' + word + ' ' + "status-"+status
+  return clazz
+}
 var disableConversionPaths = function(){
   var obj = document.body.classList;
   var length = obj.length

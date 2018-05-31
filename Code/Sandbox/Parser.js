@@ -17,7 +17,7 @@ var readParseFile = function(links){
   for(let i = 0; i < links.length; i++){
     let str = links[i];
     if(str != ''){
-      let spaces = str.split(' ');
+      let spaces = str.trim().split(/\s+/);
       let obj = {date : spaces[0], time : spaces[1], ip : spaces[2], method : spaces[3], location: spaces[4], status : spaces[5]}
       logs.push(obj);
     }
@@ -33,7 +33,7 @@ var readParseURLRouteFile = function(links, routes){
   for(let i = 0; i < links.length; i++){
     let str = links[i];
     if(str != ''){
-      let spaces = str.split(' ');
+      let spaces = str.trim().split(/\s+/);
       var url = spaces[4];
 
       routes.forEach(function(r) {
@@ -54,7 +54,7 @@ var flatProcessingOfFile = function(links){
   for(let i = 0; i < links.length; i++){
     let str = links[i];
     if(str != ''){
-      let spaces = str.split(' ');
+      let spaces = str.trim().split(/\s+/);
       let obj = {date : spaces[0], time : spaces[1], ip : spaces[2], method : spaces[3], location: "/", status : spaces[5]}
       logs.push(obj);
     }
@@ -97,6 +97,7 @@ var sortClientByDateTime = function(clients){
         date.setHours(build2[0])
         date.setMinutes(build2[1])
         date.setSeconds(build2[2])
+        date.setMilliseconds(0);
         clients[ip][i].datetime = date;
       }
     }

@@ -24,10 +24,12 @@
   <script src="patternMatching.js"></script>
   <script src="patternData.js"></script>
   <script src="bower_components/jquery/dist/jquery.js"></script>
+  <script src="drawG.js"></script>
   <!-- <script type="text/javascript" src="setup.js"></script> -->
   <link rel="stylesheet" href="styles.css">
 
   <body>
+    <div style="display: block">
     <div id="Container" style="display: flex">
       <button onclick="goBack()">Go Back</button>
       <div id="Clients" style="float: left">
@@ -52,18 +54,11 @@
           <input type="submit" />
         </form>
       </div>
-    <div id="patternMenu">
-      <select id="predefinedPatterns"></select>
-      <div id=patternButtons style="display: block">
-        <button id="visualizePattern" onclick="visualizePattern()"> Visualize </button>
-        <button id="hasPattern" onclick="hasPatternClick()"> Search Graph </button>
-      </div>
-    </div>
-      <div id="piechart"></div>
       <!-- <svg width="200px" height="200px"></svg> -->
     </div>
-    <div style="display: flex">
-      <svg id="restalk"> </g></svg>
+    <div style="display: flex" id="bigcontainer">
+      <svg id="restalk"> </svg>
+      <div style="display: flex">
       <div id="pieCharts">
         <div id="piechart-1">
 
@@ -74,6 +69,21 @@
         <div id="piechart-3">
 
         </div>
+        <!-- <svg id="vizPattern"> </svg> -->
+      </div>
+      <div style="display: block">
+        <div id="patternMenu">
+          <select id="predefinedPatterns"></select>
+          <div id=patternButtons style="display: block">
+            <button id="visualizePattern" onclick="visualizePattern()"> Visualize </button>
+            <button id="hasPattern" onclick="hasPatternClick()"> Search Graph </button>
+          </div>
+        </div>
+      <svg id="vizPattern"> </svg>
+    </div>
+    </div>
+  </div>
+  </div>
   </body>
   <script>
   //Get the Data
@@ -152,15 +162,16 @@
           x.setAttribute("type", "checkbox");
           let label = document.createElement("LABEL");
           label.setAttribute("for", "vizPatternGraph");
+          x.checked = true;
           setUpPatternVisualization(globalGraph, obj.matrixNodesVisualization);
           x.onclick = function(){
             let elem = document.getElementById("vizPatternGraph");
-            var y = document.getElementsByTagName("STYLE")[5];
-            if(elem.checked){
-              y.disabled = false;
+            let y = document.getElementsByTagName("STYLE")[5];
+            if(elem.checked != true){
+              y.disabled = true;
             }
             else{
-              y.disabled = true;
+              y.disabled = false;
             }
           }
           let btn2 = document.createElement("p");
@@ -187,25 +198,86 @@
       btn1.appendChild(txt1);
       btn2.appendChild(txt2);
       while(div.hasChildNodes()) div.removeChild(div.childNodes[0])
-      x[5].remove();
       div.appendChild(btn1);
       div.appendChild(btn2);
+      if(x[5] !== undefined) x[5].remove();
     }
     var visualizePattern = function(){
-      
+      var section = document.getElementById("predefinedPatterns");
+      var options = section && section.options;
+      var value = options[options.selectedIndex].value;
+      var obj = user_select_patterns[value];
+      let i = 1;
+      for(let node in obj){
+        let location = obj[node].url
+        obj[node].location = location;
+        if(obj[node].method == "*") obj[node].method == "any";
+        let year = 1000;
+        let month = "1";
+        let day = "1";
+        let date = day + "/" + month + '/' + year;
+        let time = "00:00:"+i;
+        obj[node].date = date;
+        obj[node].time = time;
+        obj[node].datetime = new Date(date);
+        obj[node].datetime.setSeconds(i);
+        i++;
+      }
+      console.log(obj);
+      let vizg = new dagreD3.graphlib.Graph()
+      .setGraph({})
+      .setDefaultEdgeLabel(function() { return {}; });
+      let start = "start-"+value;
+      let end = "end-"+value;
+      vizg.setNode(start, {shape: "circle", class : start});
+      vizg.setNode(end, {shape: "circle", style: "stroke-width: 4; stroke: black", class : end})
+      let length = Object.keys(obj).length;
+      let cl = obj;
+      let nodes = [];
+      let incomingXorNodes = {};
+      var endConnections = {};
+      obj = seqPreservingComparison(cl, length, nodes, start, incomingXorNodes, end, value);
+      incomingXorNodes = obj.incomingXorNodes;
+      endConnections[value]= obj.endConnection.e1;
+      nodes = obj.nodes;
+      var statusObj = {};
+      var totalTpIpArray = []
+      var startKey, startStatus;
+      var comparisonTableData = {
+        timePorIP : [],
+        uniqueOverlapping : {
+          uniqueNodes : {
+            size : 0,
+          },
+          overlappingNodes : {
+            size : 0,
+          },
+          uniqueEdges : { size : 0,},
+          overlappingEdges : {size : 0,},
+        },
+        uniqueness : {},
+        uniquenessNodes : {},
+        nodeIpTp : {},
+      }
+    var totalRequestsData = totalNumberOfRequests(nodes);
+    var totalRequests = totalRequestsData.total;
+    var maxRequests = totalRequestsData.maxRequests;
+    obj = computeMinMaxAvgDelayVal(nodes);
+    nodes = obj.nodes;
+    var totalAvgKey = obj.totalAvgKey;
+    var maxDelay = obj.MAX;
+    var minDelay = obj.MIN;
+    drawG(vizg, nodes, comparisonTableData, incomingXorNodes, totalAvgKey, maxDelay, minDelay, totalRequests, endConnections, statusObj);
+    renderSvg(vizg, "#vizPattern");
     }
     var disablePatternStyle = function(){
       let elem = document.getElementById("vizPatternGraph");
       var y = document.getElementsByTagName("STYLE")[5];
-      if(elem.checked){
+      if(elem && elem.checked){
         y.disabled = true
         elem.checked = false;
       }
     }
-    // var clearPatternVisualization(){
-    //   // var x = document.getElementsByTagName("STYLE")[5];
-    //   // x.disabled = true;
-    // }
     var hasPatternClick = function(){
       if(globalGraph === undefined) console.log("Draw a graph")
       else{
@@ -244,6 +316,7 @@
       statusColoring.checked = false;
       deleteStyles();
       disableConversionPaths();
+      clearPatternMenu();
       // clearTable();
       // disableEdgeProbability();
     }
@@ -291,7 +364,7 @@
         g.setNode("end-"+client, {shape: "circle", style: "stroke-width: 4; stroke: black", class : "start" + " tpIpColoring-"+client})
         let length = dataObject[client].length;
         let cl = dataObject[client];
-        obj = seqPreservingComparison(cl, length, nodes, start, incomingXorNodes, "end-"+client, client, comparisonTableData);
+        obj = seqPreservingComparison(cl, length, nodes, start, incomingXorNodes, "end-"+client, client);
         totalTpIpArray.push(client);
         incomingXorNodes = obj.incomingXorNodes;
         endConnections[client]= obj.endConnection.e1;
@@ -301,173 +374,152 @@
       var totalRequestsData = totalNumberOfRequests(nodes);
       var totalRequests = totalRequestsData.total;
       var maxRequests = totalRequestsData.maxRequests;
-      // comparisonTableData.uniqueOverlapping = getComparisonTableNodes(nodes, comparisonTableData.uniqueOverlapping);
-      for(var key in nodes){
-        var size = Object.keys(nodes[key]).length;
-        if(size == 1){
-          var status = Object.keys(nodes[key])[0]
-          var str = "inXOR-"+key
-          var word = setUpClassForDifferentIpTp(nodes, key, status);
-          updateComparisonUniqueness(word, comparisonTableData, key, status);
-          hasStatus(statusObj, status);
-          let patternClazz = getPatternClassName(key, status);
-          if(incomingXorNodes[key] !== undefined) checkIfIncomingXorExists(nodes, key, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXOR-"+key)
-          g.setNode(key+' '+status, { shape: "rect", label : nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length,
-          class:"type-Request method-"+key+' '+status + ' ' + patternClazz + ' ' + word + ' ' + "status-"+status});
-          if(nodes[key][status].outgoingXOR){
-            g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
-          }
-          if((nodes[key][status].statusArray.length) > 1 && Object.keys(incomingXorNodes[key]).length > 1){
-            // var bool = checkIfIncomingXorExists(nodes, key, status, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXor-"+key);
-            var str = "inXOR-"+key
-            g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR incomingXOR"});
-          }
-        }
-        else{
-          var st = Object.keys(nodes[key])[0]
-          var word = setUpTotalClassForDifferentIpTp(nodes, key);
-          let patternClazz = getPatternClassName(key, undefined);
-          updateComparisonUniqueness(word, comparisonTableData, key, undefined);
-          g.setNode(key, {shape: "rect", label: nodes[key][st].statusArray[0].key + '\n' + totalRequests[key], class: "type-Request method-"+key+' '+patternClazz + ' ' + word});
-          g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR middleXOR"});
-          var str = "inXOR-"+key
-          if(Object.keys(incomingXorNodes[key]).length > 1) g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR incomingXOR"});
-          for(var status in nodes[key]){
-            word = setUpClassForDifferentIpTp(nodes, key, status);
-            patternClazz = getPatternClassName(key, status);
-            updateComparisonUniqueness(word, comparisonTableData, key, status);
-            hasStatus(statusObj, status);
-            g.setNode(key+' '+status, {shape: "rect", label : status + '\n' + nodes[key][status].statusArray.length, class:"type-Response method-"+key+' '+status +' '+ patternClazz + ' ' + word + ' ' + "status-"+status});
-            if(nodes[key][status].outgoingXOR){
-              g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
-            }
-          }
-        }
-      }
-
-      //Compute Delay Avgs
       obj = computeMinMaxAvgDelayVal(nodes);
       nodes = obj.nodes;
       var totalAvgKey = obj.totalAvgKey;
       var maxDelay = obj.MAX;
       var minDelay = obj.MIN;
-      var edges = 0;
-      //Set Up Edges
-      for(var key in nodes){
-        var str = "inXOR-"+key
-        var size = Object.keys(nodes[key]).length
-        var bin = computeAssignBin(totalAvgKey[key].totalDelayAvgKey, maxDelay, 1);
-        if(size == 1){
-          var status = Object.keys(nodes[key])[0]
-          if(nodes[key][status].outgoingXOR){
-            // console.log("OUTGOING-Size-1");
-            g.setEdge(key+' '+status,"XOR-"+key+' '+status,
-            {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin});
-            // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "outgoingXOR");
-            edges++;
-            // console.log(key, status)
-            // g.setEdge("inXOR-"+key, key+' '+status, {label: "delayAvg: "+ delayAvg});
-          }
-          if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length == 1){
-            let space = Object.keys(incomingXorNodes[key])[0]
-            let p = getProbabilityLabel(nodes, nodes[key][status].statusArray[0].start.split(' ')[0], nodes[key][status].statusArray[0].start.split(' ')[1], incomingXorNodes[key][space].length);
-            g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,
-            {label: p,
-              class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
-              // console.log("INCOMING-Size-1");
-              // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
-              edges++;
-            }
-            if(nodes[key][status].statusArray.length == 1){
-              let p = getProbabilityLabel(nodes, nodes[key][status].statusArray[0].start.split(' ')[0], nodes[key][status].statusArray[0].start.split(' ')[1], 1);
-              g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status,
-              { label : p,
-                class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin})
-                // console.log("INCOMING-STATUS-LENGTH-1");
-                // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
-                edges++;
-              }
-              if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length > 1){
-                g.setEdge("inXOR-"+key, key+' '+status,
-                {class: "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin})
-                // increaseAppropriateEdge(size, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
-                edges++;
-                // console.log("INCOMING-XOR-SIZE-1")
-                // console.log(key, status)
-                for(var space in incomingXorNodes[key]){
-                  var len = incomingXorNodes[key][space][0].length;
-                  if(len == 1){
-                    g.setEdge(incomingXorNodes[key][space][0][0], str,
-                      {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-0"})
-                      // console.log("it should be start NODE", incomingXorNodes[key][space][0][0])
-                      comparisonTableData.uniqueOverlapping.uniqueEdges.size++;
-                      edges++;
-                    }
-                    else{
-                      let avg = getIncomingEdgeIndexDelay(nodes, key, incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
-                      bin = computeAssignBin(avg, maxDelay, 1);
-                      let p = getProbabilityLabel(nodes, incomingXorNodes[key][space][0][0], incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
-                      g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], str,
-                      { label : p,
-                        class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
-                      }
-                    }
-                  }
-                }
-                else{
-                  var str1 = "middleXOR-"+key;
-                  // g.setEdge(str,key,{label: "Delay Average:"+delayAvg});
-                  if(Object.keys(incomingXorNodes[key]).length > 1){
-                    g.setEdge(str,key, {
-                      class: "edge-thickness-"+totalRequests[key] + " " + "delay-coloring-"+bin});
-                      // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
-                      edges++;
-                    }
-                    g.setEdge(key,str1, {class: "edge-thickness-"+totalRequests[key] + " " + "delay-coloring-0"});
-                    // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "incomingXOR");
-                    edges++;
-                    for(var status in nodes[key]){
-                      // console.log(nodes[key][status].avgDelay);
-                      bin = computeAssignBin(nodes[key][status].avgDelay, maxDelay, 1);
-                      g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%",
-                      class: "edge-thickness-" +nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin})
-                      // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "middleXOR");
-                      edges++;
-                      // g.setEdge(str1,key+' '+status,{label: roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%"+'\n'+"Delay Avg:" + (computeDelayAvg(nodes, key, status)/1000/60/60/24), labelType: "html"});
-                      if(nodes[key][status].outgoingXOR){
-                        g.setEdge(key+' '+status, "XOR-"+key+' '+status,
-                        {class: "edge-thickness-" + nodes[key][status].statusArray.length + " delay-coloring-0"});
-                        // increaseAppropriateEdge(1, key, status, comparisonTableData.uniqueOverlapping, "middleXOR");
-                        edges++;
-                      }
-                    }
-                    multipleIncomingXorSetUp(g, nodes, key, Object.keys(incomingXorNodes[key]).length, maxDelay, 1, incomingXorNodes)
-                  }
-                }
-                // console.log(comparisonTableData);
-                // console.log(edges);
-                //Set Up End Node
-                for(var end in endConnections){
-                  var endConnection = endConnections[end];
-                  var spaces =  endConnection.split(' ');
-                  var k = spaces[0]
-                  var s = spaces[1]
-                  if(nodes[k][s].outgoingXOR){
-                    g.setEdge("XOR-"+k+' '+s, "end-"+end, {
-                      label : roundUp(1/totalRequests[k]*100,1)+"%",
-                      class: "edge-thickness-1 delay-coloring-0"})
-                    }
-                    else{
-                      g.setEdge(k+' '+s, "end-"+end, {class: "edge-thickness-1 delay-coloring-0"});
-                    }
-                  }
-                  g.nodes().forEach(function(v) {
-                    var node = g.node(v);
-                    // console.log(node);
-                    // console.log(g.nodes())
-                    // Round the corners of the nodes
-                    node.rx = node.ry = 5;
-                  });
+      drawG(g, nodes, comparisonTableData, incomingXorNodes, totalAvgKey, maxDelay, minDelay, totalRequests, endConnections, statusObj);
+      // comparisonTableData.uniqueOverlapping = getComparisonTableNodes(nodes, comparisonTableData.uniqueOverlapping);
+      // for(var key in nodes){
+      //   var size = Object.keys(nodes[key]).length;
+      //   if(size == 1){
+      //     var status = Object.keys(nodes[key])[0]
+      //     var str = "inXOR-"+key
+      //     let word = setUpClassForDifferentIpTp(nodes, key, status);
+      //     updateComparisonUniqueness(word, comparisonTableData, key, status);
+      //     hasStatus(statusObj, status);
+      //     let patternClazz = getPatternClassName(key, status);
+      //     let clazz = getClassForNode(word, patternClazz, nodes, key, status);
+      //     if(incomingXorNodes[key] !== undefined) checkIfIncomingXorExists(nodes, key, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXOR-"+key)
+      //     let label = nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length;
+      //     let id = key+' '+status;
+      //     g.setNode(id, { shape: "rect",
+      //                     label : label,
+      //                     class: clazz});
+      //     if(nodes[key][status].outgoingXOR){
+      //       g.setNode("XOR-"+id, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
+      //     }
+      //     if((nodes[key][status].statusArray.length) > 1 && Object.keys(incomingXorNodes[key]).length > 1){
+      //       var str = "inXOR-"+key
+      //       g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR incomingXOR"});
+      //     }
+      //   }
+      //   else{
+      //     var st = Object.keys(nodes[key])[0]
+      //     var word = setUpTotalClassForDifferentIpTp(nodes, key);
+      //     let patternClazz = getPatternClassName(key, undefined);
+      //     updateComparisonUniqueness(word, comparisonTableData, key, undefined);
+      //     let clazz = getClassForNode(word, patternClazz, nodes, key, "");
+      //     let label = nodes[key][st].statusArray[0].key + '\n' + totalRequests[key];
+      //     g.setNode(key, {shape: "rect", label: label, class: clazz});
+      //     g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR middleXOR"});
+      //     var str = "inXOR-"+key
+      //     if(Object.keys(incomingXorNodes[key]).length > 1) g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR incomingXOR"});
+      //     for(var status in nodes[key]){
+      //       let id = key+' '+status;
+      //       word = setUpClassForDifferentIpTp(nodes, key, status);
+      //       patternClazz = getPatternClassName(key, status);
+      //       clazz = getClassForNode(word, patternClazz, nodes, key, status);
+      //       let label = status + '\n' + nodes[key][status].statusArray.length;
+      //       updateComparisonUniqueness(word, comparisonTableData, key, status);
+      //       hasStatus(statusObj, status);
+      //       g.setNode(id, {shape: "rect", label : label, class: clazz});
+      //       if(nodes[key][status].outgoingXOR){
+      //         g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
+      //       }
+      //     }
+      //   }
+      // }
+      // //Set Up Edges
+      // for(var key in nodes){
+      //   var str = "inXOR-"+key
+      //   var size = Object.keys(nodes[key]).length
+      //   var bin = computeAssignBin(totalAvgKey[key].totalDelayAvgKey, maxDelay, 1);
+      //   if(size == 1){
+      //     var status = Object.keys(nodes[key])[0]
+      //     let clazz = "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin;
+      //     let id = key+' '+status;
+      //     if(nodes[key][status].outgoingXOR){
+      //       g.setEdge(id,"XOR-"+id, {class: clazz});
+      //     }
+      //     if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length == 1){
+      //       let space = Object.keys(incomingXorNodes[key])[0]
+      //       let p = getProbabilityLabel(nodes, nodes[key][status].statusArray[0].start.split(' ')[0], nodes[key][status].statusArray[0].start.split(' ')[1], incomingXorNodes[key][space].length);
+      //       g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status, {label: p, class: clazz})
+      //       }
+      //       if(nodes[key][status].statusArray.length == 1){
+      //         let p = getProbabilityLabel(nodes, nodes[key][status].statusArray[0].start.split(' ')[0], nodes[key][status].statusArray[0].start.split(' ')[1], 1);
+      //         g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status, {label : p, class: clazz})
+      //         }
+      //         if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length > 1){
+      //           g.setEdge("inXOR-"+key, id, {class: clazz})
+      //
+      //           for(var space in incomingXorNodes[key]){
+      //             var len = incomingXorNodes[key][space][0].length;
+      //             if(len == 1){
+      //               g.setEdge(incomingXorNodes[key][space][0][0], str,
+      //                 {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-0"})
+      //                 comparisonTableData.uniqueOverlapping.uniqueEdges.size++;
+      //
+      //               }
+      //               else{
+      //                 let avg = getIncomingEdgeIndexDelay(nodes, key, incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
+      //                 bin = computeAssignBin(avg, maxDelay, 1);
+      //                 let p = getProbabilityLabel(nodes, incomingXorNodes[key][space][0][0], incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
+      //                 g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], str,
+      //                 { label : p,
+      //                   class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
+      //                 }
+      //               }
+      //             }
+      //           }
+      //           else{
+      //             var str1 = "middleXOR-"+key;
+      //             let clazz ="edge-thickness-"+totalRequests[key] + " " + "delay-coloring-"+bin;
+      //             if(Object.keys(incomingXorNodes[key]).length > 1){
+      //               g.setEdge(str,key, {
+      //                 class: clazz});
+      //               }
+      //               g.setEdge(key,str1, {class: "edge-thickness-"+totalRequests[key] + " " + "delay-coloring-0"});
+      //               for(var status in nodes[key]){
+      //                 bin = computeAssignBin(nodes[key][status].avgDelay, maxDelay, 1);
+      //                 let p = roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%";
+      //                 clazz = "edge-thickness-" +nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin
+      //                 let id = key+' '+status;
+      //                 g.setEdge(str1, id,{label: p, class: clazz})
+      //                 if(nodes[key][status].outgoingXOR){
+      //                   g.setEdge(id, "XOR-"+id,
+      //                   {class: "edge-thickness-" + nodes[key][status].statusArray.length + " delay-coloring-0"});
+      //                 }
+      //               }
+      //               multipleIncomingXorSetUp(g, nodes, key, Object.keys(incomingXorNodes[key]).length, maxDelay, 1, incomingXorNodes)
+      //             }
+      //           }
+      //           // console.log(comparisonTableData);
+      //           // console.log(edges);
+      //           //Set Up End Node
+      //           for(var end in endConnections){
+      //             var endConnection = endConnections[end];
+      //             var spaces =  endConnection.split(' ');
+      //             var k = spaces[0]
+      //             var s = spaces[1]
+      //             if(nodes[k][s].outgoingXOR){
+      //               g.setEdge("XOR-"+k+' '+s, "end-"+end, {
+      //                 label : roundUp(1/totalRequests[k]*100,1)+"%",
+      //                 class: "edge-thickness-1 delay-coloring-0"})
+      //               }
+      //               else{
+      //                 g.setEdge(k+' '+s, "end-"+end, {class: "edge-thickness-1 delay-coloring-0"});
+      //               }
+      //             }
+      //             g.nodes().forEach(function(v) {
+      //               var node = g.node(v);
+      //               // console.log(node);
+      //               // console.log(g.nodes())
+      //               // Round the corners of the nodes
+      //               node.rx = node.ry = 5;
+      //             });
                   // console.log(edges, comparisonTableData);
                   setNodeClasses(g, nodes, totalRequestsData);
                   setVisualizationConfig(nfc, eft, edc, sep, statusColoring, maxRequests, statusObj);
@@ -499,7 +551,7 @@
                   displayPieChar(numOfSharedNodes.data, numOfSharedNodes.options, "piechart-2", undefined);
                   displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-3", rainbows.pieChartRainbow, comparisonTableData.uniquenessNodes);
                   // console.log(c);
-                  renderSvg(g);
+                  renderSvg(g, "svg#restalk");
                   // displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-1");
                   // displayPieChar(numOfNodes.data, numOfNodes.options, "piechart-2");
                   // var svg = d3.select("svg#restalk");
@@ -524,8 +576,8 @@
                   //   document.body.classList.toggle("enable-path-"+n);
                   //   console.log("Clicked " + id); });
                 }
-                var renderSvg = function(g){
-                  var svg = d3.select("svg#restalk");
+                var renderSvg = function(g, clazz){
+                  var svg = d3.select(clazz);
                   svg.select("g").remove();
                   var inner = svg.append("g");
 
