@@ -23,6 +23,22 @@ var identifyURL = function(u1, u2, placeholder){
     return true;
   }
 }
+var identifyCandidate = function(candidateP, arr, shareNum, followUpArr){
+  if(candidateP){
+    if(shareNum > arr.length) return false;
+    else {
+      let ret = false;
+      let counter = 0;
+      for(let i = 0; i < followUpArr.length; i++){
+        if(arr.includes(followUpArr[i])){
+          counter++;
+        }
+      }
+      return counter == followUpArr.length;
+    }
+  }
+  return true;
+}
 var setUpNode = function(method, status, url){
   var node = {}
   node.method = method;
@@ -31,26 +47,30 @@ var setUpNode = function(method, status, url){
   return node;
 }
 
-var hasPattern = function(g, nodes, pattern){
+var hasPattern = function(g, nodes, pattern, candidateP, shareNum){
   var ret = false;
   var placeholder = {};
   var oldpl;
   var nodesVisualization = [];
   var matrixNodesVisualization = [];
+  var visited = {};
   for(var key in nodes){
     let space = key.split("/");
     let mt = space[0];
     let url = "/" + space.slice(1).join("/");
+    visited[key] = {}
     if(identifyMethod(pattern[0], mt) && identifyURL(pattern[0], url, placeholder)){
       oldpl = placeholder;
       for(var status in nodes[key]){
-        if(identifyStatus(pattern[0], status)){
+        visited[key][status] = true;
+        if(identifyStatus(pattern[0], status) && identifyCandidate(candidateP, nodes[key][status].tpIpArray, shareNum, nodes[key][status].tpIpArray)){
           nodesVisualization.push(setUpNode(mt, status, url));
           console.log("start="+key+" "+status);
-          followUpPattern(nodes, key, status, pattern, placeholder, 1, nodesVisualization, matrixNodesVisualization)
+          followUpPattern(nodes, key, status, pattern, placeholder, 1, nodesVisualization, matrixNodesVisualization, candidateP, shareNum, nodes[key][status].tpIpArray, visited);
         }
         placeholder = oldpl;
         nodesVisualization.splice(-1,1);
+        visited[key][status] = false;
       }
     }
     placeholder = {};
@@ -64,9 +84,15 @@ var hasPattern = function(g, nodes, pattern){
   return false;
 }
 
-var followUpPattern = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, matrixNodesVisualization){
+var followUpPattern = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, matrixNodesVisualization, candidateP, shareNum, followUpArr, visited){
   var patternSize = Object.keys(pattern).length;
   var oldPl = placeholder;
+  if(j > patternSize) return;
+  else if(j == patternSize){
+    var newArray = nodesVisualization.slice();
+    matrixNodesVisualization.push(newArray);
+    return;
+  }
   if((pattern[j-1].status == "*" || pattern[j-1].status == "any") && j != 1){
     nodesVisualization.splice(-1,1);
     let slash = key.split('/');
@@ -75,21 +101,19 @@ var followUpPattern = function(nodes, key, status, pattern, placeholder, j, node
     for(var st in nodes[key]){
       var node = setUpNode(method, st, newUrl)
       nodesVisualization.push(node);
-      fx(nodes, key, st, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization);
+      if(visited[key] === undefined) visited[key] = {}
+      visited[key][st] = true;
+      fx(nodes, key, st, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization, candidateP, shareNum, followUpArr, visited);
+      visited[key][st] = false;
       nodesVisualization.splice(-1,1);
     }
   }
   else{
-    fx(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization);
+    fx(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization, candidateP, shareNum, followUpArr, visited);
   }
   return;
 }
-var fx = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization){
-  if(j == patternSize) {
-    var newArray = nodesVisualization.slice();
-    matrixNodesVisualization.push(newArray);
-    return;
-  }
+var fx = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization, candidateP, shareNum, followUpArr, visited){
   var oldPlaceholder = placeholder;
   for(let i = 0; i < nodes[key][status].statusArray.length; i++){
     let finalEnd = nodes[key][status].statusArray[i].finalEnd.split(' ');
@@ -98,17 +122,23 @@ var fx = function(nodes, key, status, pattern, placeholder, j, nodesVisualizatio
       let method = slash[0];
       let newUrl = "/" + slash.slice(1).join("/");
       let st = finalEnd[1];
-      if(identifyMethod(pattern[j], method) && identifyStatus(pattern[j], st) && identifyURL(pattern[j], newUrl, placeholder)){
+      if(visited[finalEnd[0]] === undefined) {
+        visited[finalEnd[0]] = {}
+        visited[finalEnd[0]][st] = false;
+      }
+      if(identifyMethod(pattern[j], method) && identifyStatus(pattern[j], st) && identifyURL(pattern[j], newUrl, placeholder) && identifyCandidate(candidateP, shareNum, nodes[key][status].tpIpArray, shareNum, followUpArr)
+    && (visited[finalEnd[0]][st] === false || visited[finalEnd[0]][st] === undefined)){
         var node = setUpNode(method, st, newUrl)
+        if(method == "DELETE" && newUrl == "/resource1") console.log("j="+j);
         nodesVisualization.push(node);
+        visited[finalEnd[0]][status] = true;
         if((j+1) == patternSize){
           var newArray = nodesVisualization.slice();
           matrixNodesVisualization.push(newArray);
         }
-        else{
-          var val = followUpPattern(nodes, finalEnd[0], finalEnd[1], pattern, placeholder, j+1, nodesVisualization, matrixNodesVisualization)
-        }
+        var val = followUpPattern(nodes, finalEnd[0], finalEnd[1], pattern, placeholder, j+1, nodesVisualization, matrixNodesVisualization, candidateP, shareNum, followUpArr, visited)
         nodesVisualization.splice(-1,1);
+        visited[finalEnd[0]][status] = false;
         placeholder = oldPlaceholder;
       }
     }

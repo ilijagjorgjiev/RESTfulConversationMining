@@ -48,10 +48,19 @@
         Edge Delay Coloring: <input type="checkbox" id="edc" onclick="myFunction2()"> <br />
         Show Edge Probability: <input type="checkbox" id="sep" onclick="myFunction3()"> <br />
         Status Coloring: <input type="checkbox" id="statusColoring"> <br />
-        <form  id="formId" onsubmit="getPattern()">
+        <!-- <form  id="formId" onsubmit="getPattern()">
           <input type="file" name="fname" id="dataId" style="display: none;">
           <input type="button" value="Add a Pattern" onclick="document.getElementById('dataId').click();" />
           <input type="submit" />
+        </form> -->
+      </div>
+      <div id="CandidatePatternMenu" style="display: block">
+        <form id="formCandidatePatterns" onsubmit="generateCP()">
+          <input id="candidateLength" type="number" value="2" min="2">
+          <label for=candidateLength> Candidate Length</label>
+          <input id="shareLvl" type="number" value="2" min="2">
+          <label for="shareLvl"> Share Threshold</label>
+          <input id="candidateSubmit" value="Generate Candidate Patterns" type="submit">
         </form>
       </div>
       <!-- <svg width="200px" height="200px"></svg> -->
@@ -73,6 +82,11 @@
       </div>
       <div style="display: block">
         <div id="patternMenu">
+          <form  id="formId" onsubmit="getPattern()">
+            <input type="file" name="fname" id="dataId" style="display: none;">
+            <input type="button" value="Add a Pattern" onclick="document.getElementById('dataId').click();" />
+            <input type="submit" />
+          </form>
           <select id="predefinedPatterns"></select>
           <div id=patternButtons style="display: block">
             <button id="visualizePattern" onclick="visualizePattern()"> Visualize </button>
@@ -108,11 +122,34 @@
       // str+=('<option value=' + client + 'onmouseenter="displayTimePeriods(\''+ client +'\')" onclick="drawGraph(\''+client +'\')"> '+ client + '</option> ');
     }
   }
-
   displayClients();
   // localStorage.removeItem('objectToPass');
   //LOAD Google Charts
-  var globalGraph, globalNodes;
+  var globalGraph, globalNodes, convDrawn;
+  var generateCP = function (e){
+    e.preventDefault();
+    var candidateLengthNum = document.getElementById("candidateLength").value;
+    var shareNum = document.getElementById("shareLvl").value;
+    let pattern = generatePattern()
+    if(convDrawn !== undefined && convDrawn > 1 && convDrawn >= shareNum){
+      let pattern = {}
+      generatePattern(pattern, candidateLengthNum);
+      console.log(pattern);
+      let obj = hasPattern(globalGraph, globalNodes, pattern, true, shareNum);
+      console.log(obj, "true");
+    }
+    else console.log("Draw at least " + shareNum + " conversations");
+  }
+
+  var generatePattern = function(pattern, size){
+    for(let i = 0; i < size; i++){
+      pattern[i] = {
+        method : "*",
+        url : "*",
+        status : "*"
+      }
+    }
+  }
   google.load("visualization", "1", {packages:["corechart"]});
   // google.charts.setOnLoadCallback(createPieChart);
   // Input related code goes here
@@ -128,12 +165,14 @@
       {
         pattern = e.target.result;
         console.log("here");
-        hasPattern(g, globalNodes, patternMixed);
+        hasPattern(g, globalNodes, patternMixed, false, convDrawn);
       }
     }
   }
     $(document).ready(function(){
       var form = document.getElementById("formId")
+      var form1 = document.getElementById("formCandidatePatterns");
+      form1.onsubmit = generateCP;
       form.onsubmit = getPattern;
     })
     var displayPatterns = function(){
@@ -153,7 +192,7 @@
       if(globalGraph === undefined) console.log("GLOBAL GRAPH NOT SET UP")
       else{
         clearPatternMenu();
-        let obj = hasPattern(globalGraph, globalNodes, pattern);
+        let obj = hasPattern(globalGraph, globalNodes, pattern, false, convDrawn);
         if(obj.bool){
           let div = document.getElementById("patternButtons");
           let newDiv = document.createElement("div");
@@ -541,6 +580,7 @@
                   // createPieChart(comparisonTableData.uniqueness);
                   globalNodes = nodes;
                   globalGraph = g;
+                  convDrawn = totalTpIpArray.length;
                   // var patternFound2 = hasPattern(g, nodes, patternWild);
                   // hasPatternWholeGraph(g, dataObject.data, patternMixed, startKey, startStatus);
                   // createPieChart();
