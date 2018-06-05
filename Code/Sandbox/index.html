@@ -206,7 +206,7 @@
       }
     }
   }
-  google.load("visualization", "1", {packages:["corechart"]});
+  google.charts.load('current', {'packages':['corechart']});
   // google.charts.setOnLoadCallback(createPieChart);
   // Input related code goes here
   function getPattern(e){
@@ -653,15 +653,17 @@
                   globalNodes = nodes;
                   globalGraph = g;
                   convDrawn = totalTpIpArray.length;
-                  // var patternFound2 = hasPattern(g, nodes, patternWild);
-                  // hasPatternWholeGraph(g, dataObject.data, patternMixed, startKey, startStatus);
-                  // createPieChart();
-                  // console.log("PATTERN="+patternFound);
-                  // console.log("PatternURL="+patternFound1);
-                  // console.log("patternWild="+patternFound2);
-                  displayPieChar(numOfNodes.data, numOfNodes.options, "piechart-1", rainbows.nodesRainbow, undefined);
-                  displayPieChar(numOfSharedNodes.data, numOfSharedNodes.options, "piechart-2", undefined);
-                  displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-3", rainbows.pieChartRainbow, comparisonTableData.uniquenessNodes);
+                  let chart1 = displayPieChar(numOfNodes.data, numOfNodes.options, "piechart-1", rainbows.nodesRainbow, undefined);
+                  let chart2 = displayPieChar(numOfSharedNodes.data, numOfSharedNodes.options, "piechart-2", undefined);
+                  let chart3 = displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-3", rainbows.pieChartRainbow, comparisonTableData.uniquenessNodes);
+                  var eventHandlerPieCharts = function(chart, data){
+                    let row = chart.getSelection()[0].row;
+                    let value = data.getValue(row, 0);
+                    alert('The user selected ' + value);
+                  }
+                  google.visualization.events.addListener(chart1, "select", function(){eventHandlerPieCharts(chart1 , google.visualization.arrayToDataTable(numOfNodes.data))})
+                  google.visualization.events.addListener(chart2, "select", function(){eventHandlerPieCharts(chart2, google.visualization.arrayToDataTable(numOfSharedNodes.data))})
+                  google.visualization.events.addListener(chart3, "select", function(){eventHandlerPieCharts(chart3, google.visualization.arrayToDataTable(convSharingNodes.data))})
                   // console.log(c);
                   renderSvg(g, "svg#restalk");
                   // displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-1");
@@ -728,9 +730,10 @@
                         options.colors.push(rainbow[i]);
                       }
                     }
-                    var chart = new google.visualization.PieChart(document.getElementById(id));
+                    let chart = new google.visualization.PieChart(document.getElementById(id));
                     chart.style = "display: block";
                     chart.draw(data, options);
+                    return chart;
                   }
                   // google.charts.load('visualization', '1.0', {packages: ['corechart', 'table', 'controls', 'gauge']});
                   </script>
