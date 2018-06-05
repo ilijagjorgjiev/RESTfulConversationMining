@@ -494,10 +494,10 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
       const oldElem = elem;
       elem = elem.split('-')
       if(elem.length > 1){
-        arr.push(["IP/TP " + oldElem, data[oldElem].counter]);
+        arr.push(["IP/TP-" + oldElem, data[oldElem].counter]);
       }
       else{
-        arr.push(["IP/TP " + oldElem, data[oldElem].counter]);
+        arr.push(["IP/TP-" + oldElem, data[oldElem].counter]);
       }
     }
   }

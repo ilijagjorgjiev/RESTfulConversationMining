@@ -656,14 +656,20 @@
                   let chart1 = displayPieChar(numOfNodes.data, numOfNodes.options, "piechart-1", rainbows.nodesRainbow, undefined);
                   let chart2 = displayPieChar(numOfSharedNodes.data, numOfSharedNodes.options, "piechart-2", undefined);
                   let chart3 = displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-3", rainbows.pieChartRainbow, comparisonTableData.uniquenessNodes);
-                  var eventHandlerPieCharts = function(chart, data){
+                  var eventHandlerPieCharts = function(chart, data, rainbow){
+                    console.log(rainbow);
                     let row = chart.getSelection()[0].row;
                     let value = data.getValue(row, 0);
-                    alert('The user selected ' + value);
+                    value = value.split("-");
+                    console.log(value);
+                    for(let i = 1; i < value.length; i++){
+                      document.body.classList.toggle("enable-path-"+value[i]);
+                    }
+                    // document.body.classList.toggle("enable-path-"+n);
                   }
-                  google.visualization.events.addListener(chart1, "select", function(){eventHandlerPieCharts(chart1 , google.visualization.arrayToDataTable(numOfNodes.data))})
+                  google.visualization.events.addListener(chart1, "select", function(){eventHandlerPieCharts(chart1 , google.visualization.arrayToDataTable(numOfNodes.data), rainbows.nodesRainbow)})
                   google.visualization.events.addListener(chart2, "select", function(){eventHandlerPieCharts(chart2, google.visualization.arrayToDataTable(numOfSharedNodes.data))})
-                  google.visualization.events.addListener(chart3, "select", function(){eventHandlerPieCharts(chart3, google.visualization.arrayToDataTable(convSharingNodes.data))})
+                  google.visualization.events.addListener(chart3, "select", function(){eventHandlerPieCharts(chart3, google.visualization.arrayToDataTable(convSharingNodes.data),rainbows.pieChartRainbow)})
                   // console.log(c);
                   renderSvg(g, "svg#restalk");
                   // displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-1");
