@@ -62,6 +62,9 @@
           <label for="shareLvl"> Share Threshold</label>
           <input id="candidateSubmit" value="Generate Candidate Patterns" type="submit">
         </form>
+        <div id="predefinedCandidatePatterns">
+
+        </div>
       </div>
       <!-- <svg width="200px" height="200px"></svg> -->
     </div>
@@ -125,20 +128,73 @@
   displayClients();
   // localStorage.removeItem('objectToPass');
   //LOAD Google Charts
-  var globalGraph, globalNodes, convDrawn;
+  var globalGraph, globalNodes, convDrawn, globalCandidatePatterns;
   var generateCP = function (e){
     e.preventDefault();
+    cleanPredifinedCandidatePatterns();
     var candidateLengthNum = document.getElementById("candidateLength").value;
     var shareNum = document.getElementById("shareLvl").value;
     let pattern = generatePattern()
     if(convDrawn !== undefined && convDrawn > 1 && convDrawn >= shareNum){
       let pattern = {}
       generatePattern(pattern, candidateLengthNum);
-      console.log(pattern);
       let obj = hasPattern(globalGraph, globalNodes, pattern, true, shareNum);
-      console.log(obj, "true");
+      if(obj.bool){
+        let mainDiv = document.getElementById("predefinedCandidatePatterns");
+        let nodesViz = obj.matrixNodesVisualization;
+        globalCandidatePatterns = nodesViz;
+        let elem = document.createElement("select");
+        elem.setAttribute("id", "candidatePatternsList");
+        for(let i = 0; i < nodesViz.length; i++){
+          let option = document.createElement("option");
+          let linkText = document.createTextNode("Candidate Pattern "+i);
+          option.value = i
+          option.appendChild(linkText)
+          elem.appendChild(option);
+        }
+        var div = document.getElementById("CandidatePatternMenu");
+        var btn = document.createElement("BUTTON");
+        let linkText = document.createTextNode("Visualize Candidate Pattern ");
+        let btn1 = document.createElement("BUTTON");
+        let linkText1 = document.createTextNode("Save Candidate Pattern");
+        btn.appendChild(linkText);
+        btn1.appendChild(linkText1);
+        btn.setAttribute("id", "visualizeCandidatePattern");
+        btn1.setAttribute("id", "saveCandidatePattern");
+        btn.onclick = function(){
+          vizCandidatePattern();
+        }
+        btn1.onclick = function(){
+          saveCandidatePattern();
+        }
+        mainDiv.appendChild(elem);
+        mainDiv.appendChild(btn);
+        mainDiv.appendChild(btn1);
+        div.appendChild(mainDiv);
+      }
     }
     else console.log("Draw at least " + shareNum + " conversations");
+  }
+  var saveCandidatePattern = function(){
+    var section = document.getElementById("candidatePatternsList");
+    var options = section && section.options;
+    var value = options[options.selectedIndex].value;
+    if(globalCandidatePatterns !== undefined){
+      var obj = globalCandidatePatterns[value];
+      var length = Object.keys(user_select_patterns).length
+      var val = "candidatePattern"+length;
+      user_select_patterns[val] = obj;
+      displayPatterns();
+    }
+    else console.log("NO CANDIDATE PATTERNS");
+  }
+  var cleanPredifinedCandidatePatterns = function(){
+    var elem = document.getElementById("predefinedCandidatePatterns");
+    if(elem !== undefined){
+      while(elem.hasChildNodes()){
+        elem.removeChild(elem.childNodes[0])
+      }
+    }
   }
 
   var generatePattern = function(pattern, size){
@@ -177,6 +233,7 @@
     })
     var displayPatterns = function(){
       var div = document.getElementById("predefinedPatterns");
+      while(div.hasChildNodes()) div.removeChild(div.childNodes[0])
       for(let pattern in user_select_patterns){
         let obj = user_select_patterns[pattern];
         let option = document.createElement("option");
@@ -241,11 +298,26 @@
       div.appendChild(btn2);
       if(x[5] !== undefined) x[5].remove();
     }
-    var visualizePattern = function(){
+    var vizPattern = function(){
       var section = document.getElementById("predefinedPatterns");
       var options = section && section.options;
       var value = options[options.selectedIndex].value;
       var obj = user_select_patterns[value];
+      if(obj !== undefined) visualizePattern(obj, value);
+      else console.log("PUT PATTERNS");
+    }
+    var vizCandidatePattern = function(){
+      var section = document.getElementById("candidatePatternsList");
+      var options = section && section.options;
+      var value = options[options.selectedIndex].value;
+      if(globalCandidatePatterns !== undefined){
+        var obj = globalCandidatePatterns[value];
+        console.log(obj, value);
+        visualizePattern(obj, value);
+      }
+      else console.log("NO CANDIDATE PATTERNS");
+    }
+    var visualizePattern = function(obj, value){
       let i = 1;
       for(let node in obj){
         let location = obj[node].url
