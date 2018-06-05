@@ -66,6 +66,11 @@ var patternWild = {
   },
   "5" : {
     method : "DELETE",
+    status : "204",
+    "url" : "$4"
+  },
+  "6" : {
+    method : "DELETE",
     status : "500",
     "url" : "$1"
   }
@@ -77,14 +82,14 @@ var patternMixed = {
     url : "*"
   },
   "1" : {
-    method : "*",
-    status : "500",
-    url : "*"
-  },
-  "2" : {
     method : "DELETE",
     status : "*",
     url : "/last"
+  },
+  "2" : {
+    method : "*",
+    status : "500",
+    url : "*"
   },
   "3" : {
     method : "POST",
@@ -97,7 +102,45 @@ var patternMixed = {
     url : "*",
   }}
 
-  var user_select_patterns = {pattern : pattern,  patternURL : patternURL, patternWild : patternWild, patternMixed : patternMixed};
+  var ipPattern = {
+    "0" : {
+      method : "POST",
+      status : "*",
+      url : "*",
+      ips : 3,
+    },
+    "1" :{
+      method : "GET",
+      status : "*",
+      url : "*",
+      ips : 3,
+    },
+    "2" :{
+      method : "POST",
+      status : "*",
+      url : "*",
+      ips : 2,
+    },
+    "3" :{
+      method : "GET",
+      status : "*",
+      url : "*",
+    }
+  }
+
+  var candidatePattern= {
+    0 : {method: "DELETE", url: "/last", status: "404"},
+    1 : {method: "OPTIONS", url: "/job", status: "404"},
+    2 : {method: "DELETE", url: "/last", status: "500"}
+  }
+
+  // var candidatePattern= {
+  //   0 : {method: "*", url: "*", status: "*", ips: at least 2},
+  //   1 : {method: "GET", url: "*", status: "*", ips: at least 2},
+  //   2 : {method: "*", url: "*", status: "*", ips: at least 2},
+  // }
+
+  var user_select_patterns = {pattern : pattern,  patternURL : patternURL, patternWild : patternWild, patternMixed : patternMixed, candidatePattern : candidatePattern, ipPattern : ipPattern};
 
   // "6" : {
   //   method : "POST",

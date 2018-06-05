@@ -25,6 +25,7 @@ var seqPreservingComparison = function(client, length, nodes, start, incomingXor
       "key" : key,
       "finalEnd" : start,
       "finalStart" : prev,
+      "conv" : tpIndex,
     }
     let delay = computeDelay(nodes, node.start, node.dataNode);
     if(k == null || s == null){
@@ -52,6 +53,8 @@ var seqPreservingComparison = function(client, length, nodes, start, incomingXor
     }
     nodes[str][status].delayArray.push(delay);
     nodes[str][status].statusArray.push(node)
+    let arrIndex = nodes[str][status].statusArray.length - 1;
+    nodes[str][status].statusArray[arrIndex].arrIndex = arrIndex;
     prev = str + ' ' + status;
     prevId = i;
     if(i == (length-1)){

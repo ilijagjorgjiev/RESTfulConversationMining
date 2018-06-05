@@ -23,22 +23,77 @@ var identifyURL = function(u1, u2, placeholder){
     return true;
   }
 }
-var identifyCandidate = function(candidateP, arr, shareNum, followUpArr){
-  if(candidateP){
+var identifyCandidate = function(candidateP, arr, shareNum, followUpArr, statusArray, visitedArray){
+  if(candidateP || shareNum > 1){
     if(shareNum > arr.length) return false;
-    else {
-      let ret = false;
+    else{
       let counter = 0;
       for(let i = 0; i < followUpArr.length; i++){
         if(arr.includes(followUpArr[i])){
           counter++;
         }
       }
-      return counter == followUpArr.length;
+      var fx = function(followUpArr){
+        let newCounter = 0;
+        let newArr = []
+        let combs = k_combinations(statusArray, shareNum)
+        let val = counter;
+        let finalEnd;
+        while(val >= shareNum){
+          let combs = k_combinations(statusArray, val)
+          for(let i = 0; i < combs.length; i++){
+            finalEnd = combs[i][0].finalEnd;
+            newArr.push(combs[i][0].conv);
+            for(let j = 1; j < combs[i].length; j++){
+              if(combs[i][j].finalEnd == finalEnd && !visitedArray[combs[i][j].arrIndex]){
+                newArr.push(combs[i][j].conv);
+              }
+            }
+            for(let k = 0; k < followUpArr.length; k++){
+              if(newArr.includes(followUpArr[k])){
+                newCounter++;
+              }
+            }
+            if(newCounter == counter || (newCounter >= shareNum && newCounter < followUpArr.length)){
+              var revertVisited = [];
+              for(let j = 0; j < combs[i].length; j++){
+                visitedArray[combs[i][j].arrIndex] = true;
+                revertVisited.push(combs[i][j].arrIndex);
+              }
+              if(counter < followUpArr.length) console.log("PASS")
+              return{
+                revertVisited : revertVisited,
+                bool : true,
+                followUpArr : newArr
+              }
+            }
+            newArr = []
+            newCounter = 0;
+          }
+          val--;
+        }
+        return {
+          revertVisited : [],
+          bool : false
+        }
+        // val--;
+      }
+      if(counter == followUpArr.length){
+        let obj = fx(followUpArr);
+        if(obj.bool) return obj;
+        else return false;
+      }
+      else if(counter >= shareNum && counter < followUpArr.length){
+        followUpArr = arr;
+        console.log(followUpArr);
+        fx(followUpArr);
+      }
+      // return counter == followUpArr.length;
     }
   }
   return true;
 }
+
 var setUpNode = function(method, status, url){
   var node = {}
   node.method = method;
@@ -46,36 +101,65 @@ var setUpNode = function(method, status, url){
   node.status = status;
   return node;
 }
-
+var setVisitedArray = function(nodes){
+  for(var key in nodes){
+    for(var status in nodes[key]){
+      nodes[key][status].visitedArray = [];
+      for(let i = 0; i < nodes[key][status].statusArray.length; i++){
+        nodes[key][status].visitedArray[i] = false;
+      }
+    }
+  }
+}
+var revertVisitedArray = function(visitedArray, revertVisited){
+  for(let i = 0; i < revertVisited.length; i++){
+    visitedArray[revertVisitedArray[i]] = false;
+  }
+}
 var hasPattern = function(g, nodes, pattern, candidateP, shareNum){
   var ret = false;
   var placeholder = {};
   var oldpl;
   var nodesVisualization = [];
   var matrixNodesVisualization = [];
-  var visited = {};
+  setVisitedArray(nodes);
   for(var key in nodes){
     let space = key.split("/");
     let mt = space[0];
     let url = "/" + space.slice(1).join("/");
-    visited[key] = {}
     if(identifyMethod(pattern[0], mt) && identifyURL(pattern[0], url, placeholder)){
       oldpl = placeholder;
       for(var status in nodes[key]){
-        visited[key][status] = true;
-        if(identifyStatus(pattern[0], status) && identifyCandidate(candidateP, nodes[key][status].tpIpArray, shareNum, nodes[key][status].tpIpArray)){
-          nodesVisualization.push(setUpNode(mt, status, url));
-          console.log("start="+key+" "+status);
-          followUpPattern(nodes, key, status, pattern, placeholder, 1, nodesVisualization, matrixNodesVisualization, candidateP, shareNum, nodes[key][status].tpIpArray, visited);
+        if(identifyStatus(pattern[0], status)){
+          var fx = function(){
+            nodesVisualization.push(setUpNode(mt, status, url));
+            console.log("start="+space + status,  nodes[key][status].tpIpArray);
+            followUpPattern(nodes, key, status, pattern, placeholder, 1, nodesVisualization, matrixNodesVisualization, candidateP, shareNum, nodes[key][status].tpIpArray);
+            placeholder = oldpl;
+            nodesVisualization.splice(-1,1);
+          }
+          if(candidateP){
+            if(nodes[key][status].tpIpArray.length > 1){
+              fx();
+            }
+          }
+          else{
+            if(pattern[0].ips != undefined && pattern[0].ips > 1){
+              shareNum = pattern[0].ips;
+              if(nodes[key][status].tpIpArray.length > 1) fx();
+            }
+            else{
+              fx();
+            }
+          }
         }
-        placeholder = oldpl;
-        nodesVisualization.splice(-1,1);
-        visited[key][status] = false;
       }
     }
     placeholder = {};
+    setVisitedArray(nodes);
   }
   if(matrixNodesVisualization.length > 0){
+    console.log(matrixNodesVisualization);
     return{
       bool : true,
       matrixNodesVisualization : matrixNodesVisualization
@@ -84,15 +168,10 @@ var hasPattern = function(g, nodes, pattern, candidateP, shareNum){
   return false;
 }
 
-var followUpPattern = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, matrixNodesVisualization, candidateP, shareNum, followUpArr, visited){
+var followUpPattern = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, matrixNodesVisualization, candidateP, shareNum, followUpArr){
   var patternSize = Object.keys(pattern).length;
-  var oldPl = placeholder;
-  if(j > patternSize) return;
-  else if(j == patternSize){
-    var newArray = nodesVisualization.slice();
-    matrixNodesVisualization.push(newArray);
-    return;
-  }
+  let oldPl = Object.assign({}, placeholder);
+  if(j >= patternSize) return;
   if((pattern[j-1].status == "*" || pattern[j-1].status == "any") && j != 1){
     nodesVisualization.splice(-1,1);
     let slash = key.split('/');
@@ -101,20 +180,18 @@ var followUpPattern = function(nodes, key, status, pattern, placeholder, j, node
     for(var st in nodes[key]){
       var node = setUpNode(method, st, newUrl)
       nodesVisualization.push(node);
-      if(visited[key] === undefined) visited[key] = {}
-      visited[key][st] = true;
-      fx(nodes, key, st, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization, candidateP, shareNum, followUpArr, visited);
-      visited[key][st] = false;
+      fx(nodes, key, st, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization, candidateP, shareNum, followUpArr);
       nodesVisualization.splice(-1,1);
     }
   }
   else{
-    fx(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization, candidateP, shareNum, followUpArr, visited);
+    fx(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization, candidateP, shareNum, followUpArr);
   }
   return;
 }
-var fx = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization, candidateP, shareNum, followUpArr, visited){
-  var oldPlaceholder = placeholder;
+var fx = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization, candidateP, shareNum, followUpArr){
+  let finalEnds = []
+  let oldPlaceholder = Object.assign({}, placeholder);
   for(let i = 0; i < nodes[key][status].statusArray.length; i++){
     let finalEnd = nodes[key][status].statusArray[i].finalEnd.split(' ');
     if(finalEnd.length > 1){
@@ -122,24 +199,40 @@ var fx = function(nodes, key, status, pattern, placeholder, j, nodesVisualizatio
       let method = slash[0];
       let newUrl = "/" + slash.slice(1).join("/");
       let st = finalEnd[1];
-      if(visited[finalEnd[0]] === undefined) {
-        visited[finalEnd[0]] = {}
-        visited[finalEnd[0]][st] = false;
-      }
-      if(identifyMethod(pattern[j], method) && identifyStatus(pattern[j], st) && identifyURL(pattern[j], newUrl, placeholder) && identifyCandidate(candidateP, shareNum, nodes[key][status].tpIpArray, shareNum, followUpArr)
-    && (visited[finalEnd[0]][st] === false || visited[finalEnd[0]][st] === undefined)){
+      // console.log(finalEnd, candidateP, j);
+      if(identifyMethod(pattern[j], method) && identifyStatus(pattern[j], st) && identifyURL(pattern[j], newUrl, placeholder)){
         var node = setUpNode(method, st, newUrl)
-        if(method == "DELETE" && newUrl == "/resource1") console.log("j="+j);
-        nodesVisualization.push(node);
-        visited[finalEnd[0]][status] = true;
-        if((j+1) == patternSize){
-          var newArray = nodesVisualization.slice();
-          matrixNodesVisualization.push(newArray);
+        var fx = function(){
+          nodesVisualization.push(node);
+          if(j+1 == patternSize){
+            // console.log(j, jSizeBool, obj.bool);
+            var newArray = nodesVisualization.slice();
+            // setUpPatternVisualization(nodes);
+            matrixNodesVisualization.push(newArray);
+          }
+          var val = followUpPattern(nodes, finalEnd[0], finalEnd[1], pattern, placeholder, j+1, nodesVisualization, matrixNodesVisualization, candidateP, shareNum, followUpArr)
+          nodesVisualization.splice(-1,1);
+          placeholder = oldPlaceholder;
         }
-        var val = followUpPattern(nodes, finalEnd[0], finalEnd[1], pattern, placeholder, j+1, nodesVisualization, matrixNodesVisualization, candidateP, shareNum, followUpArr, visited)
-        nodesVisualization.splice(-1,1);
-        visited[finalEnd[0]][status] = false;
-        placeholder = oldPlaceholder;
+        var fx1 = function(){
+          let obj = identifyCandidate(candidateP,  nodes[key][status].tpIpArray, shareNum, followUpArr, nodes[key][status].statusArray, nodes[key][status].visitedArray)
+          if(obj.bool){
+            if(obj.bool) followUpArr = obj.followUpArr;
+            fx();
+          }
+        }
+        if(candidateP){
+          fx1();
+          }
+        else{
+          shareNum = pattern[j].ips;
+          console.log(shareNum);
+          followUpArr = nodes[key][status].tpIpArray;
+          if(pattern[j].ips != undefined && pattern[j].ips > 1){
+            fx1();
+          }
+          else fx();
+        }
       }
     }
   }
@@ -199,6 +292,64 @@ var getPatternClassName = function(key, status){
   if(status !== undefined) clazz += "-"+status;
   return clazz;
 }
+//Link: https://gist.github.com/axelpale/3118596
+function k_combinations(set, k) {
+  var i, j, combs, head, tailcombs;
+
+  // There is no way to take e.g. sets of 5 elements from
+  // a set of 4.
+  if (k > set.length || k <= 0) {
+    return [];
+  }
+
+  // K-sized set has only one K-sized subset.
+  if (k == set.length) {
+    return [set];
+  }
+
+  // There is N 1-sized subsets in a N-sized set.
+  if (k == 1) {
+    combs = [];
+    for (i = 0; i < set.length; i++) {
+      combs.push([set[i]]);
+    }
+    return combs;
+  }
+
+  // Assert {1 < k < set.length}
+
+  // Algorithm description:
+  // To get k-combinations of a set, we want to join each element
+  // with all (k-1)-combinations of the other elements. The set of
+  // these k-sized sets would be the desired result. However, as we
+  // represent sets with lists, we need to take duplicates into
+  // account. To avoid producing duplicates and also unnecessary
+  // computing, we use the following approach: each element i
+  // divides the list into three: the preceding elements, the
+  // current element i, and the subsequent elements. For the first
+  // element, the list of preceding elements is empty. For element i,
+  // we compute the (k-1)-computations of the subsequent elements,
+  // join each with the element i, and store the joined to the set of
+  // computed k-combinations. We do not need to take the preceding
+  // elements into account, because they have already been the i:th
+  // element so they are already computed and stored. When the length
+  // of the subsequent list drops below (k-1), we cannot find any
+  // (k-1)-combs, hence the upper limit for the iteration:
+  combs = [];
+  for (i = 0; i < set.length - k + 1; i++) {
+    // head is a list that includes only our current element.
+    head = set.slice(i, i + 1);
+    // We take smaller combinations from the subsequent elements
+    tailcombs = k_combinations(set.slice(i + 1), k - 1);
+    // For each (k-1)-combination we join it with the current
+    // and store it to the set of k-combinations.
+    for (j = 0; j < tailcombs.length; j++) {
+      combs.push(head.concat(tailcombs[j]));
+    }
+  }
+  return combs;
+}
+
 // var hasPatternWholeGraph = function(g, nodes, pattern, startKey, startStatus){
 //   var ret = false;
 //   var nodesVisualization = []
