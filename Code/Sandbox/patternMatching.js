@@ -1,3 +1,179 @@
+var hasPatternWholeGraph = function(g, nodes, pattern, candidateP, shareNum){
+  var ret = false;
+  var placeholder = {};
+  var oldpl;
+  var nodesVisualization = [];
+  var matrixNodesVisualization = {
+    n : [],
+    w : [],
+  };
+  var wholeNodesVisualization = [];
+  setVisitedArray(nodes);
+  for(var key in nodes){
+    let space = key.split("/");
+    let mt = space[0];
+    let url = "/" + space.slice(1).join("/");
+    if(identifyMethod(pattern[0], mt) && identifyURL(pattern[0], url, placeholder)){
+      oldpl = placeholder;
+      for(var status in nodes[key]){
+        if(identifyStatus(pattern[0], status)){
+          var fx = function(){
+            nodesVisualization.push(setUpNode(mt, status, url));
+            console.log("start="+space + status,  nodes[key][status].tpIpArray);
+            wholefollowUp(nodes, key, status, pattern, placeholder, 1, nodesVisualization, matrixNodesVisualization, candidateP, shareNum, nodes[key][status].tpIpArray, wholeNodesVisualization);
+            placeholder = oldpl;
+            nodesVisualization.splice(-1,1);
+          }
+          if(candidateP){
+            if(nodes[key][status].tpIpArray.length > 1){
+              fx();
+            }
+          }
+          else{
+            if(pattern[0].ips != undefined && pattern[0].ips > 1){
+              shareNum = pattern[0].ips;
+              if(nodes[key][status].tpIpArray.length > 1) fx();
+            }
+            else{
+              fx();
+            }
+          }
+        }
+      }
+    }
+    placeholder = {};
+    setVisitedArray(nodes);
+
+  }
+  if(matrixNodesVisualization.n.length > 0){
+    console.log(matrixNodesVisualization);
+    return{
+      bool : true,
+      matrixNodesVisualization : matrixNodesVisualization
+    }
+  }
+  return false;
+}
+
+var wholefollowUp = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, matrixNodesVisualization, candidateP, shareNum, followUpArr, wholeNodesVisualization){
+  var patternSize = Object.keys(pattern).length;
+  let oldPl = Object.assign({}, placeholder);
+  if(j >= patternSize) return;
+  if((pattern[j-1].status == "*" || pattern[j-1].status == "any") && j != 1){
+    if(pattern[j].type == "whole"){
+      wholeNodesVisualization.splice(-1,1);
+      let slash = key.split('/');
+      let method = slash[0];
+      let newUrl = "/" + slash.slice(1).join("/");
+      for(var st in nodes[key]){
+        var node = setUpNode(method, st, newUrl)
+        wholeNodesVisualization.push(node);
+        wholeFx(nodes, key, st, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization, candidateP, shareNum, followUpArr, wholeNodesVisualization);
+        wholeNodesVisualization.splice(-1,1);
+      }
+    }
+    else{
+      nodesVisualization.splice(-1,1);
+      let slash = key.split('/');
+      let method = slash[0];
+      let newUrl = "/" + slash.slice(1).join("/");
+      for(var st in nodes[key]){
+        var node = setUpNode(method, st, newUrl)
+        nodesVisualization.push(node);
+        // nodes[key][st].visitedArray[]
+        // for(let i = 0; i < nodes[key][st])
+        wholeFx(nodes, key, st, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization, candidateP, shareNum, followUpArr, wholeNodesVisualization);
+        nodesVisualization.splice(-1,1);
+      }
+    }
+  }
+  else{
+    wholeFx(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization, candidateP, shareNum, followUpArr, wholeNodesVisualization);
+  }
+  return;
+}
+
+var wholeFx = function(nodes, key, status, pattern, placeholder, j, nodesVisualization, patternSize, matrixNodesVisualization, candidateP, shareNum, followUpArr, wholeNodesVisualization){
+  let oldPlaceholder = Object.assign({}, placeholder);
+  for(let i = 0; i < nodes[key][status].statusArray.length; i++){
+    let finalEnd = nodes[key][status].statusArray[i].finalEnd.split(' ');
+    if(finalEnd.length > 1){
+      let slash = finalEnd[0].split('/');
+      let method = slash[0];
+      let newUrl = "/" + slash.slice(1).join("/");
+      let st = finalEnd[1];
+      if(!nodes[key][status].visitedArray[i]){
+        console.log(finalEnd[0], finalEnd[1], j);
+        if(identifyMethod(pattern[j], method) && identifyStatus(pattern[j], st) && identifyURL(pattern[j], newUrl, placeholder)){
+          console.log(finalEnd[0], finalEnd[1], j);
+          var node = setUpNode(method, st, newUrl);
+          var fx = function(){
+            nodesVisualization.push(node);
+            if(j+1 == patternSize){
+              // console.log(key, status, nodes[key][status].tpIpArray);
+              if(pattern[j].ips != undefined && pattern[j].ips > 1){
+                if(nodes[finalEnd[0]][finalEnd[1]].tpIpArray.length >= pattern[j].ips){
+                  var newArray = nodesVisualization.slice();
+                  var newArr = wholeNodesVisualization.slice();
+                  matrixNodesVisualization.n.push(newArray);
+                  matrixNodesVisualization.w.push(newArr);
+                }
+              }
+              else{
+                console.log(finalEnd[0], finalEnd[1])
+                var newArray = nodesVisualization.slice();
+                var newArr = wholeNodesVisualization.slice();
+                matrixNodesVisualization.n.push(newArray);
+                matrixNodesVisualization.w.push(newArr);
+              }
+            }
+            var val = wholefollowUp(nodes, finalEnd[0], finalEnd[1], pattern, placeholder, j+1, nodesVisualization, matrixNodesVisualization, candidateP, shareNum, followUpArr, wholeNodesVisualization)
+            nodesVisualization.splice(-1,1);
+            placeholder = oldPlaceholder;
+          }
+          var fx1 = function(){
+            // console.log(key, status, nodes[key][status].visitedArray);
+            let obj = identifyCandidate(candidateP,  nodes[key][status].tpIpArray, shareNum, followUpArr, nodes[key][status].statusArray, nodes[key][status].visitedArray)
+            // console.log(obj);
+            if(obj.bool){
+              if(obj.bool) followUpArr = obj.followUpArr;
+              fx();
+            }
+          }
+          if(candidateP){
+            fx1();
+          }
+          else{
+            shareNum = pattern[j-1].ips;
+            followUpArr = nodes[key][status].tpIpArray;
+            if(pattern[j-1].ips != undefined && pattern[j-1].ips > 1){
+              fx1();
+            }
+            else{
+              nodes[key][status].visitedArray[i] = true;
+              fx();
+            }
+
+          }
+        }
+        else if(pattern[j].type == "whole"){
+          console.log(j, key, status, nodesVisualization.slice(), finalEnd[0], finalEnd[1]);
+          nodes[key][status].visitedArray[i] = true;
+          let node = setUpNode(method, st, newUrl);
+          wholeNodesVisualization.push(node);
+          var val = wholefollowUp(nodes, finalEnd[0], finalEnd[1], pattern, placeholder, j, nodesVisualization, matrixNodesVisualization, candidateP, shareNum, followUpArr, wholeNodesVisualization);
+          wholeNodesVisualization.splice(-1,1);
+        }
+      }
+    }
+    else{
+      nodes[key][status].visitedArray[i] = true;
+    }
+  }
+  return;
+}
+
+
 var identifyMethod = function(m1, m2){
   if(m1.method == "*" || m1.method == "any") return true;
   else return (m1.method == m2);
@@ -24,6 +200,7 @@ var identifyURL = function(u1, u2, placeholder){
   }
 }
 var identifyCandidate = function(candidateP, arr, shareNum, followUpArr, statusArray, visitedArray){
+  // console.log(arr, followUpArr, shareNum);
   if(candidateP || shareNum > 1){
     if(shareNum > arr.length) return false;
     else{
@@ -43,32 +220,37 @@ var identifyCandidate = function(candidateP, arr, shareNum, followUpArr, statusA
           let combs = k_combinations(statusArray, val)
           for(let i = 0; i < combs.length; i++){
             finalEnd = combs[i][0].finalEnd;
-            newArr.push(combs[i][0].conv);
-            for(let j = 1; j < combs[i].length; j++){
-              if(combs[i][j].finalEnd == finalEnd && !visitedArray[combs[i][j].arrIndex]){
-                newArr.push(combs[i][j].conv);
+            // console.log(finalEnd, combs[i])
+            if(!visitedArray[combs[i][0].arrIndex]){
+              newArr.push(combs[i][0].conv);
+              for(let j = 1; j < combs[i].length; j++){
+                // console.log(combs[i][j].finalEnd);
+                if(combs[i][j].finalEnd == finalEnd && !visitedArray[combs[i][j].arrIndex]){
+                  newArr.push(combs[i][j].conv);
+                }
               }
+              for(let k = 0; k < followUpArr.length; k++){
+                if(newArr.includes(followUpArr[k])){
+                  newCounter++;
+                }
+              }
+              // console.log(newArr, arr, newCounter, visitedArray);
+              if(newCounter == counter || (newCounter >= shareNum && newCounter < followUpArr.length)){
+                var revertVisited = [];
+                for(let j = 0; j < combs[i].length; j++){
+                  visitedArray[combs[i][j].arrIndex] = true;
+                  revertVisited.push(combs[i][j].arrIndex);
+                }
+                if(counter < followUpArr.length) console.log("PASS")
+                return{
+                  revertVisited : revertVisited,
+                  bool : true,
+                  followUpArr : newArr
+                }
+              }
+              newArr = []
+              newCounter = 0;
             }
-            for(let k = 0; k < followUpArr.length; k++){
-              if(newArr.includes(followUpArr[k])){
-                newCounter++;
-              }
-            }
-            if(newCounter == counter || (newCounter >= shareNum && newCounter < followUpArr.length)){
-              var revertVisited = [];
-              for(let j = 0; j < combs[i].length; j++){
-                visitedArray[combs[i][j].arrIndex] = true;
-                revertVisited.push(combs[i][j].arrIndex);
-              }
-              if(counter < followUpArr.length) console.log("PASS")
-              return{
-                revertVisited : revertVisited,
-                bool : true,
-                followUpArr : newArr
-              }
-            }
-            newArr = []
-            newCounter = 0;
           }
           val--;
         }
@@ -223,12 +405,12 @@ var fx = function(nodes, key, status, pattern, placeholder, j, nodesVisualizatio
         }
         if(candidateP){
           fx1();
-          }
+        }
         else{
-          shareNum = pattern[j].ips;
+          shareNum = pattern[j-1].ips;
           console.log(shareNum);
           followUpArr = nodes[key][status].tpIpArray;
-          if(pattern[j].ips != undefined && pattern[j].ips > 1){
+          if(pattern[j-1].ips != undefined && pattern[j-1].ips > 1){
             fx1();
           }
           else fx();
@@ -248,26 +430,38 @@ var setUpPatternVisualization = function(g, matrixNodesVisualization){
   // Add the <style> element to the page
   document.head.appendChild(style);
 
-  var rainbow = createRainbow(matrixNodesVisualization.length);
+  var rainbow = createRainbow(matrixNodesVisualization.n.length);
   var st = document.getElementsByTagName("STYLE")[5];
   var sheet = document.getElementsByTagName("STYLE")[5].sheet;
   var clazz;
-  for(let j = 0; j < matrixNodesVisualization.length; j++){
-    var nodesVisualization = matrixNodesVisualization[j];
+  var fx = function(rainbow, nodesVisualization, j){
+    console.log(rainbow, j);
     for(let i = 0; i < nodesVisualization.length; i++){
-      var full = nodesVisualization[i].method + nodesVisualization[i].url + ' ' + nodesVisualization[i].status;
-      var key = nodesVisualization[i].method + nodesVisualization[i].url
-
+      let full = nodesVisualization[i].method + nodesVisualization[i].url + ' ' + nodesVisualization[i].status;
+      let key = nodesVisualization[i].method + nodesVisualization[i].url
+      // console.log(key, full, i, nodesVisualization);
       let st = "fill: "+rainbow[j];
       if(g._nodes[key] !== undefined){
         clazz = getPatternClassName(key, undefined);
-        console.log(clazz);
+        // console.log(clazz);
         sheet.insertRule("."+clazz+"{ "+st+" }");
       }
       clazz = getPatternClassName(key, nodesVisualization[i].status);
-      console.log(clazz);
+      // console.log(clazz);
       sheet.insertRule("."+clazz+"{ "+st+" }");
     }
+  }
+  for(let j = 0; j < matrixNodesVisualization.n.length; j++){
+    var nodesVisualization = matrixNodesVisualization.n[j];
+    fx(rainbow, nodesVisualization, j)
+  }
+  for(let i = 0; i < rainbow.length; i++){
+    rainbow[i] = rgbToHex(getGradientColor([0, 0, 0], hexToRgb(rainbow[i]), 0.5));
+    console.log(rainbow[i]);
+  }
+  for(let i = 0; i < matrixNodesVisualization.w.length; i++){
+    var wholeNodesVisualization = matrixNodesVisualization.w[i];
+    fx(rainbow, wholeNodesVisualization, i);
   }
   st.disabled = false;
 }
@@ -283,6 +477,7 @@ var createRainbow = function(size){
   return rainbow;
 }
 var getPatternClassName = function(key, status){
+  // console.log(key);
   let _key = key.split('/');
   let clazz = '';
   for(let i = 0; i < _key.length; i++){

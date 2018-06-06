@@ -100,20 +100,21 @@ var patternMixed = {
     method : "PUT",
     status : "*",
     url : "*",
-  }}
-
+  },
+  5 : {method: "DELETE", url: "/job/1", status: "*", type: "whole"}
+}
   var ipPattern = {
     "0" : {
       method : "POST",
       status : "*",
       url : "*",
-      ips : 3,
+      ips : 4,
     },
     "1" :{
       method : "GET",
       status : "*",
       url : "*",
-      ips : 3,
+      ips : 4
     },
     "2" :{
       method : "POST",
@@ -121,11 +122,11 @@ var patternMixed = {
       url : "*",
       ips : 2,
     },
-    "3" :{
-      method : "GET",
-      status : "*",
-      url : "*",
-    }
+    // "3" :{
+    //   method : "GET",
+    //   status : "*",
+    //   url : "*",
+    // }
   }
 
   var candidatePattern= {
@@ -133,6 +134,10 @@ var patternMixed = {
     1 : {method: "OPTIONS", url: "/job", status: "404"},
     2 : {method: "DELETE", url: "/last", status: "500"}
   }
+  var wholePattern = {
+    "0" : {method: "POST", url: "/poll", status: "*", type: "whole"},
+    "1" : {method: "PUT", url: "$2", "status" : "*", type: "whole"}
+}
 
   // var candidatePattern= {
   //   0 : {method: "*", url: "*", status: "*", ips: at least 2},
@@ -140,7 +145,9 @@ var patternMixed = {
   //   2 : {method: "*", url: "*", status: "*", ips: at least 2},
   // }
 
-  var user_select_patterns = {pattern : pattern,  patternURL : patternURL, patternWild : patternWild, patternMixed : patternMixed, candidatePattern : candidatePattern, ipPattern : ipPattern};
+  var user_select_patterns = {pattern : pattern,  patternURL : patternURL, patternWild : patternWild, patternMixed : patternMixed, candidatePattern : candidatePattern,
+    ipPattern : ipPattern,
+  wholePattern : wholePattern};
 
   // "6" : {
   //   method : "POST",

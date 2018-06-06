@@ -94,6 +94,7 @@
           <div id=patternButtons style="display: block">
             <button id="visualizePattern" onclick="visualizePattern()"> Visualize </button>
             <button id="hasPattern" onclick="hasPatternClick()"> Search Graph </button>
+            <button id="wholeGraphSearch">Whole Graph Search</button>
           </div>
         </div>
       <svg id="vizPattern"> </svg>
@@ -138,7 +139,7 @@
     if(convDrawn !== undefined && convDrawn > 1 && convDrawn >= shareNum){
       let pattern = {}
       generatePattern(pattern, candidateLengthNum);
-      let obj = hasPattern(globalGraph, globalNodes, pattern, true, shareNum);
+      let obj = hasPatternWholeGraph(globalGraph, globalNodes, pattern, true, shareNum);
       if(obj.bool){
         let mainDiv = document.getElementById("predefinedCandidatePatterns");
         let nodesViz = obj.matrixNodesVisualization;
@@ -244,12 +245,14 @@
       }
     }
     displayPatterns();
-    var checkPatterns = function(pattern){
+    var checkPatterns = function(pattern, id){
 
       if(globalGraph === undefined) console.log("GLOBAL GRAPH NOT SET UP")
       else{
         clearPatternMenu();
-        let obj = hasPattern(globalGraph, globalNodes, pattern, false, convDrawn);
+        let obj;
+        if(id == "hasPattern") obj = hasPattern(globalGraph, globalNodes, pattern, false, convDrawn);
+        else obj = hasPatternWholeGraph(globalGraph, globalNodes, pattern, false, convDrawn);
         if(obj.bool){
           let div = document.getElementById("patternButtons");
           let newDiv = document.createElement("div");
@@ -287,15 +290,23 @@
       let x = document.getElementsByTagName("STYLE");
       let btn1 = document.createElement("BUTTON");
       let btn2 = document.createElement("BUTTON");
+      let btn3 = document.createElement("BUTTON");
       let txt1 = document.createTextNode("Visualize");
       let txt2 = document.createTextNode("Search Graph");
+      let txt3 = document.createTextNode("Search Whole Graph");
       btn1.onclick = visualizePattern;
       btn2.onclick = hasPatternClick;
+      btn3.onclick = hasPatternClick;
       btn1.appendChild(txt1);
       btn2.appendChild(txt2);
+      btn1.setAttribute("id", "visualizePattern");
+      btn2.setAttribute("id", "hasPattern");
+      btn3.setAttribute("id", "wholeGraphSearch");
+      btn3.appendChild(txt3);
       while(div.hasChildNodes()) div.removeChild(div.childNodes[0])
       div.appendChild(btn1);
       div.appendChild(btn2);
+      div.appendChild(btn3);
       if(x[5] !== undefined) x[5].remove();
     }
     var vizPattern = function(){
@@ -389,13 +400,14 @@
         elem.checked = false;
       }
     }
-    var hasPatternClick = function(){
+    var hasPatternClick = function(e){
+     let id = e.currentTarget.id;
       if(globalGraph === undefined) console.log("Draw a graph")
       else{
           var section = document.getElementById("predefinedPatterns");
           var options = section && section.options;
           var value = options[options.selectedIndex].value;
-          checkPatterns(user_select_patterns[value]);
+          checkPatterns(user_select_patterns[value], id);
       }
     }
     var displayTimePeriods = function(clientIP){
