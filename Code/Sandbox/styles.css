@@ -91,6 +91,20 @@ svg#vizPattern {
   border: 1px solid #999;
   height: 85%;
 }
+#pieCharts{
+  flex-grow: 1;
+}
+#someContainer{
+  flex-grow: 1;
+  border: 1px solid #999;
+}
+#patternContainer{
+  border: 1px solid #999;
+
+}
+#smallContainer{
+  border: 1px solid #999;
+}
 table {
     font-family: arial, sans-serif;
     border-collapse: collapse;
