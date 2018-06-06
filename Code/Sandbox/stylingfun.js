@@ -1,6 +1,8 @@
 
 var getClassForNode = function(word, patternClazz, nodes, key, status){
-  var clazz = "type-Request method-"+key+' '+status + ' ' + patternClazz + ' ' + word + ' ' + "status-"+status
+  var _word = word.split(" ");
+  let shared = _word.length - 1;
+  var clazz = "type-Request method-"+key+' '+status + ' ' + patternClazz + ' ' + word + ' ' + "status-"+status + " shared-" + shared;
   return clazz
 }
 var disableConversionPaths = function(){
@@ -253,7 +255,7 @@ var setStatusColoring = function(statusObj, class_prefix, sheet){
   }
 }
 var setStyles = function(){
-  for(let i = 0; i < 5; i++){
+  for(let i = 0; i < 6; i++){
     let style = document.createElement('style')
 
     style.disabled = true;

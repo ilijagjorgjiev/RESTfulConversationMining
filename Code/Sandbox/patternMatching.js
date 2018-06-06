@@ -431,8 +431,8 @@ var setUpPatternVisualization = function(g, matrixNodesVisualization){
   document.head.appendChild(style);
 
   var rainbow = createRainbow(matrixNodesVisualization.n.length);
-  var st = document.getElementsByTagName("STYLE")[5];
-  var sheet = document.getElementsByTagName("STYLE")[5].sheet;
+  var st = document.getElementsByTagName("STYLE")[6];
+  var sheet = document.getElementsByTagName("STYLE")[6].sheet;
   var clazz;
   var fx = function(rainbow, nodesVisualization, j){
     console.log(rainbow, j);

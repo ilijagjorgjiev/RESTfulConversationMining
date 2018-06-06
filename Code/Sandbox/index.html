@@ -193,7 +193,6 @@ var changeTp = function(){
       }
     }
   }
-  console.log(result);
   displayTimePeriods(result);
 }
 var saveCandidatePattern = function(){
@@ -283,7 +282,7 @@ var checkPatterns = function(pattern){
       setUpPatternVisualization(globalGraph, obj.matrixNodesVisualization);
       x.onclick = function(){
         let elem = document.getElementById("vizPatternGraph");
-        let y = document.getElementsByTagName("STYLE")[5];
+        let y = document.getElementsByTagName("STYLE")[6];
         if(elem.checked != true){
           y.disabled = true;
         }
@@ -319,7 +318,7 @@ var clearPatternMenu = function(){
   while(div.hasChildNodes()) div.removeChild(div.childNodes[0])
   div.appendChild(btn1);
   div.appendChild(btn3);
-  if(x[5] !== undefined) x[5].remove();
+  if(x[6] !== undefined) x[6].remove();
 }
 var vizPattern = function(){
   var section = document.getElementById("predefinedPatterns");
@@ -391,6 +390,7 @@ var visualizePattern = function(obj, value){
     uniqueness : {},
     uniquenessNodes : {},
     nodeIpTp : {},
+    sharedNodes : {}
   }
   var totalRequestsData = totalNumberOfRequests(nodes);
   var totalRequests = totalRequestsData.total;
@@ -405,7 +405,7 @@ var visualizePattern = function(obj, value){
 }
 var disablePatternStyle = function(){
   let elem = document.getElementById("vizPatternGraph");
-  var y = document.getElementsByTagName("STYLE")[5];
+  var y = document.getElementsByTagName("STYLE")[6];
   if(elem && elem.checked){
     y.disabled = true
     elem.checked = false;
@@ -425,7 +425,6 @@ var displayTimePeriods = function(client){
   var el = document.getElementById("multiSelect");
   var form = document.getElementById("multiSelectForm");
   var timePeriods = differenceThreshold(client);
-  console.log(timePeriods);
   var str = "";
   for(let i = 0; i < timePeriods.length; i++){
     str += '<option value=\''+i+'\'> Time Period '+ i + '</option>'
@@ -451,8 +450,6 @@ var fixVisualizationConfig = function(nfc, eft, edc, sep, statusColoring){
   deleteStyles();
   disableConversionPaths();
   clearPatternMenu();
-  // clearTable();
-  // disableEdgeProbability();
 }
 //Draw the Graph for the selected IP.
 var drawGraph = function(dataObject){
@@ -491,6 +488,7 @@ var drawGraph = function(dataObject){
     uniqueness : {},
     uniquenessNodes : {},
     nodeIpTp : {},
+    sharedNodes : {},
   }
   for(let client in dataObject){
     let start = "start-"+client;
@@ -514,210 +512,45 @@ var drawGraph = function(dataObject){
   var maxDelay = obj.MAX;
   var minDelay = obj.MIN;
   drawG(g, nodes, comparisonTableData, incomingXorNodes, totalAvgKey, maxDelay, minDelay, totalRequests, endConnections, statusObj);
-  // comparisonTableData.uniqueOverlapping = getComparisonTableNodes(nodes, comparisonTableData.uniqueOverlapping);
-  // for(var key in nodes){
-  //   var size = Object.keys(nodes[key]).length;
-  //   if(size == 1){
-  //     var status = Object.keys(nodes[key])[0]
-  //     var str = "inXOR-"+key
-  //     let word = setUpClassForDifferentIpTp(nodes, key, status);
-  //     updateComparisonUniqueness(word, comparisonTableData, key, status);
-  //     hasStatus(statusObj, status);
-  //     let patternClazz = getPatternClassName(key, status);
-  //     let clazz = getClassForNode(word, patternClazz, nodes, key, status);
-  //     if(incomingXorNodes[key] !== undefined) checkIfIncomingXorExists(nodes, key, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXOR-"+key)
-  //     let label = nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length;
-  //     let id = key+' '+status;
-  //     g.setNode(id, { shape: "rect",
-  //                     label : label,
-  //                     class: clazz});
-  //     if(nodes[key][status].outgoingXOR){
-  //       g.setNode("XOR-"+id, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
-  //     }
-  //     if((nodes[key][status].statusArray.length) > 1 && Object.keys(incomingXorNodes[key]).length > 1){
-  //       var str = "inXOR-"+key
-  //       g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR incomingXOR"});
-  //     }
-  //   }
-  //   else{
-  //     var st = Object.keys(nodes[key])[0]
-  //     var word = setUpTotalClassForDifferentIpTp(nodes, key);
-  //     let patternClazz = getPatternClassName(key, undefined);
-  //     updateComparisonUniqueness(word, comparisonTableData, key, undefined);
-  //     let clazz = getClassForNode(word, patternClazz, nodes, key, "");
-  //     let label = nodes[key][st].statusArray[0].key + '\n' + totalRequests[key];
-  //     g.setNode(key, {shape: "rect", label: label, class: clazz});
-  //     g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR middleXOR"});
-  //     var str = "inXOR-"+key
-  //     if(Object.keys(incomingXorNodes[key]).length > 1) g.setNode(str, {label: "XOR", shape: "diamond", class: "type-XOR incomingXOR"});
-  //     for(var status in nodes[key]){
-  //       let id = key+' '+status;
-  //       word = setUpClassForDifferentIpTp(nodes, key, status);
-  //       patternClazz = getPatternClassName(key, status);
-  //       clazz = getClassForNode(word, patternClazz, nodes, key, status);
-  //       let label = status + '\n' + nodes[key][status].statusArray.length;
-  //       updateComparisonUniqueness(word, comparisonTableData, key, status);
-  //       hasStatus(statusObj, status);
-  //       g.setNode(id, {shape: "rect", label : label, class: clazz});
-  //       if(nodes[key][status].outgoingXOR){
-  //         g.setNode("XOR-"+key+' '+status, {label: "XOR", shape: "diamond", class: "type-XOR outgoingXOR"});
-  //       }
-  //     }
-  //   }
-  // }
-  // //Set Up Edges
-  // for(var key in nodes){
-  //   var str = "inXOR-"+key
-  //   var size = Object.keys(nodes[key]).length
-  //   var bin = computeAssignBin(totalAvgKey[key].totalDelayAvgKey, maxDelay, 1);
-  //   if(size == 1){
-  //     var status = Object.keys(nodes[key])[0]
-  //     let clazz = "edge-thickness-" + nodes[key][status].statusArray.length + " " + "delay-coloring-" + bin;
-  //     let id = key+' '+status;
-  //     if(nodes[key][status].outgoingXOR){
-  //       g.setEdge(id,"XOR-"+id, {class: clazz});
-  //     }
-  //     if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length == 1){
-  //       let space = Object.keys(incomingXorNodes[key])[0]
-  //       let p = getProbabilityLabel(nodes, nodes[key][status].statusArray[0].start.split(' ')[0], nodes[key][status].statusArray[0].start.split(' ')[1], incomingXorNodes[key][space].length);
-  //       g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status, {label: p, class: clazz})
-  //       }
-  //       if(nodes[key][status].statusArray.length == 1){
-  //         let p = getProbabilityLabel(nodes, nodes[key][status].statusArray[0].start.split(' ')[0], nodes[key][status].statusArray[0].start.split(' ')[1], 1);
-  //         g.setEdge(nodes[key][status].statusArray[0].start, key+' '+status, {label : p, class: clazz})
-  //         }
-  //         if(nodes[key][status].statusArray.length > 1 && Object.keys(incomingXorNodes[key]).length > 1){
-  //           g.setEdge("inXOR-"+key, id, {class: clazz})
-  //
-  //           for(var space in incomingXorNodes[key]){
-  //             var len = incomingXorNodes[key][space][0].length;
-  //             if(len == 1){
-  //               g.setEdge(incomingXorNodes[key][space][0][0], str,
-  //                 {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-0"})
-  //                 comparisonTableData.uniqueOverlapping.uniqueEdges.size++;
-  //
-  //               }
-  //               else{
-  //                 let avg = getIncomingEdgeIndexDelay(nodes, key, incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
-  //                 bin = computeAssignBin(avg, maxDelay, 1);
-  //                 let p = getProbabilityLabel(nodes, incomingXorNodes[key][space][0][0], incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
-  //                 g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], str,
-  //                 { label : p,
-  //                   class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
-  //                 }
-  //               }
-  //             }
-  //           }
-  //           else{
-  //             var str1 = "middleXOR-"+key;
-  //             let clazz ="edge-thickness-"+totalRequests[key] + " " + "delay-coloring-"+bin;
-  //             if(Object.keys(incomingXorNodes[key]).length > 1){
-  //               g.setEdge(str,key, {
-  //                 class: clazz});
-  //               }
-  //               g.setEdge(key,str1, {class: "edge-thickness-"+totalRequests[key] + " " + "delay-coloring-0"});
-  //               for(var status in nodes[key]){
-  //                 bin = computeAssignBin(nodes[key][status].avgDelay, maxDelay, 1);
-  //                 let p = roundUp(nodes[key][status].statusArray.length/totalRequests[key]*100,1)+"%";
-  //                 clazz = "edge-thickness-" +nodes[key][status].statusArray.length + " " + "delay-coloring-"+bin
-  //                 let id = key+' '+status;
-  //                 g.setEdge(str1, id,{label: p, class: clazz})
-  //                 if(nodes[key][status].outgoingXOR){
-  //                   g.setEdge(id, "XOR-"+id,
-  //                   {class: "edge-thickness-" + nodes[key][status].statusArray.length + " delay-coloring-0"});
-  //                 }
-  //               }
-  //               multipleIncomingXorSetUp(g, nodes, key, Object.keys(incomingXorNodes[key]).length, maxDelay, 1, incomingXorNodes)
-  //             }
-  //           }
-  //           // console.log(comparisonTableData);
-  //           // console.log(edges);
-  //           //Set Up End Node
-  //           for(var end in endConnections){
-  //             var endConnection = endConnections[end];
-  //             var spaces =  endConnection.split(' ');
-  //             var k = spaces[0]
-  //             var s = spaces[1]
-  //             if(nodes[k][s].outgoingXOR){
-  //               g.setEdge("XOR-"+k+' '+s, "end-"+end, {
-  //                 label : roundUp(1/totalRequests[k]*100,1)+"%",
-  //                 class: "edge-thickness-1 delay-coloring-0"})
-  //               }
-  //               else{
-  //                 g.setEdge(k+' '+s, "end-"+end, {class: "edge-thickness-1 delay-coloring-0"});
-  //               }
-  //             }
-  //             g.nodes().forEach(function(v) {
-  //               var node = g.node(v);
-  //               // console.log(node);
-  //               // console.log(g.nodes())
-  //               // Round the corners of the nodes
-  //               node.rx = node.ry = 5;
-  //             });
-  // console.log(edges, comparisonTableData);
   setNodeClasses(g, nodes, totalRequestsData);
   setVisualizationConfig(nfc, eft, edc, sep, statusColoring, maxRequests, statusObj);
   // triggerEdgeProbability(sep);
   var rainbows = conversionPath("tpIpColoring", totalTpIpArray.length, totalTpIpArray, comparisonTableData.uniquenessNodes);
-  var patternFound;
+
   var convSharingNodes = createConversationSharingNodes(comparisonTableData.uniquenessNodes);
   var numOfSharedNodes = createComparisonUniquenessTable(comparisonTableData.uniqueness);
   var numOfNodes = createComparisonNodeIpTpTable(comparisonTableData.nodeIpTp);
-  // $(document).ready(function(){
-  //   console.log(document.getElementById("piechart-1"));
-  //   displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-1");
-  // })
-  // window.onload = function() {
-  //     console.log(document.getElementById("piechart-1"));
-  //     displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-1");
-  // };
-  // displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-1");
-  // createPieChart(comparisonTableData.uniqueness);
+  var sharedNodesRainbow = createRainbow(Object.keys(comparisonTableData.uniqueness).length);
   globalNodes = nodes;
   globalGraph = g;
   convDrawn = totalTpIpArray.length;
+  console.log(comparisonTableData);
   let chart1 = displayPieChar(numOfNodes.data, numOfNodes.options, "piechart-1", rainbows.nodesRainbow, undefined);
-  let chart2 = displayPieChar(numOfSharedNodes.data, numOfSharedNodes.options, "piechart-2", undefined);
+  let chart2 = displayPieChar(numOfSharedNodes.data, numOfSharedNodes.options, "piechart-2", sharedNodesRainbow, undefined);
   let chart3 = displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-3", rainbows.pieChartRainbow, comparisonTableData.uniquenessNodes);
-  var eventHandlerPieCharts = function(chart, data, rainbow){
-    console.log(rainbow);
+  var eventHandlerPieCharts = function(chart, data){
     let row = chart.getSelection()[0].row;
     let value = data.getValue(row, 0);
     value = value.split("-");
-    console.log(value);
-    for(let i = 1; i < value.length; i++){
-      document.body.classList.toggle("enable-path-"+value[i]);
-    }
-    // document.body.classList.toggle("enable-path-"+n);
+    console.log(value[1]);
+    if(value.length == 1) document.body.classList.toggle("shared-"+1)
+    else document.body.classList.toggle("shared-"+value[1]);
   }
+  setStyleShared(sharedNodesRainbow);
   // google.visualization.events.addListener(chart1, "select", function(){eventHandlerPieCharts(chart1 , google.visualization.arrayToDataTable(numOfNodes.data), rainbows.nodesRainbow)})
-  // google.visualization.events.addListener(chart2, "select", function(){eventHandlerPieCharts(chart2, google.visualization.arrayToDataTable(numOfSharedNodes.data))})
+  google.visualization.events.addListener(chart2, "select", function(){eventHandlerPieCharts(chart2, google.visualization.arrayToDataTable(numOfSharedNodes.data))})
   // google.visualization.events.addListener(chart3, "select", function(){eventHandlerPieCharts(chart3, google.visualization.arrayToDataTable(convSharingNodes.data),rainbows.pieChartRainbow)})
   // console.log(c);
   renderSvg(g, "svg#restalk");
-  // displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-1");
-  // displayPieChar(numOfNodes.data, numOfNodes.options, "piechart-2");
-  // var svg = d3.select("svg#restalk");
-  // svg.selectAll("*").remove();
-  // var inner = svg.append("g");
-  //
-  // // Set up zoom support
-  // var zoom = d3.zoom().on("zoom", function() {
-  //   inner.attr("transform", d3.event.transform);
-  // });
-  // svg.call(zoom);
-  //
-  // // Create the renderer
-  // var render = new dagreD3.render();
-  // // Run the renderer. This is what draws the final graph.
-  // render(inner, g);
-  // // Center the graph
-  // var initialScale = 0.2;
-  // svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
-  // svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id);
-  //   var n = id.split("start-")[1];
-  //   document.body.classList.toggle("enable-path-"+n);
-  //   console.log("Clicked " + id); });
+}
+var setStyleShared = function(rainbow){
+  var sheet;
+  if(document.getElementsByTagName("STYLE")[5] !== undefined) sheet = document.getElementsByTagName("STYLE")[5].sheet;
+  for(let i = 0; i < rainbow.length; i++){
+    let clazz = ".shared-"+(i+1);
+    let st = "fill: "+rainbow[i];
+    sheet.insertRule(clazz+"{ "+st+" }");
+  }
 }
 var renderSvg = function(g, clazz){
   var svg = d3.select(clazz);
@@ -753,7 +586,7 @@ var renderSvg = function(g, clazz){
         options.colors.push(rainbow[rule]);
       }
     }
-    else if (id == "piechart-1"){
+    else{
       options.colors = []
       for(let i in rainbow){
         options.colors.push(rainbow[i]);

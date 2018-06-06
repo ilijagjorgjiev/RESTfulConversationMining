@@ -444,10 +444,18 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
     var dataUniqueness = comparisonTableData.uniqueness;
     var dataUniquenessNodes = comparisonTableData.uniquenessNodes;
     var dataNodeIpTp = comparisonTableData.nodeIpTp
+    var sharedNodes = comparisonTableData.sharedNodes;
     var _word = word.split(' ');
     _word.sort().reverse();
-    if(dataUniqueness[_word.length-1] === undefined) dataUniqueness[_word.length-1] = 1;
-    else dataUniqueness[_word.length-1]++;
+    if(dataUniqueness[_word.length-1] === undefined){
+      dataUniqueness[_word.length-1] = 1;
+      sharedNodes[_word.length-1] = [];
+      sharedNodes[_word.length-1].push(key + ' ' + status);
+    }
+    else {
+      dataUniqueness[_word.length-1]++;
+      sharedNodes[_word.length-1].push(key + ' ' + status);
+    }
     if(_word.length > 2) comparisonTableData.uniqueOverlapping.overlappingNodes.size++;
     else comparisonTableData.uniqueOverlapping.uniqueNodes.size++;
     var tPiP="";
