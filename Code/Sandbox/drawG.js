@@ -10,7 +10,7 @@ var drawG = function(g, nodes, comparisonTableData, incomingXorNodes, totalAvgKe
       let patternClazz = getPatternClassName(key, status);
       let clazz = getClassForNode(word, patternClazz, nodes, key, status);
       if(incomingXorNodes[key] !== undefined) checkIfIncomingXorExists(nodes, key, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXOR-"+key)
-      let label = nodes[key][status].statusArray[0].key + '\n' + status + '\n' + nodes[key][status].statusArray.length;
+      let label = nodes[key][status].statusArray[0].key + '\n' + status + '\n' + "(" + nodes[key][status].statusArray.length + ")";
       let id = key+' '+status;
       g.setNode(id, { shape: "rect",
       label : label,
@@ -29,7 +29,7 @@ var drawG = function(g, nodes, comparisonTableData, incomingXorNodes, totalAvgKe
       let patternClazz = getPatternClassName(key, undefined);
       updateComparisonUniqueness(word, comparisonTableData, key, undefined);
       let clazz = getClassForNode(word, patternClazz, nodes, key, "");
-      let label = nodes[key][st].statusArray[0].key + '\n' + totalRequests[key];
+      let label = nodes[key][st].statusArray[0].key + '\n' + "(" + totalRequests[key] + ")";
       g.setNode(key, {shape: "rect", label: label, class: clazz});
       g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR middleXOR"});
       var str = "inXOR-"+key
@@ -39,7 +39,7 @@ var drawG = function(g, nodes, comparisonTableData, incomingXorNodes, totalAvgKe
         word = setUpClassForDifferentIpTp(nodes, key, status);
         patternClazz = getPatternClassName(key, status);
         clazz = getClassForNode(word, patternClazz, nodes, key, status);
-        let label = status + '\n' + nodes[key][status].statusArray.length;
+        let label = status + '\n' +"(" + nodes[key][status].statusArray.length + ")";
         updateComparisonUniqueness(word, comparisonTableData, key, status);
         hasStatus(statusObj, status);
         g.setNode(id, {shape: "rect", label : label, class: clazz});
