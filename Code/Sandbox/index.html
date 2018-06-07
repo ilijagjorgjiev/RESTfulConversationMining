@@ -54,46 +54,48 @@
           <input type="submit" />
         </form> -->
       </div>
-      <div style="float: right; display: flex">
-      <div id="CandidatePatternMenu" style="display: block">
-        <form id="formCandidatePatterns" onsubmit="generateCP()" style="display: block">
-          <input id="candidateLength" type="number" value="2" min="2" style="display: block">
-          <label for=candidateLength> Candidate Length</label>
-          <input id="shareLvl" type="number" value="2" min="2" style="display: block">
-          <label for="shareLvl"> Share Threshold</label>
-          <input id="candidateSubmit" value="Generate Candidate Patterns" type="submit" style="display: block">
-        </form>
-        <div id="predefinedCandidatePatterns">
+      <div id="PatternContainer"style="display: flex; float: right; ">
+        <div id="CandidatePatternMenu" style="display: block">
+          <form id="formCandidatePatterns" onsubmit="generateCP()" style="display: block">
+            <input id="candidateLength" type="number" value="2" min="2" style="display: block">
+            <label for=candidateLength> Candidate Length</label>
+            <input id="shareLvl" type="number" value="2" min="2" style="display: block">
+            <label for="shareLvl"> Share Threshold</label>
+            <input id="candidateSubmit" value="Generate Candidate Patterns" type="submit" style="display: block">
+          </form>
+          <div id="predefinedCandidatePatterns" style="display: block">
+          </div>
+        </div>
+        <div id="patternMenu">
+          <form  id="formId" onsubmit="getPattern()">
+            <input type="file" name="fname" id="dataId" style="display: none;">
+            <input type="button" value="Add a Pattern" onclick="document.getElementById('dataId').click();" />
+            <input type="submit" />
+          </form>
+          <select id="predefinedPatterns"></select>
+          <div id=patternButtons style="display: block">
+            <button id="visualizePattern" onclick="visualizePattern()"> Visualize </button>
+            <button id="wholeGraphSearch" onclick="hasPatternClick()">Whole Graph Search</button>
+          </div>
         </div>
       </div>
-      <div id="patternMenu">
-        <form  id="formId" onsubmit="getPattern()">
-          <input type="file" name="fname" id="dataId" style="display: none;">
-          <input type="button" value="Add a Pattern" onclick="document.getElementById('dataId').click();" />
-          <input type="submit" />
-        </form>
-        <select id="predefinedPatterns"></select>
-        <div id=patternButtons style="display: block">
-          <button id="visualizePattern" onclick="visualizePattern()"> Visualize </button>
-          <button id="wholeGraphSearch" onclick="hasPatternClick()">Whole Graph Search</button>
-        </div>
-      </div>
-    </div>
       <!-- <svg width="200px" height="200px"></svg> -->
     </div>
     <div style="display: flex" id="bigcontainer">
       <svg id="restalk"> </svg>
       <div id="smallContainer" style="display: flex">
-        <div id="pieCharts">
+        <div id="pieCharts" style="display: block;">
           <div id="piechart-1">
           </div>
           <div id="piechart-2">
           </div>
           <div id="piechart-3">
           </div>
+          <div id="piechart-4">
+          </div>
           <!-- <svg id="vizPattern"> </svg> -->
         </div>
-          <svg id="vizPattern"> </svg>
+        <svg id="vizPattern"> </svg>
       </div>
     </div>
   </div>
@@ -137,7 +139,7 @@ var generateCP = function (e){
     let obj = hasPatternWholeGraph(globalGraph, globalNodes, pattern, true, shareNum);
     if(obj.bool){
       let mainDiv = document.getElementById("predefinedCandidatePatterns");
-      let nodesViz = obj.matrixNodesVisualization;
+      let nodesViz = obj.matrixNodesVisualization.n;
       globalCandidatePatterns = nodesViz;
       let elem = document.createElement("select");
       elem.setAttribute("id", "candidatePatternsList");
@@ -164,9 +166,9 @@ var generateCP = function (e){
         saveCandidatePattern();
       }
       mainDiv.appendChild(elem);
-      mainDiv.appendChild(btn);
       mainDiv.appendChild(btn1);
       div.appendChild(mainDiv);
+      div.appendChild(btn);
     }
   }
   else console.log("Draw at least " + shareNum + " conversations");
@@ -529,30 +531,36 @@ var drawGraph = function(dataObject){
   let chart2 = displayPieChar(numOfSharedNodes.data, numOfSharedNodes.options, "piechart-2", sharedNodesRainbow, undefined);
   let chart3 = displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-3", rainbows.pieChartRainbow, comparisonTableData.uniquenessNodes);
   var eventHandlerPieCharts = function(chart, data){
-    let row = chart.getSelection()[0].row;
-    let value = data.getValue(row, 0);
-    value = value.split("-");
-    console.log(value[1]);
-    if(value.length == 1) document.body.classList.toggle("shared-"+1)
-    else document.body.classList.toggle("shared-"+value[1]);
+    let row = chart.getSelection();
+    if(row.length > 0){
+      row = row[0].row;
+      let value = data.getValue(row, 0);
+      value = value.split("-");
+      console.log(value[1]);
+      console.log(document.body.classList)
+      if(value.length == 1) document.body.classList.toggle("enable-shared-"+1)
+      else document.body.classList.toggle("enable-shared-"+value[1]);
+    }
+    chart.setSelection([]);
   }
   setStyleShared(sharedNodesRainbow);
   // google.visualization.events.addListener(chart1, "select", function(){eventHandlerPieCharts(chart1 , google.visualization.arrayToDataTable(numOfNodes.data), rainbows.nodesRainbow)})
   google.visualization.events.addListener(chart2, "select", function(){eventHandlerPieCharts(chart2, google.visualization.arrayToDataTable(numOfSharedNodes.data))})
   // google.visualization.events.addListener(chart3, "select", function(){eventHandlerPieCharts(chart3, google.visualization.arrayToDataTable(convSharingNodes.data),rainbows.pieChartRainbow)})
   // console.log(c);
-  renderSvg(g, "svg#restalk");
+  renderSvg(g, "svg#restalk", rainbows.dynamicPieChartRainbow, comparisonTableData.uniquenessNodes, comparisonTableData.nodeIpTp);
 }
 var setStyleShared = function(rainbow){
   var sheet;
   if(document.getElementsByTagName("STYLE")[5] !== undefined) sheet = document.getElementsByTagName("STYLE")[5].sheet;
   for(let i = 0; i < rainbow.length; i++){
-    let clazz = ".shared-"+(i+1);
+    let clazz = ".enable-shared-" + (i+1) +  " .shared-"+(i+1);
     let st = "fill: "+rainbow[i];
     sheet.insertRule(clazz+"{ "+st+" }");
   }
+  document.getElementsByTagName("STYLE")[5].disabled = false;
 }
-var renderSvg = function(g, clazz){
+var renderSvg = function(g, clazz, rainbow, rules, convSize){
   var svg = d3.select(clazz);
   svg.select("g").remove();
   var inner = svg.append("g");
@@ -562,7 +570,6 @@ var renderSvg = function(g, clazz){
     inner.attr("transform", d3.event.transform);
   });
   svg.call(zoom);
-
   // Create the renderer
   var render = new dagreD3.render();
   // Run the renderer. This is what draws the final graph.
@@ -572,15 +579,64 @@ var renderSvg = function(g, clazz){
   svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
   svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id);
     var n = id.split("start-")[1];
+    // console.log(document.body.classList);
     document.body.classList.toggle("enable-path-"+n);
+    let arr = document.body.classList.value;
+    arr = arr.split(" ");
+    if(arr[0] != ""){
+      let ids = [];
+      for(let i = 0; i < arr.length; i++){
+        ids.push(arr[i].split("enable-path-")[1]);
+      }
+      let data  = buildRules(ids, rules);
+      console.log(data, rainbow);
+      let dynamicData = createDynamicPieChart(data);
+      displayPieChar(dynamicData.data, dynamicData.options, "piechart-4", rainbow, data);
+    }
+    else{
+      let div = document.getElementById("piechart-4");
+      while(div.hasChildNodes()) div.removeChild(div.childNodes[0])
+    }
     console.log("Clicked " + id); });
   }
   function goBack() {
     window.history.back();
   }
+  var buildRules = function(ids, rules){
+    let obj = {};
+    let ru;
+    for(var rule in rules){
+      r = rule.split("-");
+      let counter = rules[rule].counter;
+      if(r.length == 1){
+        if(ids.includes(r[0])){
+          obj[rule] = counter;
+        }
+      }
+      else{
+        let newArr = [];
+        for(let i = 0; i < r.length; i++){
+          if(ids.includes(r[i])){
+            newArr.push(r[i]);
+          }
+        }
+        if(newArr.length > 0){
+        ru = "";
+        for(let i = 0; i < newArr.length; i++){
+          // console.log(newArr[i]);
+          if(i==0) ru = newArr[i];
+          else ru = ru + ("-"+newArr[i]);
+        }
+        if(obj[ru] === undefined) obj[ru] = counter;
+        else obj[ru]+=counter;
+      }
+    }
+    }
+    return obj;
+  }
   function displayPieChar(arr, options, id, rainbow, rules){
     data = google.visualization.arrayToDataTable(arr);
-    if(id === "piechart-3"){
+    if(id === "piechart-3" || id == "piechart-4"){
       options.colors = []
       for(var rule in rules){
         options.colors.push(rainbow[rule]);

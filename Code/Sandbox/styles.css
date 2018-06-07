@@ -80,6 +80,15 @@ text {
 .dropdown:hover .dropbtn {
     background-color: #3e8e41;
 }
+#bigcontainer{
+  position: relative;
+  border: 1px solid #999;
+  top: 55px;
+}
+/* svg{
+  position: relative;
+  top: 200px;
+} */
 svg#restalk {
   flex-grow: 1;
   height: 800px;
@@ -91,19 +100,14 @@ svg#vizPattern {
   border: 1px solid #999;
   height: 85%;
 }
-#pieCharts{
-  flex-grow: 1;
-}
 #someContainer{
   flex-grow: 1;
   border: 1px solid #999;
 }
-#patternContainer{
+#PatternContainer{
   border: 1px solid #999;
-
-}
-#smallContainer{
-  border: 1px solid #999;
+  position: absolute;
+  right: 0;
 }
 table {
     font-family: arial, sans-serif;

@@ -22,11 +22,13 @@ var conversionPath = function(class_prefix, size, totalTpIpArray, data){
   document.head.appendChild(style);
   var rainbow = createRainbowDiff(size, totalTpIpArray);
   var pieChartRainbow = {};
+  var dynamicPieChartRainbow = {};
   var sheet = style.sheet;
   for(let i in totalTpIpArray){
     let st = "fill: "+rainbow[totalTpIpArray[i]];
     let clazz = "."+class_prefix+"-"+totalTpIpArray[i];
     pieChartRainbow[totalTpIpArray[i]] = rainbow[totalTpIpArray[i]];
+    dynamicPieChartRainbow[totalTpIpArray[i]] = rainbow[totalTpIpArray[i]];
     sheet.insertRule(".enable-path-" + totalTpIpArray[i] + " " +clazz+" { "+st+" }");
   }
   createPieChartColors(pieChartRainbow, data);
@@ -37,6 +39,7 @@ var conversionPath = function(class_prefix, size, totalTpIpArray, data){
     let color =  hexToRgb(rainbow[subComb[0]]);
     let str1 = "."+class_prefix+"-"+subComb[0];
     let str = ".enable-path-"+subComb[0];
+    let rule = subComb[0];
     let weight = 0.5;
     let factor = 0.1;
     for(let j = 1; j < subComb.length; j++){
@@ -44,15 +47,18 @@ var conversionPath = function(class_prefix, size, totalTpIpArray, data){
       let st = "fill: rgb("+color[0]+","+color[1]+","+color[2]+")";
       st = " { "+st+" }";
       str += (".enable-path-"+subComb[j])
+      rule += "-"+subComb[j];
       str1 += "."+class_prefix+"-"+subComb[j]
       let final = str + " " + str1 + st;
+      dynamicPieChartRainbow[rule] = rgbToHex(color);
       weight += factor;
       factor = 0;
       sheet.insertRule(final);
     }
   }
   return {pieChartRainbow : pieChartRainbow,
-          nodesRainbow : rainbow};
+          nodesRainbow : rainbow,
+          dynamicPieChartRainbow : dynamicPieChartRainbow};
 }
 var createPieChartColors = function(pieChartRainbow, data){
   for(rule in data){

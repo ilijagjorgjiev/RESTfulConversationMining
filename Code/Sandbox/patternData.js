@@ -145,7 +145,7 @@ var patternMixed = {
   //   2 : {method: "*", url: "*", status: "*", ips: at least 2},
   // }
 
-  var user_select_patterns = {pattern : pattern,  patternURL : patternURL, patternWild : patternWild, patternMixed : patternMixed, candidatePattern : candidatePattern,
+  var user_select_patterns = {patternURL : patternURL, patternWild : patternWild, patternMixed : patternMixed, candidatePattern : candidatePattern,
     ipPattern : ipPattern,
   wholePattern : wholePattern};
 

@@ -511,12 +511,28 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
   }
     return createPieChart(data, fx, "IP/TP Shared Nodes")
   }
+  var createDynamicPieChart = function(data){
+
+    var fx = function(data, arr){
+      for(var elem in data){
+        const oldElem = elem;
+        elem = elem.split('-')
+        if(elem.length > 1){
+          arr.push(["IP/TP-" + oldElem, data[oldElem]]);
+        }
+        else{
+          arr.push(["IP/TP-" + oldElem, data[oldElem]]);
+        }
+      }
+    }
+    return createPieChart(data, fx, "Dynamic Sharing PieChart")
+  }
   var createPieChart = function(data, fx, title){
     var arr = []
     arr.push(["Task", "Hours Per Day"]);
     fx(data, arr);
     // Optional; add a title and set the width and height of the chart
-    var options = {'title': title, 'width':"50%", 'height': "200px"};
+    var options = {'title': title, 'width':"50%", 'height': "150px"};
 
     // Display the chart inside the <div> element with id="piechart"
     return {data : arr,
