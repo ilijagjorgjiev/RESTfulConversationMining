@@ -167,8 +167,9 @@ var generateCP = function (e){
       }
       mainDiv.appendChild(elem);
       mainDiv.appendChild(btn1);
+      mainDiv.appendChild(btn);
       div.appendChild(mainDiv);
-      div.appendChild(btn);
+      // div.appendChild(btn);
     }
   }
   else console.log("Draw at least " + shareNum + " conversations");
@@ -535,11 +536,11 @@ var drawGraph = function(dataObject){
     if(row.length > 0){
       row = row[0].row;
       let value = data.getValue(row, 0);
-      value = value.split("-");
-      console.log(value[1]);
+      value = value.split(" ");
+      console.log(value[2]);
       console.log(document.body.classList)
-      if(value.length == 1) document.body.classList.toggle("enable-shared-"+1)
-      else document.body.classList.toggle("enable-shared-"+value[1]);
+      if(value.length == 2) document.body.classList.toggle("enable-shared-"+1)
+      else document.body.classList.toggle("enable-shared-"+value[2]);
     }
     chart.setSelection([]);
   }

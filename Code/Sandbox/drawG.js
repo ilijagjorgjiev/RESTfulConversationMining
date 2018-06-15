@@ -8,7 +8,7 @@ var drawG = function(g, nodes, comparisonTableData, incomingXorNodes, totalAvgKe
       updateComparisonUniqueness(word, comparisonTableData, key, status);
       hasStatus(statusObj, status);
       let patternClazz = getPatternClassName(key, status);
-      let clazz = getClassForNode(word, patternClazz, nodes, key, status);
+      let clazz = getClassForNode(word, patternClazz, nodes, key, status, false);
       if(incomingXorNodes[key] !== undefined) checkIfIncomingXorExists(nodes, key, incomingXorNodes, Object.keys(incomingXorNodes[key]).length, "inXOR-"+key)
       let label = nodes[key][status].statusArray[0].key + '\n' + status + '\n' + "(" + nodes[key][status].statusArray.length + ")";
       let id = key+' '+status;
@@ -28,7 +28,7 @@ var drawG = function(g, nodes, comparisonTableData, incomingXorNodes, totalAvgKe
       var word = setUpTotalClassForDifferentIpTp(nodes, key);
       let patternClazz = getPatternClassName(key, undefined);
       updateComparisonUniqueness(word, comparisonTableData, key, undefined);
-      let clazz = getClassForNode(word, patternClazz, nodes, key, "");
+      let clazz = getClassForNode(word, patternClazz, nodes, key, "", false);
       let label = nodes[key][st].statusArray[0].key + '\n' + "(" + totalRequests[key] + ")";
       g.setNode(key, {shape: "rect", label: label, class: clazz});
       g.setNode("middleXOR-"+key,{label: "XOR", shape: "diamond", class: "type-XOR middleXOR"});
@@ -38,7 +38,7 @@ var drawG = function(g, nodes, comparisonTableData, incomingXorNodes, totalAvgKe
         let id = key+' '+status;
         word = setUpClassForDifferentIpTp(nodes, key, status);
         patternClazz = getPatternClassName(key, status);
-        clazz = getClassForNode(word, patternClazz, nodes, key, status);
+        clazz = getClassForNode(word, patternClazz, nodes, key, status, true);
         let label = status + '\n' +"(" + nodes[key][status].statusArray.length + ")";
         updateComparisonUniqueness(word, comparisonTableData, key, status);
         hasStatus(statusObj, status);

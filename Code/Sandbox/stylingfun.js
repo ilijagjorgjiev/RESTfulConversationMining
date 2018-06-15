@@ -1,8 +1,10 @@
 
-var getClassForNode = function(word, patternClazz, nodes, key, status){
+var getClassForNode = function(word, patternClazz, nodes, key, status, response){
   var _word = word.split(" ");
   let shared = _word.length - 1;
-  var clazz = "type-Request method-"+key+' '+status + ' ' + patternClazz + ' ' + word + ' ' + "status-"+status + " shared-" + shared;
+  var clazz;
+  if(!response) clazz = "type-Request method-"+key+' '+status + ' ' + patternClazz + ' ' + word + ' ' + "status-"+status + " shared-" + shared;
+  else clazz = "type-Response method-"+key+' '+status + ' ' + patternClazz + ' ' + word + ' ' + "status-"+status + " shared-" + shared;
   return clazz
 }
 var disableConversionPaths = function(){

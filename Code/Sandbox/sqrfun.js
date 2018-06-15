@@ -281,8 +281,19 @@ var getSelectedIPs = function(clients, elem){
   }
   return result;
 }
-
+var sortLogs = function(clients){
+    clients.sort((a,b) => compare(a.datetime,b.datetime));
+    return clients;
+}
+var compare = function(a,b){
+  a = new Date(a);
+  b = new Date(b);
+  if(a > b) return 1
+  else if (a === b) return 0
+  else return -1
+}
 var differenceThreshold = function(client){
+  client = sortLogs(client);
   let avg = 0;
   let min = Number.MAX_VALUE;
   let max = Number.MIN_VALUE;
@@ -305,6 +316,7 @@ var differenceThreshold = function(client){
     let date1 = new Date(client[i].datetime)
     let diff = Math.abs(date1-date);
     if(diff > diffThreshold){
+      if(timeP == []) timeP.push(client[i-1]);
       timePeriods.push(timeP);
       timeP = []
     }
@@ -348,228 +360,228 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
           g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], str,
           { label: p,
             class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
+          }
         }
-      }
-    }
-    else{
-      // if(nodes["GET/post"]) console.log("Trigger");
-      for(var space in incomingXorNodes[key]){
-        var len = incomingXorNodes[key][space][0].length;
-        if(len == 1){
-          g.setEdge(incomingXorNodes[key][space][0][0], key,
-            {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-0"})
-          }
-          else{
-            let avg = getIncomingEdgeIndexDelay(nodes, key, incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
-            bin = computeAssignBin(avg, maxDelay, 1);
-            let p = getProbabilityLabel(nodes, incomingXorNodes[key][space][0][0], incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
-            g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], key,
-            { label: p,
-              class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
-          }
-      }
-    }
-  }
-  var getProbability = function(nodes, key, status, length){
-    return (roundUp(length/nodes[key][status].statusArray.length*100,1));
-  }
-  var getProbabilityLabel = function(nodes, s1, s2, length){
-    if(s1.includes("start")) return '';
-    s1 =  s1.split('-')
-    if(s1.length > 1) s1 = s1[1];
-    else s1 = s1[0];
-    let p = getProbability(nodes, s1, s2, length);
-    if(p == 100) p = '';
-    else p = p+'%';
-    return p;
-  }
-  // var getComparisonTableNodes = function(nodes, comparisonTableData){
-  //   var array = [];
-  //   var totalArray = [];
-  //   for(var key in nodes){
-  //     if(comparisonTableData.nodes[key] === undefined){
-  //       comparisonTableData.nodes[key] = {
-  //         statuses : {},
-  //         totalArray : [],
-  //       }
-  //     }
-  //     for(var status in nodes[key]){
-  //       for(let i = 0; i < nodes[key][status].statusArray.length; i++){
-  //           if(array.includes(nodes[key][status].tpIpArray[i]) != true){
-  //           array.push(nodes[key][status].tpIpArray[i]);
-  //         }
-  //         if(totalArray.includes(nodes[key][status].tpIpArray[i]) != true) totalArray.push(nodes[key][status].tpIpArray[i]);
-  //       }
-  //       if(array.length > 1) comparisonTableData.overlappingNodes.size++;
-  //       else comparisonTableData.uniqueNodes.size++;
-  //
-  //       //nodecounter[array.length]++
-  //       //nodecounter[1] // uniqueNodes
-  //       //nodecounter[2] // two IP
-  //       //nodecounter[3] // three IP
-  //
-  //       //nodeipcounter[IP]++ //how many nodes has IP?
-  //
-  //       if(comparisonTableData.nodes[key].statuses[status] === undefined){
-  //         comparisonTableData.nodes[key].statuses[status] = [];
-  //         comparisonTableData.nodes[key].statuses[status] = array;
-  //       }
-  //       array = [];
-  //     }
-  //     //BUG
-  //     if(totalArray.length > 1) comparisonTableData.overlappingNodes.size++;
-  //     let l = Object.keys(nodes[key]).length;
-  //     if(totalArray.length == 1 && l > 1) comparisonTableData.uniqueNodes.size++;
-  //     comparisonTableData.nodes[key].totalArray = totalArray;
-  //     totalArray = [];
-  //   }
-  //   return comparisonTableData;
-  // }
-  var increaseAppropriateEdge = function(size, key, status, comparisonTableData, kind){
-    if(kind === "outgoingXOR" && size == 1){
-      if(comparisonTableData.nodes[key].totalArray.length == 1) comparisonTableData.uniqueEdges.size++;
-      else comparisonTableData.overlappingEdges.size++;
-    }
-    else if(kind === "incomingXOR" && size == 1){
-      if(comparisonTableData.nodes[key].totalArray.length == 1) comparisonTableData.uniqueEdges.size++;
-      else comparisonTableData.overlappingEdges.size++;
-    }
-    else if(kind === "middleXOR"){
-      if(comparisonTableData.nodes[key].statuses[status].length == 1) comparisonTableData.uniqueEdges.size++;
-      else comparisonTableData.overlappingEdges.size++;
-    }
-  }
-
-  var updateComparisonUniqueness = function(word, comparisonTableData, key, status){
-    var dataUniqueness = comparisonTableData.uniqueness;
-    var dataUniquenessNodes = comparisonTableData.uniquenessNodes;
-    var dataNodeIpTp = comparisonTableData.nodeIpTp
-    var sharedNodes = comparisonTableData.sharedNodes;
-    var _word = word.split(' ');
-    _word.sort().reverse();
-    if(dataUniqueness[_word.length-1] === undefined){
-      dataUniqueness[_word.length-1] = 1;
-      sharedNodes[_word.length-1] = [];
-      sharedNodes[_word.length-1].push(key + ' ' + status);
-    }
-    else {
-      dataUniqueness[_word.length-1]++;
-      sharedNodes[_word.length-1].push(key + ' ' + status);
-    }
-    if(_word.length > 2) comparisonTableData.uniqueOverlapping.overlappingNodes.size++;
-    else comparisonTableData.uniqueOverlapping.uniqueNodes.size++;
-    var tPiP="";
-    for(let i = 0; i < _word.length-1; i++){
-      let val = _word[i].split('-')[1];
-      if(i) tPiP += '-' + val
-      else tPiP += val
-      if(dataNodeIpTp[val] === undefined) dataNodeIpTp[val] = 1;
-      else dataNodeIpTp[val]++;
-    }
-    if(dataUniquenessNodes[tPiP] === undefined) {
-      dataUniquenessNodes[tPiP] = {};
-      dataUniquenessNodes[tPiP].counter = 1;
-      dataUniquenessNodes[tPiP].nodes = [];
-      if(status === undefined) dataUniquenessNodes[tPiP].nodes.push(key);
-      else dataUniquenessNodes[tPiP].nodes.push(key+' '+status);
-    }
-    else{
-      dataUniquenessNodes[tPiP].counter++;
-      if(status === undefined) dataUniquenessNodes[tPiP].nodes.push(key);
-      else dataUniquenessNodes[tPiP].nodes.push(key+' '+status);
-    }
-  }
-  var createComparisonUniquenessTable = function(data){
-    var fx = function(data, arr){
-      for(var node in data){
-        if(node == 1) arr.push(["Unique Nodes", data[node]]);
-        else arr.push(["Shared-"+node, data[node]]);
-      }
-    }
-    return createPieChart(data, fx, "Number of Shared Nodes");
-  }
-  var createComparisonNodeIpTpTable = function(data){
-    var fx = function(data, arr){
-      for(var node in data){
-        arr.push(["IP/TP Nodes-"+node, data[node]]);
-      }
-    }
-    return createPieChart(data, fx, "IP/TP Number of Nodes")
-  }
-  var createConversationSharingNodes = function(data){
-    var fx = function(data, arr){
-    for(var elem in data){
-      const oldElem = elem;
-      elem = elem.split('-')
-      if(elem.length > 1){
-        arr.push(["IP/TP-" + oldElem, data[oldElem].counter]);
       }
       else{
-        arr.push(["IP/TP-" + oldElem, data[oldElem].counter]);
-      }
-    }
-  }
-    return createPieChart(data, fx, "IP/TP Shared Nodes")
-  }
-  var createDynamicPieChart = function(data){
-
-    var fx = function(data, arr){
-      for(var elem in data){
-        const oldElem = elem;
-        elem = elem.split('-')
-        if(elem.length > 1){
-          arr.push(["IP/TP-" + oldElem, data[oldElem]]);
+        // if(nodes["GET/post"]) console.log("Trigger");
+        for(var space in incomingXorNodes[key]){
+          var len = incomingXorNodes[key][space][0].length;
+          if(len == 1){
+            g.setEdge(incomingXorNodes[key][space][0][0], key,
+              {class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-0"})
+            }
+            else{
+              let avg = getIncomingEdgeIndexDelay(nodes, key, incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
+              bin = computeAssignBin(avg, maxDelay, 1);
+              let p = getProbabilityLabel(nodes, incomingXorNodes[key][space][0][0], incomingXorNodes[key][space][0][1], incomingXorNodes[key][space].length);
+              g.setEdge(incomingXorNodes[key][space][0][0]+' '+incomingXorNodes[key][space][0][1], key,
+              { label: p,
+                class: "edge-thickness-" + incomingXorNodes[key][space].length + " delay-coloring-"+bin})
+              }
+            }
+          }
         }
-        else{
-          arr.push(["IP/TP-" + oldElem, data[oldElem]]);
+        var getProbability = function(nodes, key, status, length){
+          return (roundUp(length/nodes[key][status].statusArray.length*100,1));
         }
-      }
-    }
-    return createPieChart(data, fx, "Dynamic Sharing PieChart")
-  }
-  var createPieChart = function(data, fx, title){
-    var arr = []
-    arr.push(["Task", "Hours Per Day"]);
-    fx(data, arr);
-    // Optional; add a title and set the width and height of the chart
-    var options = {'title': title, 'width':"50%", 'height': "150px"};
+        var getProbabilityLabel = function(nodes, s1, s2, length){
+          if(s1.includes("start")) return '';
+          s1 =  s1.split('-')
+          if(s1.length > 1) s1 = s1[1];
+          else s1 = s1[0];
+          let p = getProbability(nodes, s1, s2, length);
+          if(p == 100) p = '';
+          else p = p+'%';
+          return p;
+        }
+        // var getComparisonTableNodes = function(nodes, comparisonTableData){
+        //   var array = [];
+        //   var totalArray = [];
+        //   for(var key in nodes){
+        //     if(comparisonTableData.nodes[key] === undefined){
+        //       comparisonTableData.nodes[key] = {
+        //         statuses : {},
+        //         totalArray : [],
+        //       }
+        //     }
+        //     for(var status in nodes[key]){
+        //       for(let i = 0; i < nodes[key][status].statusArray.length; i++){
+        //           if(array.includes(nodes[key][status].tpIpArray[i]) != true){
+        //           array.push(nodes[key][status].tpIpArray[i]);
+        //         }
+        //         if(totalArray.includes(nodes[key][status].tpIpArray[i]) != true) totalArray.push(nodes[key][status].tpIpArray[i]);
+        //       }
+        //       if(array.length > 1) comparisonTableData.overlappingNodes.size++;
+        //       else comparisonTableData.uniqueNodes.size++;
+        //
+        //       //nodecounter[array.length]++
+        //       //nodecounter[1] // uniqueNodes
+        //       //nodecounter[2] // two IP
+        //       //nodecounter[3] // three IP
+        //
+        //       //nodeipcounter[IP]++ //how many nodes has IP?
+        //
+        //       if(comparisonTableData.nodes[key].statuses[status] === undefined){
+        //         comparisonTableData.nodes[key].statuses[status] = [];
+        //         comparisonTableData.nodes[key].statuses[status] = array;
+        //       }
+        //       array = [];
+        //     }
+        //     //BUG
+        //     if(totalArray.length > 1) comparisonTableData.overlappingNodes.size++;
+        //     let l = Object.keys(nodes[key]).length;
+        //     if(totalArray.length == 1 && l > 1) comparisonTableData.uniqueNodes.size++;
+        //     comparisonTableData.nodes[key].totalArray = totalArray;
+        //     totalArray = [];
+        //   }
+        //   return comparisonTableData;
+        // }
+        var increaseAppropriateEdge = function(size, key, status, comparisonTableData, kind){
+          if(kind === "outgoingXOR" && size == 1){
+            if(comparisonTableData.nodes[key].totalArray.length == 1) comparisonTableData.uniqueEdges.size++;
+            else comparisonTableData.overlappingEdges.size++;
+          }
+          else if(kind === "incomingXOR" && size == 1){
+            if(comparisonTableData.nodes[key].totalArray.length == 1) comparisonTableData.uniqueEdges.size++;
+            else comparisonTableData.overlappingEdges.size++;
+          }
+          else if(kind === "middleXOR"){
+            if(comparisonTableData.nodes[key].statuses[status].length == 1) comparisonTableData.uniqueEdges.size++;
+            else comparisonTableData.overlappingEdges.size++;
+          }
+        }
 
-    // Display the chart inside the <div> element with id="piechart"
-    return {data : arr,
+        var updateComparisonUniqueness = function(word, comparisonTableData, key, status){
+          var dataUniqueness = comparisonTableData.uniqueness;
+          var dataUniquenessNodes = comparisonTableData.uniquenessNodes;
+          var dataNodeIpTp = comparisonTableData.nodeIpTp
+          var sharedNodes = comparisonTableData.sharedNodes;
+          var _word = word.split(' ');
+          _word.sort().reverse();
+          if(dataUniqueness[_word.length-1] === undefined){
+            dataUniqueness[_word.length-1] = 1;
+            sharedNodes[_word.length-1] = [];
+            sharedNodes[_word.length-1].push(key + ' ' + status);
+          }
+          else {
+            dataUniqueness[_word.length-1]++;
+            sharedNodes[_word.length-1].push(key + ' ' + status);
+          }
+          if(_word.length > 2) comparisonTableData.uniqueOverlapping.overlappingNodes.size++;
+          else comparisonTableData.uniqueOverlapping.uniqueNodes.size++;
+          var tPiP="";
+          for(let i = 0; i < _word.length-1; i++){
+            let val = _word[i].split('-')[1];
+            if(i) tPiP += '-' + val
+            else tPiP += val
+            if(dataNodeIpTp[val] === undefined) dataNodeIpTp[val] = 1;
+            else dataNodeIpTp[val]++;
+          }
+          if(dataUniquenessNodes[tPiP] === undefined) {
+            dataUniquenessNodes[tPiP] = {};
+            dataUniquenessNodes[tPiP].counter = 1;
+            dataUniquenessNodes[tPiP].nodes = [];
+            if(status === undefined) dataUniquenessNodes[tPiP].nodes.push(key);
+            else dataUniquenessNodes[tPiP].nodes.push(key+' '+status);
+          }
+          else{
+            dataUniquenessNodes[tPiP].counter++;
+            if(status === undefined) dataUniquenessNodes[tPiP].nodes.push(key);
+            else dataUniquenessNodes[tPiP].nodes.push(key+' '+status);
+          }
+        }
+        var createComparisonUniquenessTable = function(data){
+          var fx = function(data, arr){
+            for(var node in data){
+              if(node == 1) arr.push(["Unique Nodes", data[node]]);
+              else arr.push([("Shared between "+ node + " \n IP/TP"), data[node]]);
+            }
+          }
+          return createPieChart(data, fx, "Uniqueness of Nodes");
+        }
+        var createComparisonNodeIpTpTable = function(data){
+          var fx = function(data, arr){
+            for(var node in data){
+              arr.push(["IP/TP-"+node, data[node]]);
+            }
+          }
+          return createPieChart(data, fx, "IP/TP Number of Nodes")
+        }
+        var createConversationSharingNodes = function(data){
+          var fx = function(data, arr){
+            for(var elem in data){
+              const oldElem = elem;
+              elem = elem.split('-')
+              if(elem.length > 1){
+                arr.push(["IP/TP-" + oldElem, data[oldElem].counter]);
+              }
+              else{
+                arr.push(["IP/TP-" + oldElem, data[oldElem].counter]);
+              }
+            }
+          }
+          return createPieChart(data, fx, "IP/TP Shared Nodes")
+        }
+        var createDynamicPieChart = function(data){
+
+          var fx = function(data, arr){
+            for(var elem in data){
+              const oldElem = elem;
+              elem = elem.split('-')
+              if(elem.length > 1){
+                arr.push(["IP/TP-" + oldElem, data[oldElem]]);
+              }
+              else{
+                arr.push(["IP/TP-" + oldElem, data[oldElem]]);
+              }
+            }
+          }
+          return createPieChart(data, fx, "Dynamic Sharing PieChart")
+        }
+        var createPieChart = function(data, fx, title){
+          var arr = []
+          arr.push(["Task", "Hours Per Day"]);
+          fx(data, arr);
+          // Optional; add a title and set the width and height of the chart
+          var options = {'title': title, 'width':"50%", 'height': "150px"};
+
+          // Display the chart inside the <div> element with id="piechart"
+          return {data : arr,
             options : options}
 
-  }
-  var createTable = function(data, fx, id, caption){
-    var i = 1;
-    var table = document.createElement("TABLE");
-    table.createCaption();
-    table.innerHTML = "<b>" + caption + "</b>";
-    var container = document.getElementById("comparisonTableData");
-    var x = document.createElement("TR");
-    x.setAttribute("id", ("myTr"+id));
-    container.appendChild(table);
-    table.setAttribute("id", id);
-    table.appendChild(x);
-    var y = document.createElement("TR");
-    y.setAttribute("id", ("myTr1"+id));
-    table.appendChild(y);
-    for(var input in data){
-      var th = document.createElement("TH")
-      var td = document.createElement("TD");
-      var str = fx(i);
-      var text = document.createTextNode(str);
-      var text1 = document.createTextNode(data[input]);
-      th.appendChild(text);
-      // console.log(x);
-      x.appendChild(th);
-      td.appendChild(text1);
-      y.appendChild(td);
-      i++;
-    }
-  }
-  var clearTable = function(){
-    var container = document.getElementById("comparisonTableData");
-    while(container.hasChildNodes()) {
-      container.removeChild(container.childNodes[0])
-    };
-  }
+          }
+          var createTable = function(data, fx, id, caption){
+            var i = 1;
+            var table = document.createElement("TABLE");
+            table.createCaption();
+            table.innerHTML = "<b>" + caption + "</b>";
+            var container = document.getElementById("comparisonTableData");
+            var x = document.createElement("TR");
+            x.setAttribute("id", ("myTr"+id));
+            container.appendChild(table);
+            table.setAttribute("id", id);
+            table.appendChild(x);
+            var y = document.createElement("TR");
+            y.setAttribute("id", ("myTr1"+id));
+            table.appendChild(y);
+            for(var input in data){
+              var th = document.createElement("TH")
+              var td = document.createElement("TD");
+              var str = fx(i);
+              var text = document.createTextNode(str);
+              var text1 = document.createTextNode(data[input]);
+              th.appendChild(text);
+              // console.log(x);
+              x.appendChild(th);
+              td.appendChild(text1);
+              y.appendChild(td);
+              i++;
+            }
+          }
+          var clearTable = function(){
+            var container = document.getElementById("comparisonTableData");
+            while(container.hasChildNodes()) {
+              container.removeChild(container.childNodes[0])
+            };
+          }

@@ -139,6 +139,13 @@ var patternMixed = {
     "1" : {method: "PUT", url: "$2", "status" : "*", type: "whole"}
 }
 
+var posterPattern = {
+  "0" :
+  {method: "POST", url:"/poll/1", status: "201"},
+  "1" :
+  {method: "DELETE", url:"/poll/1", status: "200"}
+}
+
   // var candidatePattern= {
   //   0 : {method: "*", url: "*", status: "*", ips: at least 2},
   //   1 : {method: "GET", url: "*", status: "*", ips: at least 2},
@@ -147,7 +154,8 @@ var patternMixed = {
 
   var user_select_patterns = {patternURL : patternURL, patternWild : patternWild, patternMixed : patternMixed, candidatePattern : candidatePattern,
     ipPattern : ipPattern,
-  wholePattern : wholePattern};
+  wholePattern : wholePattern,
+ ptrn :  posterPattern};
 
   // "6" : {
   //   method : "POST",
