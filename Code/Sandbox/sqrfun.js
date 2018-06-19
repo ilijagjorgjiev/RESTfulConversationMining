@@ -241,26 +241,6 @@ var totalNumberOfRequests = function(nodes){
   return {"total" : totalNumberOfRequests,
   "maxRequests" : max};
 }
-
-// var getSelectedPeriods = function(timePeriods){
-//   var elem = document.getElementById("multiSelect");
-//   var result = [];
-//   var options = elem && elem.options;
-//   var opt;
-//   for (let i=0, iLen=options.length; i<iLen; i++) {
-//     opt = options[i];
-//
-//     if (opt.selected) {
-//       result.push(timePeriods[parseInt(opt.value)] || timePeriods[parseInt(opt.text)]);
-//     }
-//   }
-//   var obj = {
-//     "identify" : "tp",
-//     "data" : result
-//   }
-//   return result;
-//   // drawGraph(obj);
-// }
 var getSelectedIPs = function(clients, elem){
   var result = {};
   var options = elem && elem.options;

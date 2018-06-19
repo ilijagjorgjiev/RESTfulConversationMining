@@ -294,7 +294,7 @@ var checkPatterns = function(pattern){
         }
       }
       let btn2 = document.createElement("p");
-      let txt1 = document.createTextNode("VisualizePatternInGraph")
+      let txt1 = document.createTextNode("Visualize Pattern In Graph")
       let txt2 = document.createTextNode("Pattern was FOUND")
       label.appendChild(txt1);
       btn2.appendChild(txt2);
@@ -590,7 +590,6 @@ var renderSvg = function(g, clazz, rainbow, rules, convSize){
         ids.push(arr[i].split("enable-path-")[1]);
       }
       let data  = buildRules(ids, rules);
-      console.log(data, rainbow);
       let dynamicData = createDynamicPieChart(data);
       displayPieChar(dynamicData.data, dynamicData.options, "piechart-4", rainbow, data);
     }
