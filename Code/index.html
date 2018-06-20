@@ -1,57 +1,661 @@
 <!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>RESTful Conversation Mining</title>
 
-<meta charset="utf-8">
-<title>Dagre Interactive Demo</title>
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://dagrejs.github.io/project/graphlib-dot/v0.6.3/graphlib-dot.js"></script>
+  <script src="bower_components/lodash/lodash.js"></script>
+  <script src="bower_components/graphlib/dist/graphlib.core.js"></script>
+  <script src="bower_components/dagre/dist/dagre.core.js"></script>
+  <script src="bower_components/dagre-d3/dist/dagre-d3.core.js"></script>
+  <link rel="stylesheet/less" type="text/css" href="bower_components/tyles.less" />
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <!-- <script src="firstData.js"></script> -->
+  <!-- <script src="routesData.js"></script> -->
+  <!-- <script src="data.js"></script> -->
+  <script src="sqrfun.js"></script>
+  <script src="stylingfun.js"></script>
+  <script src="patternMatching.js"></script>
+  <script src="patternData.js"></script>
+  <script src="bower_components/jquery/dist/jquery.js"></script>
+  <script src="drawG.js"></script>
+  <!-- <script type="text/javascript" src="setup.js"></script> -->
+  <link rel="stylesheet" href="styles.css">
 
-<script src="https://d3js.org/d3.v4.js"></script>
-<script src="https://dagrejs.github.io/project/graphlib-dot/v0.6.3/graphlib-dot.js"></script>
-<script src="/Users/ilijagjorgjiev/node_modules/dagre-d3/dist/dagre-d3.js"></script>
-<script src="date.js"></script>
-<!-- <script type="text/javascript" src="setup.js"></script> -->
-<link rel="stylesheet" href="styles.css">
-
-
-<body>
-
-<svg width='800' height = '600'></svg>
-
+  <body>
+    <div style="display: block">
+      <div id="Container" style="display: flex">
+        <button onclick="goBack()">Go Back</button>
+        <div id="Clients" style="float: left">
+          <select id="multiSelect-Clients" multiple="multiple" onchange="changeTp()">
+          </select>
+          <!-- <button class="dropbtn" onmouseover="displayClients()">Clients</button> -->
+        </div>
+        <select id="multiSelect" multiple="multiple">
+        </select>
+        <button id="multiSelectForm" type="submit"/> Draw </button>
+        <div id="Btns">
+        </div>
+        <div id="VisualizationConfig" style="display: none">
+          Node Frequency Coloring: <input type="checkbox" id="nfc" onclick="myFunction()"> <br />
+          Edge Frequency Thickness: <input type="checkbox" id="eft" onclick="myFunction1()"> <br />
+          Edge Delay Coloring: <input type="checkbox" id="edc" onclick="myFunction2()"> <br />
+          Show Edge Probability: <input type="checkbox" id="sep" onclick="myFunction3()"> <br />
+          Status Coloring: <input type="checkbox" id="statusColoring"> <br />
+          <!-- <form  id="formId" onsubmit="getPattern()">
+          <input type="file" name="fname" id="dataId" style="display: none;">
+          <input type="button" value="Add a Pattern" onclick="document.getElementById('dataId').click();" />
+          <input type="submit" />
+        </form> -->
+      </div>
+      <div id="PatternContainer"style="display: flex; float: right; ">
+        <div id="CandidatePatternMenu" style="display: block">
+          <form id="formCandidatePatterns" onsubmit="generateCP()" style="display: block">
+            <input id="candidateLength" type="number" value="2" min="2" style="display: block">
+            <label for=candidateLength> Candidate Length</label>
+            <input id="shareLvl" type="number" value="2" min="2" style="display: block">
+            <label for="shareLvl"> Share Threshold</label>
+            <input id="candidateSubmit" value="Generate Candidate Patterns" type="submit" style="display: block">
+          </form>
+          <div id="predefinedCandidatePatterns" style="display: block">
+          </div>
+        </div>
+        <div id="patternMenu">
+          <form  id="formId" onsubmit="getPattern">
+            <input type="file" name="fname" id="dataId" style="display: none;">
+            <input type="button" value="Add a Pattern" onclick="document.getElementById('dataId').click();" />
+            <input type="submit" />
+          </form>
+          <select id="predefinedPatterns"></select>
+          <div id=patternButtons style="display: block">
+            <button id="visualizePattern" onclick="visualizePattern()"> Visualize </button>
+            <button id="wholeGraphSearch" onclick="hasPatternClick()">Whole Graph Search</button>
+          </div>
+        </div>
+      </div>
+      <!-- <svg width="200px" height="200px"></svg> -->
+    </div>
+    <div style="display: flex" id="bigcontainer">
+      <svg id="restalk"> </svg>
+      <div id="smallContainer" style="display: flex">
+        <div id="pieCharts" style="display: block;">
+          <div id="piechart-1">
+          </div>
+          <div id="piechart-2">
+          </div>
+          <div id="piechart-3">
+          </div>
+          <div id="piechart-4">
+          </div>
+          <!-- <svg id="vizPattern"> </svg> -->
+        </div>
+        <svg id="vizPattern"> </svg>
+      </div>
+    </div>
+  </div>
+</body>
 <script>
-// Input related code goes here
-// Create the input graph
+//Get the Data
+var clients = localStorage.getItem('objectToPass');
+clients = JSON.parse(clients);
 
-var g = new dagreD3.graphlib.Graph()
+// Create the list of Clients.
+var displayClients = function(){
+  let i = 0;
+  var div = document.getElementById("multiSelect-Clients");
+  var str = '';
+  for(let client in clients){
+    let option = document.createElement("option");
+    // option.onmouseenter = function(){
+    //   displayTimePeriods(client);
+    // }
+    let linkText = document.createTextNode(i+"-"+client);
+    option.value = i+"-"+client;
+    option.appendChild(linkText);
+    div.appendChild(option);
+    i++;
+    // str+=('<option value=' + client + 'onmouseenter="displayTimePeriods(\''+ client +'\')" onclick="drawGraph(\''+client +'\')"> '+ client + '</option> ');
+  }
+}
+displayClients();
+// localStorage.removeItem('objectToPass');
+//LOAD Google Charts
+var globalGraph, globalNodes, convDrawn, globalCandidatePatterns;
+var generateCP = function (e){
+  e.preventDefault();
+  cleanPredifinedCandidatePatterns();
+  var candidateLengthNum = document.getElementById("candidateLength").value;
+  var shareNum = document.getElementById("shareLvl").value;
+  let pattern = generatePattern()
+  if(convDrawn !== undefined && convDrawn > 1 && convDrawn >= shareNum){
+    let pattern = {}
+    generatePattern(pattern, candidateLengthNum);
+    let obj = hasPatternWholeGraph(globalGraph, globalNodes, pattern, true, shareNum);
+    if(obj.bool){
+      let mainDiv = document.getElementById("predefinedCandidatePatterns");
+      let nodesViz = obj.matrixNodesVisualization.n;
+      globalCandidatePatterns = nodesViz;
+      let elem = document.createElement("select");
+      elem.setAttribute("id", "candidatePatternsList");
+      for(let i = 0; i < nodesViz.length; i++){
+        let option = document.createElement("option");
+        let linkText = document.createTextNode("Candidate Pattern "+i);
+        option.value = i
+        option.appendChild(linkText);
+        elem.appendChild(option);
+      }
+      var div = document.getElementById("CandidatePatternMenu");
+      var btn = document.createElement("BUTTON");
+      let linkText = document.createTextNode("Visualize Candidate Pattern ");
+      let btn1 = document.createElement("BUTTON");
+      let linkText1 = document.createTextNode("Save Candidate Pattern");
+      btn.appendChild(linkText);
+      btn1.appendChild(linkText1);
+      btn.setAttribute("id", "visualizeCandidatePattern");
+      btn1.setAttribute("id", "saveCandidatePattern");
+      btn.onclick = function(){
+        vizCandidatePattern();
+      }
+      btn1.onclick = function(){
+        saveCandidatePattern();
+      }
+      mainDiv.appendChild(elem);
+      mainDiv.appendChild(btn1);
+      mainDiv.appendChild(btn);
+      div.appendChild(mainDiv);
+    }
+  }
+  else console.log("Draw at least " + shareNum + " conversations");
+}
+var changeTp = function(){
+  var section = document.getElementById("multiSelect-Clients");
+  var options = section && section.options;
+  var opt;
+  var result = []
+  for (let i=0, iLen=options.length; i<iLen; i++) {
+    opt = options[i];
+
+    if (opt.selected){
+      let iptp = opt.value.split('-');
+      let val = iptp;
+      let val1 = iptp;
+      if(iptp.length > 1){
+        val = iptp[0];
+        val1 = iptp[1]
+      }
+      let res = ((clients[val1] || clients[parseInt(opt.text)]));
+      for(let j = 0; j < res.length; j++){
+        result.push(res[j]);
+      }
+    }
+  }
+  displayTimePeriods(result);
+}
+var saveCandidatePattern = function(){
+  var section = document.getElementById("candidatePatternsList");
+  var options = section && section.options;
+  var value = options[options.selectedIndex].value;
+  if(globalCandidatePatterns !== undefined){
+    var obj = globalCandidatePatterns[value];
+    var length = Object.keys(user_select_patterns).length
+    var val = "candidatePattern"+length;
+    user_select_patterns[val] = obj;
+    displayPatterns();
+  }
+  else console.log("NO CANDIDATE PATTERNS");
+}
+var cleanPredifinedCandidatePatterns = function(){
+  var elem = document.getElementById("predefinedCandidatePatterns");
+  if(elem !== undefined){
+    while(elem.hasChildNodes()){
+      elem.removeChild(elem.childNodes[0])
+    }
+  }
+}
+
+var generatePattern = function(pattern, size){
+  for(let i = 0; i < size; i++){
+    pattern[i] = {
+      method : "*",
+      url : "*",
+      status : "*"
+    }
+  }
+}
+google.charts.load('current', {'packages':['corechart']});
+// google.charts.setOnLoadCallback(createPieChart);
+// Input related code goes here
+function getPattern(e){
+  var x = e.preventDefault();
+  var file = document.getElementById('dataId');
+  if(file.files.length)
+  {
+    console.log(file.files);
+    var reader = new FileReader();
+
+    reader.onload = function(e)
+    {
+      pattern = e.target.result;
+      pattern = pattern.split("\n");
+      console.log(pattern);
+      // hasPattern(g, globalNodes, patternMixed, false, convDrawn);
+    }
+    for(let i = 0; i < file.files.length; i++){
+      reader.readAsText(file.files[i]);
+    }
+  }
+}
+$(document).ready(function(){
+  var form = document.getElementById("formId")
+  var form1 = document.getElementById("formCandidatePatterns");
+  form1.onsubmit = generateCP;
+  form.onsubmit = getPattern;
+})
+var displayPatterns = function(){
+  var div = document.getElementById("predefinedPatterns");
+  while(div.hasChildNodes()) div.removeChild(div.childNodes[0])
+  for(let pattern in user_select_patterns){
+    let obj = user_select_patterns[pattern];
+    let option = document.createElement("option");
+    let linkText = document.createTextNode(pattern);
+    option.appendChild(linkText);
+    option.value = pattern;
+    div.appendChild(option);
+  }
+}
+displayPatterns();
+var checkPatterns = function(pattern){
+
+  if(globalGraph === undefined) console.log("GLOBAL GRAPH NOT SET UP")
+  else{
+    clearPatternMenu();
+    let obj = hasPatternWholeGraph(globalGraph, globalNodes, pattern, false, convDrawn);
+    if(obj.bool){
+      let div = document.getElementById("patternButtons");
+      let newDiv = document.createElement("div");
+      var x = document.createElement("INPUT");
+      x.setAttribute("id", "vizPatternGraph");
+      x.setAttribute("type", "checkbox");
+      let label = document.createElement("LABEL");
+      label.setAttribute("for", "vizPatternGraph");
+      x.checked = true;
+      setUpPatternVisualization(globalGraph, obj.matrixNodesVisualization);
+      x.onclick = function(){
+        let elem = document.getElementById("vizPatternGraph");
+        let y = document.getElementsByTagName("STYLE")[6];
+        if(elem.checked != true){
+          y.disabled = true;
+        }
+        else{
+          y.disabled = false;
+        }
+      }
+      let btn2 = document.createElement("p");
+      let txt1 = document.createTextNode("Visualize Pattern In Graph")
+      let txt2 = document.createTextNode("Pattern was FOUND")
+      label.appendChild(txt1);
+      btn2.appendChild(txt2);
+      div.appendChild(btn2);
+      newDiv.appendChild(x);
+      div.appendChild(x);
+      div.appendChild(label);
+    }
+  }
+}
+var clearPatternMenu = function(){
+  let div = document.getElementById("patternButtons");
+  let x = document.getElementsByTagName("STYLE");
+  let btn1 = document.createElement("BUTTON");
+  let btn3 = document.createElement("BUTTON");
+  let txt1 = document.createTextNode("Visualize");
+  let txt3 = document.createTextNode("Search Whole Graph");
+  btn1.onclick = vizPattern;
+  btn3.onclick = hasPatternClick;
+  btn1.appendChild(txt1);
+  btn1.setAttribute("id", "visualizePattern");
+  btn3.setAttribute("id", "wholeGraphSearch");
+  btn3.appendChild(txt3);
+  while(div.hasChildNodes()) div.removeChild(div.childNodes[0])
+  div.appendChild(btn1);
+  div.appendChild(btn3);
+  if(x[6] !== undefined) x[6].remove();
+}
+var vizPattern = function(){
+  var section = document.getElementById("predefinedPatterns");
+  var options = section && section.options;
+  var value = options[options.selectedIndex].value;
+  var obj = user_select_patterns[value];
+  if(obj !== undefined) visualizePattern(obj, value);
+  else console.log("PUT PATTERNS");
+}
+var vizCandidatePattern = function(){
+  var section = document.getElementById("candidatePatternsList");
+  var options = section && section.options;
+  var value = options[options.selectedIndex].value;
+  if(globalCandidatePatterns !== undefined){
+    var obj = globalCandidatePatterns[value];
+    visualizePattern(obj, value);
+  }
+  else console.log("NO CANDIDATE PATTERNS");
+}
+var visualizePattern = function(obj, value){
+  let i = 1;
+  for(let node in obj){
+    let location = obj[node].url
+    obj[node].location = location;
+    if(obj[node].method == "*") obj[node].method == "any";
+    let year = 1000;
+    let month = "1";
+    let day = "1";
+    let date = day + "/" + month + '/' + year;
+    let time = "00:00:"+i;
+    obj[node].date = date;
+    obj[node].time = time;
+    obj[node].datetime = new Date(date);
+    obj[node].datetime.setSeconds(i);
+    i++;
+  }
+  console.log(obj);
+  let vizg = new dagreD3.graphlib.Graph()
   .setGraph({})
   .setDefaultEdgeLabel(function() { return {}; });
-
-// Here we"re setting nodeclass, which is used by our custom drawNodes function
-// below.
-for(let i = 0; i < clients["154.103.165.66"].length; i++){
-  g.setNode(i, {label: "Method: "+ clients["154.103.165.66"][i].method + '\n' + 'Status: '+ clients["154.103.165.66"][i].status + '\n' +"Location:"+clients["154.103.165.66"][i].location, class: "type-"  + clients["154.103.165.66"][i].method})
+  let start = "start-"+value;
+  let end = "end-"+value;
+  vizg.setNode(start, {shape: "circle", class : start});
+  vizg.setNode(end, {shape: "circle", style: "stroke-width: 4; stroke: black", class : end})
+  let length = Object.keys(obj).length;
+  let cl = obj;
+  let nodes = [];
+  let incomingXorNodes = {};
+  var endConnections = {};
+  obj = seqPreservingComparison(cl, length, nodes, start, incomingXorNodes, end, value);
+  incomingXorNodes = obj.incomingXorNodes;
+  endConnections[value]= obj.endConnection.e1;
+  nodes = obj.nodes;
+  var statusObj = {};
+  var totalTpIpArray = []
+  var startKey, startStatus;
+  var comparisonTableData = {
+    timePorIP : [],
+    uniqueOverlapping : {
+      uniqueNodes : {
+        size : 0,
+      },
+      overlappingNodes : {
+        size : 0,
+      },
+      uniqueEdges : { size : 0,},
+      overlappingEdges : {size : 0,},
+    },
+    uniqueness : {},
+    uniquenessNodes : {},
+    nodeIpTp : {},
+    sharedNodes : {}
+  }
+  var totalRequestsData = totalNumberOfRequests(nodes);
+  var totalRequests = totalRequestsData.total;
+  var maxRequests = totalRequestsData.maxRequests;
+  obj = computeMinMaxAvgDelayVal(nodes);
+  nodes = obj.nodes;
+  var totalAvgKey = obj.totalAvgKey;
+  var maxDelay = obj.MAX;
+  var minDelay = obj.MIN;
+  drawG(vizg, nodes, comparisonTableData, incomingXorNodes, totalAvgKey, maxDelay, minDelay, totalRequests, endConnections, statusObj);
+  renderSvg(vizg, "#vizPattern");
 }
-g.nodes().forEach(function(v) {
-  var node = g.node(v);
-  // Round the corners of the nodes
-  node.rx = node.ry = 5;
-});
-
-// Set up edges, no special attributes.
-for(let i = 1; i < clients["154.103.165.66"].length; i++){
-  g.setEdge(i-1,i);
+var disablePatternStyle = function(){
+  let elem = document.getElementById("vizPatternGraph");
+  var y = document.getElementsByTagName("STYLE")[6];
+  if(elem && elem.checked){
+    y.disabled = true
+    elem.checked = false;
+  }
 }
+var hasPatternClick = function(e){
+  let id = e.currentTarget.id;
+  if(globalGraph === undefined) console.log("Draw a graph")
+  else{
+    var section = document.getElementById("predefinedPatterns");
+    var options = section && section.options;
+    var value = options[options.selectedIndex].value;
+    checkPatterns(user_select_patterns[value]);
+  }
+}
+var displayTimePeriods = function(client){
+  var el = document.getElementById("multiSelect");
+  var form = document.getElementById("multiSelectForm");
+  var timePeriods = differenceThreshold(client);
+  var str = "";
+  for(let i = 0; i < timePeriods.length; i++){
+    str += '<option value=\''+i+'\'> Time Period '+ i + '</option>'
+  }
+  form.onclick = function(){
+    var elem1 = document.getElementById("multiSelect");
+    var elem2 = document.getElementById("multiSelect-Clients");
+    var ret1 = getSelectedIPs(timePeriods, elem1);
+    var ret2 = getSelectedIPs(clients, elem2);
 
-// Create the renderer
-var render = new dagreD3.render();
-console.log(g)
+    if(Object.keys(ret1).length) drawGraph(ret1);
+    else drawGraph(ret2);
+  }
+  el.innerHTML = str;
+}
+var fixVisualizationConfig = function(nfc, eft, edc, sep, statusColoring){
 
-// Set up an SVG group so that we can translate the final graph.
-var svg = d3.select("svg"),
-    svgGroup = svg.append("g");
+  nfc.checked = false;
+  eft.checked = false;
+  edc.checked = false;
+  sep.checked = false;
+  statusColoring.checked = false;
+  deleteStyles();
+  disableConversionPaths();
+  clearPatternMenu();
+}
+//Draw the Graph for the selected IP.
+var drawGraph = function(dataObject){
+  var g = new dagreD3.graphlib.Graph()
+  .setGraph({})
+  .setDefaultEdgeLabel(function() { return {}; });
+  globalGraph = g;
+  var nfc = document.getElementById("nfc");
+  var eft = document.getElementById("eft");
+  var edc = document.getElementById("edc");
+  var sep = document.getElementById("sep");
+  var statusColoring = document.getElementById("statusColoring");
 
-// Run the renderer. This is what draws the final graph.
-render(d3.select("svg g"), g);
+  fixVisualizationConfig(nfc, eft, edc, sep, statusColoring);
+  // Here we"re setting nodeclass, which is used by our custom drawNodes function
+  // below.
+  var statusObj = {};
+  var obj;
+  var endConnections = {};
+  var nodes = []
+  var incomingXorNodes = {}
+  var totalTpIpArray = []
+  var startKey, startStatus;
+  var comparisonTableData = {
+    timePorIP : [],
+    uniqueOverlapping : {
+      uniqueNodes : {
+        size : 0,
+      },
+      overlappingNodes : {
+        size : 0,
+      },
+      uniqueEdges : { size : 0,},
+      overlappingEdges : {size : 0,},
+    },
+    uniqueness : {},
+    uniquenessNodes : {},
+    nodeIpTp : {},
+    sharedNodes : {},
+  }
+  for(let client in dataObject){
+    let start = "start-"+client;
+    g.setNode(start, {shape: "circle", class : "start" + " tpIpColoring-"+client});
+    g.setNode("end-"+client, {shape: "circle", style: "stroke-width: 4; stroke: black", class : "start" + " tpIpColoring-"+client})
+    let length = dataObject[client].length;
+    let cl = dataObject[client];
+    obj = seqPreservingComparison(cl, length, nodes, start, incomingXorNodes, "end-"+client, client);
+    totalTpIpArray.push(client);
+    incomingXorNodes = obj.incomingXorNodes;
+    endConnections[client]= obj.endConnection.e1;
+    comparisonTableData.timePorIP.push(client);
+    nodes = obj.nodes;
+  }
+  var totalRequestsData = totalNumberOfRequests(nodes);
+  var totalRequests = totalRequestsData.total;
+  var maxRequests = totalRequestsData.maxRequests;
+  obj = computeMinMaxAvgDelayVal(nodes);
+  nodes = obj.nodes;
+  var totalAvgKey = obj.totalAvgKey;
+  var maxDelay = obj.MAX;
+  var minDelay = obj.MIN;
+  drawG(g, nodes, comparisonTableData, incomingXorNodes, totalAvgKey, maxDelay, minDelay, totalRequests, endConnections, statusObj);
+  setNodeClasses(g, nodes, totalRequestsData);
+  setVisualizationConfig(nfc, eft, edc, sep, statusColoring, maxRequests, statusObj);
+  // triggerEdgeProbability(sep);
+  var rainbows = conversionPath("tpIpColoring", totalTpIpArray.length, totalTpIpArray, comparisonTableData.uniquenessNodes);
 
-// Center the graph
-var xCenterOffset = (svg.attr("width") - g.graph().width) / 2;
-svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
-svg.attr("height", g.graph().height + 40);
-</script>
+  var convSharingNodes = createConversationSharingNodes(comparisonTableData.uniquenessNodes);
+  var numOfSharedNodes = createComparisonUniquenessTable(comparisonTableData.uniqueness);
+  var numOfNodes = createComparisonNodeIpTpTable(comparisonTableData.nodeIpTp);
+  var sharedNodesRainbow = createRainbow(Object.keys(comparisonTableData.uniqueness).length);
+  globalNodes = nodes;
+  globalGraph = g;
+  convDrawn = totalTpIpArray.length;
+  console.log(comparisonTableData);
+  let chart1 = displayPieChar(numOfNodes.data, numOfNodes.options, "piechart-1", rainbows.nodesRainbow, undefined);
+  let chart2 = displayPieChar(numOfSharedNodes.data, numOfSharedNodes.options, "piechart-2", sharedNodesRainbow, undefined);
+  let chart3 = displayPieChar(convSharingNodes.data, convSharingNodes.options, "piechart-3", rainbows.pieChartRainbow, comparisonTableData.uniquenessNodes);
+  var eventHandlerPieCharts = function(chart, data){
+    let row = chart.getSelection();
+    if(row.length > 0){
+      row = row[0].row;
+      let value = data.getValue(row, 0);
+      value = value.split(" ");
+      console.log(value[2]);
+      console.log(document.body.classList)
+      if(value.length == 2) document.body.classList.toggle("enable-shared-"+1)
+      else document.body.classList.toggle("enable-shared-"+value[2]);
+    }
+    chart.setSelection([]);
+  }
+  setStyleShared(sharedNodesRainbow);
+  // google.visualization.events.addListener(chart1, "select", function(){eventHandlerPieCharts(chart1 , google.visualization.arrayToDataTable(numOfNodes.data), rainbows.nodesRainbow)})
+  google.visualization.events.addListener(chart2, "select", function(){eventHandlerPieCharts(chart2, google.visualization.arrayToDataTable(numOfSharedNodes.data))})
+  // google.visualization.events.addListener(chart3, "select", function(){eventHandlerPieCharts(chart3, google.visualization.arrayToDataTable(convSharingNodes.data),rainbows.pieChartRainbow)})
+  // console.log(c);
+  renderSvg(g, "svg#restalk", rainbows.dynamicPieChartRainbow, comparisonTableData.uniquenessNodes, comparisonTableData.nodeIpTp);
+}
+var setStyleShared = function(rainbow){
+  var sheet;
+  if(document.getElementsByTagName("STYLE")[5] !== undefined) sheet = document.getElementsByTagName("STYLE")[5].sheet;
+  for(let i = 0; i < rainbow.length; i++){
+    let clazz = ".enable-shared-" + (i+1) +  " .shared-"+(i+1);
+    let st = "fill: "+rainbow[i];
+    sheet.insertRule(clazz+"{ "+st+" }");
+  }
+  document.getElementsByTagName("STYLE")[5].disabled = false;
+}
+var renderSvg = function(g, clazz, rainbow, rules, convSize){
+  var svg = d3.select(clazz);
+  svg.select("g").remove();
+  var inner = svg.append("g");
+
+  // Set up zoom support
+  var zoom = d3.zoom().on("zoom", function() {
+    inner.attr("transform", d3.event.transform);
+  });
+  svg.call(zoom);
+  // Create the renderer
+  var render = new dagreD3.render();
+  // Run the renderer. This is what draws the final graph.
+  render(inner, g);
+  // Center the graph
+  var initialScale = 0.2;
+  svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
+  svg.selectAll("g.node.start").on("click", function(id) { var _node = g.node(id);
+    var n = id.split("start-")[1];
+    // console.log(document.body.classList);
+    document.body.classList.toggle("enable-path-"+n);
+    let arr = document.body.classList.value;
+    arr = arr.split(" ");
+    if(arr[0] != ""){
+      let ids = [];
+      for(let i = 0; i < arr.length; i++){
+        ids.push(arr[i].split("enable-path-")[1]);
+      }
+      let data  = buildRules(ids, rules);
+      let dynamicData = createDynamicPieChart(data);
+      displayPieChar(dynamicData.data, dynamicData.options, "piechart-4", rainbow, data);
+    }
+    else{
+      let div = document.getElementById("piechart-4");
+      while(div.hasChildNodes()) div.removeChild(div.childNodes[0])
+    }
+    console.log("Clicked " + id); });
+  }
+  function goBack() {
+    window.history.back();
+  }
+  var buildRules = function(ids, rules){
+    let obj = {};
+    let ru;
+    for(var rule in rules){
+      r = rule.split("-");
+      let counter = rules[rule].counter;
+      if(r.length == 1){
+        if(ids.includes(r[0])){
+          obj[rule] = counter;
+        }
+      }
+      else{
+        let newArr = [];
+        for(let i = 0; i < r.length; i++){
+          if(ids.includes(r[i])){
+            newArr.push(r[i]);
+          }
+        }
+        if(newArr.length > 0){
+        ru = "";
+        for(let i = 0; i < newArr.length; i++){
+          // console.log(newArr[i]);
+          if(i==0) ru = newArr[i];
+          else ru = ru + ("-"+newArr[i]);
+        }
+        if(obj[ru] === undefined) obj[ru] = counter;
+        else obj[ru]+=counter;
+      }
+    }
+    }
+    return obj;
+  }
+  function displayPieChar(arr, options, id, rainbow, rules){
+    data = google.visualization.arrayToDataTable(arr);
+    if(id === "piechart-3" || id == "piechart-4"){
+      options.colors = []
+      for(var rule in rules){
+        options.colors.push(rainbow[rule]);
+      }
+    }
+    else{
+      options.colors = []
+      for(let i in rainbow){
+        options.colors.push(rainbow[i]);
+      }
+    }
+    let chart = new google.visualization.PieChart(document.getElementById(id));
+    chart.style = "display: block";
+    chart.draw(data, options);
+    return chart;
+  }
+  // google.charts.load('visualization', '1.0', {packages: ['corechart', 'table', 'controls', 'gauge']});
+  </script>
+  </html>

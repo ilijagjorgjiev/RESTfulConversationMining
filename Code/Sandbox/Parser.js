@@ -3,8 +3,6 @@ var requireFromUrl = require('require-from-url/sync');
 var fs = require('fs');
 var dagre = require("dagre");
 var dagreD3 = require("dagre-d3");
-var Iconv  = require('iconv').Iconv
-var utf8 = require('utf8');
 const Route = require('route-parser');
 
 // var graphlib = requireFromUrl("https://dagrejs.github.io/project/graphlib-dot/v0.6.3/graphlib-dot.js")

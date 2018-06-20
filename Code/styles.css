@@ -1,0 +1,129 @@
+/* g.type-TK > rect {
+  fill: #00ffd0;
+} */
+
+text {
+  font-weight: 300;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
+  font-size: 14px;
+}
+/* .node circle, */
+/* .node rect {
+  fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1
+} */
+ /* .node up{
+  fill:#e6e6e6;stroke:#000000;stroke-width:1.11049819px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1
+} */
+.node polygon,
+.node circle{
+  fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1
+}
+.type-Response{
+  fill:#e6e6e6;stroke:#000000;stroke-width:1.11049819px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1
+}
+.type-Request{
+  fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1
+}
+ /* .freq-1{
+  fill: mix(#ff0000, #0000ff, 50%);
+}
+ .freq-2{
+  fill: red;
+} */
+/* .edgePath path { */
+.edgePath {
+  stroke: #333;
+  fill: black;
+  stroke-width: 1.5px;
+}
+.arrowhead{
+  stroke: black;
+  fill: black;
+  stroke-width: 2px;
+}
+
+.dropbtn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {background-color: #ddd}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown:hover .dropbtn {
+    background-color: #3e8e41;
+}
+#bigcontainer{
+  position: relative;
+  border: 1px solid #999;
+  top: 80px;
+}
+/* svg{
+  position: relative;
+  top: 200px;
+} */
+svg#restalk {
+  flex-grow: 1;
+  height: 800px;
+  border: 1px solid #999;
+  overflow: hidden;
+}
+svg#vizPattern {
+  flex-grow: 1;
+  border: 1px solid #999;
+  height: 85%;
+}
+#someContainer{
+  flex-grow: 1;
+  border: 1px solid #999;
+}
+#PatternContainer{
+  border: 1px solid #999;
+  position: absolute;
+  right: 0;
+}
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+
+/* .edgeLabel tspan{
+  fill: green;
+} */

@@ -67,7 +67,7 @@
           </div>
         </div>
         <div id="patternMenu">
-          <form  id="formId" onsubmit="getPattern()">
+          <form  id="formId" onsubmit="getPattern">
             <input type="file" name="fname" id="dataId" style="display: none;">
             <input type="button" value="Add a Pattern" onclick="document.getElementById('dataId').click();" />
             <input type="submit" />
@@ -147,7 +147,7 @@ var generateCP = function (e){
         let option = document.createElement("option");
         let linkText = document.createTextNode("Candidate Pattern "+i);
         option.value = i
-        option.appendChild(linkText)
+        option.appendChild(linkText);
         elem.appendChild(option);
       }
       var div = document.getElementById("CandidatePatternMenu");
@@ -169,7 +169,6 @@ var generateCP = function (e){
       mainDiv.appendChild(btn1);
       mainDiv.appendChild(btn);
       div.appendChild(mainDiv);
-      // div.appendChild(btn);
     }
   }
   else console.log("Draw at least " + shareNum + " conversations");
@@ -235,16 +234,20 @@ google.charts.load('current', {'packages':['corechart']});
 function getPattern(e){
   var x = e.preventDefault();
   var file = document.getElementById('dataId');
-
   if(file.files.length)
   {
+    console.log(file.files);
     var reader = new FileReader();
 
     reader.onload = function(e)
     {
       pattern = e.target.result;
-      console.log("here");
-      hasPattern(g, globalNodes, patternMixed, false, convDrawn);
+      pattern = pattern.split("\n");
+      console.log(pattern);
+      // hasPattern(g, globalNodes, patternMixed, false, convDrawn);
+    }
+    for(let i = 0; i < file.files.length; i++){
+      reader.readAsText(file.files[i]);
     }
   }
 }
@@ -621,16 +624,16 @@ var renderSvg = function(g, clazz, rainbow, rules, convSize){
           }
         }
         if(newArr.length > 0){
-        ru = "";
-        for(let i = 0; i < newArr.length; i++){
-          // console.log(newArr[i]);
-          if(i==0) ru = newArr[i];
-          else ru = ru + ("-"+newArr[i]);
+          ru = "";
+          for(let i = 0; i < newArr.length; i++){
+            // console.log(newArr[i]);
+            if(i==0) ru = newArr[i];
+            else ru = ru + ("-"+newArr[i]);
+          }
+          if(obj[ru] === undefined) obj[ru] = counter;
+          else obj[ru]+=counter;
         }
-        if(obj[ru] === undefined) obj[ru] = counter;
-        else obj[ru]+=counter;
       }
-    }
     }
     return obj;
   }
