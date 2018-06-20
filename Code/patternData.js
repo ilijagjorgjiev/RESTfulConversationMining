@@ -1,43 +1,38 @@
-
-var pattern = {
+var patternPlaceholder = {
   "0" : {
-    method : "GET",
-    status : "200"
-  },
-  "1" : {
-    method : "DELETE",
-    status : "500"
-  },
-  // "2" : {
-  //   method : "GET",
-  //   status : "404"
-  // },
-  // "3" : {
-  //   method : "GET",
-  //   status : "200"
-  // },
-  // "4" : {
-  //   method : "GET",
-  //   status : "300"
-  // }
-}
-var patternURL = {
-  "0" : {
-    method : "POST",
-    status : "200",
-    url : "/resource/edit"
-  },
-  "1" : {
-    method : "POST",
-    status : "401",
-    url : "/resource"
-  },
-  "2" : {
     method : "POST",
     status : "201",
-    url : "/"
-  }
+    url : "$1"
+  },
+  "1" : {
+    method : "GET",
+    status : "*",
+    url : "$2",
+  },
+  "2" : {
+    method : "GET",
+    status : "201",
+    url : "$3"
+  },
+  "3" : {
+    method : "DELETE",
+    status : "*",
+    url : "$3",
+  },
 }
+var patternPlaceholder1 = {
+  "0" : {
+    method : "POST",
+    status : "201",
+    url : "$1"
+  },
+  "1" : {
+    method : "GET",
+    status : "*",
+    url : "$2",
+  },
+}
+
 var patternWild = {
   "0" : {
     method : "OPTIONS",
@@ -129,11 +124,6 @@ var patternMixed = {
     // }
   }
 
-  var candidatePattern= {
-    0 : {method: "DELETE", url: "/last", status: "404"},
-    1 : {method: "OPTIONS", url: "/job", status: "404"},
-    2 : {method: "DELETE", url: "/last", status: "500"}
-  }
   var wholePattern = {
     "0" : {method: "POST", url: "/poll", status: "*", type: "whole"},
     "1" : {method: "PUT", url: "$2", "status" : "*", type: "whole"}
@@ -152,10 +142,12 @@ var posterPattern = {
   //   2 : {method: "*", url: "*", status: "*", ips: at least 2},
   // }
 
-  var user_select_patterns = {patternURL : patternURL, patternWild : patternWild, patternMixed : patternMixed, candidatePattern : candidatePattern,
+  var user_select_patterns = { patternWild : patternWild, patternMixed : patternMixed,
     ipPattern : ipPattern,
   wholePattern : wholePattern,
- ptrn :  posterPattern};
+ ptrn :  posterPattern,
+ patternPlaceholder : patternPlaceholder,
+  patternPlaceholder1  :  patternPlaceholder1};
 
   // "6" : {
   //   method : "POST",
