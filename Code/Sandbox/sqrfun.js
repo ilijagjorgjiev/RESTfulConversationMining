@@ -370,6 +370,7 @@ var multipleIncomingXorSetUp = function(g, nodes, key, inXorIdSize, maxDelay, mi
           s1 =  s1.split('-')
           if(s1.length > 1) s1 = s1[1];
           else s1 = s1[0];
+    
           let p = getProbability(nodes, s1, s2, length);
           if(p == 100) p = '';
           else p = p+'%';

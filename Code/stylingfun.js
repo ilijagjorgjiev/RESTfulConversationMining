@@ -34,9 +34,10 @@ var conversionPath = function(class_prefix, size, totalTpIpArray, data){
     sheet.insertRule(".enable-path-" + totalTpIpArray[i] + " " +clazz+" { "+st+" }");
   }
   createPieChartColors(pieChartRainbow, data);
-  let combinations = getCombinations(totalTpIpArray);
+  let combinations = combine(totalTpIpArray, 2);
+
   for(let i = 0; i < combinations.length; i++){
-    let subComb = combinations[i].split('');
+    let subComb = combinations[i]
     subComb.reverse();
     let color =  hexToRgb(rainbow[subComb[0]]);
     let str1 = "."+class_prefix+"-"+subComb[0];
@@ -88,6 +89,26 @@ var getCombinations = function(chars){
   }
   f('', chars);
   return result;
+}
+var combine = function(a, min) {
+    var fn = function(n, src, got, all) {
+        if (n == 0) {
+            if (got.length > 0) {
+                all[all.length] = got;
+            }
+            return;
+        }
+        for (var j = 0; j < src.length; j++) {
+            fn(n - 1, src.slice(j + 1), got.concat([src[j]]), all);
+        }
+        return;
+    }
+    var all = [];
+    for (var i = min; i < a.length; i++) {
+        fn(i, a, [], all);
+    }
+    all.push(a);
+    return all;
 }
 var hexToRgb = function(hex){
   // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")

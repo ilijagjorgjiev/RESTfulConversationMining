@@ -38,6 +38,7 @@ var conversionPath = function(class_prefix, size, totalTpIpArray, data){
   for(let i = 0; i < combinations.length; i++){
     let subComb = combinations[i].split('');
     subComb.reverse();
+    console.log(rainbow, subComb);
     let color =  hexToRgb(rainbow[subComb[0]]);
     let str1 = "."+class_prefix+"-"+subComb[0];
     let str = ".enable-path-"+subComb[0];
