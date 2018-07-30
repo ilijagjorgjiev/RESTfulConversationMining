@@ -1,0 +1,3 @@
+/content/abstract/scopus_id/:id
+/content/serial/title/issn/:id
+/content/author/author_id/:id
